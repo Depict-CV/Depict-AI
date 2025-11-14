@@ -1,0 +1,28 @@
+[project]
+name = "Depict-AI"
+version = "0.1.0"
+description = '''
+image data tool for computer vision from raw images to model training/fine-tuning.
+tasks: data visualization, annotation, dataset management, cleaning.
+cv tasks: classification, object detection, segmentation. images and videos.
+'''
+authors = [
+    {name = "Edouard Geze",email = "edouard.geze@hotmail.fr"}
+]
+license = {text = "\"AGPL-3.0\""}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy (>=2.3.4,<3.0.0)"
+]
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
+extend-select = ["I"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
