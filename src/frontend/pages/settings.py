@@ -1,6 +1,6 @@
 from nicegui import ui
 
-from frontend.utils.session_storage import store
+from src.frontend.utils.session_storage import store
 
 
 def settings_page():

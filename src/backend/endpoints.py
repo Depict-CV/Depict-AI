@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 
-from backend.api import annotations, auth, data, ml, projects, users
-from backend.db.database import init_db
+from src.backend.api import annotations, auth
+from src.backend.api import users, ml, projects, data
+from src.backend.db.database import init_db
 
 app = FastAPI()
 

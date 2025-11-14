@@ -3,8 +3,8 @@ from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
-from backend.api.deps import get_session
-from backend.db.tables import Annotation, Data, Project, User
+from src.backend.api.deps import get_session
+from src.backend.db.tables import Annotation, Data, Project, User
 
 router = APIRouter(prefix="/data", tags=["data"])
 

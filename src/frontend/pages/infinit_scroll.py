@@ -2,10 +2,10 @@ import httpx
 from nicegui import ui
 
 from config import config
-from frontend.components.image import mosaic_image
-from frontend.pages.manual_annotation import run_annotation
-from frontend.utils.session_storage import store
-from frontend.utils.tags import TAG_CERTIFIED, TAG_REJECTED, TAG_TO_REVIEW
+from src.frontend.components.image import mosaic_image
+from src.frontend.pages.manual_annotation import run_annotation
+from src.frontend.utils.session_storage import store
+from src.frontend.utils.tags import TAG_CERTIFIED, TAG_REJECTED, TAG_TO_REVIEW
 
 API_URL = config.API_URL
 

@@ -1,8 +1,8 @@
 import httpx
 from nicegui import ui
 
-from frontend.pages.admin import API_URL
-from frontend.utils.tags import TAG_CERTIFIED, TAG_REJECTED, TAG_TO_REVIEW
+from src.frontend.pages.admin import API_URL
+from src.frontend.utils.tags import TAG_CERTIFIED, TAG_REJECTED, TAG_TO_REVIEW
 
 
 def mosaic_image(url: str, annot):

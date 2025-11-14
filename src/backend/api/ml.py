@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body, HTTPException
 
-from ml.main import infer_resnet50
+from src.ml.main import infer_resnet50
 
 router = APIRouter(prefix="/infer", tags=["ML_Inference"])
 

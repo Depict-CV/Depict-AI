@@ -5,8 +5,8 @@ import httpx
 from nicegui import ui
 
 from config import config
-from frontend.utils.session_storage import store
-from frontend.utils.tags import (
+from src.frontend.utils.session_storage import store
+from src.frontend.utils.tags import (
     TAG_CAN_CERTIFY,
     TAG_EDIT,
     TAG_EDIT_DELETE,

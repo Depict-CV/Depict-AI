@@ -1,13 +1,13 @@
 from nicegui import ui
 
-from frontend.pages.admin import read_user_data
-from frontend.pages.ai_annotation import ai_annotation
-from frontend.pages.filters import annotation_filters
-from frontend.pages.import_export import image_import
-from frontend.pages.infinit_scroll import load_random_img_infinit
-from frontend.pages.projects import create_project, fetch_project, join_project
-from frontend.pages.settings import settings_page
-from frontend.utils.session_storage import store
+from src.frontend.pages.admin import read_user_data
+from src.frontend.pages.ai_annotation import ai_annotation
+from src.frontend.pages.filters import annotation_filters
+from src.frontend.pages.import_export import image_import
+from src.frontend.pages.infinit_scroll import load_random_img_infinit
+from src.frontend.pages.projects import create_project, fetch_project, join_project
+from src.frontend.pages.settings import settings_page
+from src.frontend.utils.session_storage import store
 
 
 @ui.page("/")  # main_page

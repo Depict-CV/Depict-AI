@@ -1,7 +1,7 @@
 from nicegui import ui
 
 from config import config
-from frontend.utils.session_storage import store
+from src.frontend.utils.session_storage import store
 
 API_URL = config.API_URL
 
