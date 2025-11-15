@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 25.11.0
+    hooks:
+      - id: black
+        language_version: python3
+
+#  - repo: https://github.com/charliermarsh/ruff-pre-commit
+#    rev: v0.14.4
+#    hooks:
+#      - id: ruff
+#        args: [--fix]  # auto-fixes lint issues when possible
+#
+#  - repo: https://github.com/PyCQA/isort
+#    rev: 7.0.0
+#    hooks:
+#      - id: isort
+#        args: ["--profile", "black"]

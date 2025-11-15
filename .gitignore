@@ -1,0 +1,9 @@
+.idea/
+node_modules/
+*.db
+*.pyc
+*.png
+__pycache__/
+
+Todo.py
+.env
