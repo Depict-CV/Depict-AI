@@ -55,18 +55,17 @@ async def join_project():
 
                     if response.status_code == 200:
                         project_id = response.json().get("project_id")
+                        try:
+                            response = await client.post(f"{API_URL}/projects/{project_id}/users/{store.user_id}")
+                            if response.status_code == 200 or response.status_code == 201:
+                                message.text = "User added successfully."
+                                dialog.close()
+                            else:
+                                message.text = f"Error: {response.text}"
+                        except Exception as e:
+                            message.text = f"Exception: {e}"
                     else:
                         ui.notify("Project not found", color="negative")
-
-                    try:
-                        response = await client.post(f"{API_URL}/projects/{project_id}/users/{store.user_id}")
-                        if response.status_code == 200 or response.status_code == 201:
-                            message.text = "User added successfully."
-                            dialog.close()
-                        else:
-                            message.text = f"Error: {response.text}"
-                    except Exception as e:
-                        message.text = f"Exception: {e}"
 
             ui.button("Submit", on_click=submit)
             ui.button("Cancel", on_click=dialog.close)
