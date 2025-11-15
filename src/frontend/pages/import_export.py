@@ -44,7 +44,7 @@ async def on_file_uploaded(directory_path: str):
 def image_import():
     with ui.column().classes("items-center p-4 gap-4"):
         ui.label("📁 Select a folder containing images").classes("text-xl font-semibold")
-        directory_path = ui.input("give direcrotory path all images in the sub directory will be automatically").props(
+        directory_path = ui.input("give directory path all images in the sub directory will be automatically").props(
             "outlined"
         )
         ui.button("Import", on_click=lambda e: on_file_uploaded(directory_path.value)).props("outlined")
