@@ -176,7 +176,7 @@ async def load_random_img_infinit():
                 try:
                     metadata_label.set_text(f"**Annotation:** {annot}  \n**Prediction:** {prediction}")
                 except Exception:
-                    pass
+                    print("Failed to update metadata label with new prediction")
                 zoom_dialog.close()
                 return
         except Exception as e:
@@ -195,7 +195,7 @@ async def load_random_img_infinit():
                 try:
                     metadata_label.set_text(f"**Annotation:** {annot}  \n**Prediction:** {prediction}")
                 except Exception:
-                    pass
+                    print("Failed to update metadata label with new prediction")
                 zoom_dialog.close()
                 return
             else:
@@ -232,7 +232,7 @@ async def load_random_img_infinit():
                     },
                 )
             except Exception:
-                pass
+                print("Failed to increment annotation score on view")
 
             zoom_dialog.open()
 

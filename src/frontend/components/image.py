@@ -42,11 +42,11 @@ def mosaic_image(url: str, annot):
 
 if __name__ == "__main__":
     # Example usage
-    mosaic_image("https://picsum.photos/id/1018/800/450")
+    mosaic_image("https://picsum.photos/id/1018/800/450", {})
 
     # You can now reuse it anywhere and even keep a reference
-    img1 = mosaic_image("https://picsum.photos/id/1019/800/450")
-    img2 = mosaic_image("https://picsum.photos/id/1020/800/450")
+    img1 = mosaic_image("https://picsum.photos/id/1019/800/450",{})
+    img2 = mosaic_image("https://picsum.photos/id/1020/800/450",{})
 
     with ui.row():
         img1
