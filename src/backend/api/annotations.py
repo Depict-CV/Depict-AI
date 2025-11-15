@@ -95,6 +95,7 @@ def update_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         annotation.status = new_status
     db.commit()
     db.refresh(annotation)
+    return annotation
 
 
 ###############

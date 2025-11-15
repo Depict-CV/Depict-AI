@@ -61,7 +61,7 @@ async def profile_page():
         with ui.row():
             ui.button("create project", on_click=create_project)
             ui.button("join project", on_click=join_project)
-        ui.label("all yours projects Projects")
+        ui.label("All your projects")
         try:
             await fetch_project()
         except Exception as e:

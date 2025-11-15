@@ -9,7 +9,7 @@ API_URL = config.API_URL
 # TODO to main page add the fact tha the manager can tag annotation so the team can clean them
 # TODO make sure that 1 image as 1 annotation
 # TODO add notification with all annotation to review
-
+API_URL = config.API_URL
 
 async def create_project():
     with ui.dialog() as dialog:
@@ -26,7 +26,7 @@ async def create_project():
                 }
                 async with httpx.AsyncClient() as client:
                     try:
-                        response = await client.post("http://127.0.0.1:8000/projects/", json=user_data)
+                        response = await client.post(f"{API_URL}/projects/", json=user_data)
                         if response.status_code == 200 or response.status_code == 201:
                             message.text = "Project added successfully."
                             dialog.close()

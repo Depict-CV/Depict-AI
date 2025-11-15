@@ -33,7 +33,7 @@ async def on_file_uploaded(directory_path: str):
         if response.status_code == 200:
             data = response.json()
             ui.notify(
-                f"image added : {data["created"]}, image skipped : {data["skipped"]} ",
+                f"image added : {data['created']}, image skipped : {data['skipped']} ",
                 color="positive",
             )
             ui.notify("Uploaded and added images to project", color="positive")
@@ -48,5 +48,3 @@ def image_import():
             "outlined"
         )
         ui.button("Import", on_click=lambda e: on_file_uploaded(directory_path.value)).props("outlined")
-
-    # select a

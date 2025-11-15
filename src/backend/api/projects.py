@@ -78,7 +78,7 @@ def read_project(project_id: int, db: Session = Depends(get_session)):
     return project
 
 
-@router.post("/projects/fetch", tags=["projects"])
+@router.post("/fetch", tags=["projects"])
 def get_project_id(data: dict = Body(...), db: Session = Depends(get_session)):
     statement = select(Project).where(Project.name == data["project_name"])
     project = db.exec(statement).first()

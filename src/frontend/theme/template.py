@@ -59,7 +59,7 @@ with ui.dialog() as project_dialog, ui.card():
     ui.label("project list")
     for project in range(5):
         with ui.card():
-            ui.label(f"Project: {generate_username})")
+            ui.label(f"Project: {generate_username()})")
             ui.button("Open Project")
     ui.button("Close", on_click=project_dialog.close)
 
