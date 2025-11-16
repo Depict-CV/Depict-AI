@@ -8,6 +8,7 @@ load_dotenv()
 
 class Config:
     API_URL = os.getenv("API_URL")
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
 
     base_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(base_dir,"src" ,"config.yaml")

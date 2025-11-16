@@ -1,10 +1,23 @@
-from fastapi import FastAPI
-
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from src.backend.api import annotations, auth
 from src.backend.api import users, ml, projects, data
 from src.backend.db.database import init_db
+import sentry_sdk
+from fastapi import FastAPI
+from config import config
+SENTRY_DSN = config.SENTRY_DSN
+
+# Initialize Sentry
+sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=True,)
+
+
 
 app = FastAPI()
+
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
 
 # initialize DB (creates tables if needed)
 init_db()

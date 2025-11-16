@@ -5,7 +5,7 @@ class Store:
     data_id: int | None = None
     annotation_id: int | None = None
 
-    settings_image_size: int = 32  # TODO why it is not 32 by default but the default value at settings_page?
+    settings_image_size: int = 42
 
 
 store = Store()
