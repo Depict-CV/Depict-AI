@@ -23,7 +23,7 @@ async def login_action(username, password):
             user_id = response.json().get("user_id")
             store.user_id = user_id
             ui.notify("Login successful!", color="positive")
-            ui.link("open projects", "/main_page")
+            ui.link("open projects", "/")
         else:
             ui.notify("Invalid credentials", color="negative")
 

@@ -13,11 +13,12 @@ API_URL = config.API_URL
 async def get_next_batch_annotations(annotation_list, image_offset, batch_size=200):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f"{API_URL}/annotations/score",
+            f"{API_URL}/annotations/batch",
             json={
                 "project_id": store.project_id,
                 "limit": batch_size,
                 "offset": image_offset,
+                "selected_labels" : store.label_selected,
             },
         )
         if response.status_code == 200:

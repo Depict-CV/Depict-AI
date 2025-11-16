@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, Data, Project, User
+from datetime import datetime
 
 router = APIRouter(prefix="/annotations", tags=["annotations"])
 
@@ -40,6 +41,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         status=status,
         annotation_score=annotation_score,
         label=label,
+        creation_date = datetime.now(),
     )
     db.add(new_annotation)
     db.commit()
@@ -55,24 +57,56 @@ def read_annotation(annotation_id: int, db: Session = Depends(get_session)):
     return db.get(Annotation, annotation_id)
 
 
-@router.post("/score")
-def read_annotation_by_score(data: dict = Body(...), db: Session = Depends(get_session)):
-    offset = data["offset"]
-    limit = data["limit"]
-    project_id = data["project_id"]
-    filtered_annotations = db.exec(select(Annotation).where(Annotation.project_id == project_id)).all()
-    sorted_annotations = sorted(filtered_annotations, key=lambda x: x.annotation_score)
-    return sorted_annotations[offset : offset + limit]
 
+@router.post("/batch")
+def read_annotation_by_score(
+    data: dict = Body(...),
+    db: Session = Depends(get_session),
+):
 
-@router.post("/filter")
-def read_all_annotations_status(data: dict = Body(...), db: Session = Depends(get_session)):
-    project_id = data["project_id"]
-    status = data["status"]
+    """
+    {
+      "offset": 0,
+      "limit": 50,
+      "project_id": 1,
+      "selected_labels": ["dog", "car"],
+      "sort_by": "score",        // or "date"
+      "sort_order": "asc"        // or "desc"
+    }
+    """
+    offset = data.get("offset", 0)
+    limit = data.get("limit", 50)
+    project_id = data["project_id"] # required
+    selected_labels = data.get("selected_labels", [])
 
-    statement = select(Annotation).where((Annotation.project_id == project_id) & (Annotation.status == status))
-    return db.exec(statement).all()
+    sort_by = data.get("sort_by", "score")  # default score
+    sort_order = data.get("sort_order", "asc")  # default asc
 
+    # ---- BASE QUERY ----
+    query = select(Annotation).where(Annotation.project_id == project_id)
+
+    # ---- FILTER BY LABELS ----
+    if selected_labels:
+        query = query.where(Annotation.label.in_(selected_labels))
+
+    # ---- SORTING ----
+    if sort_by == "score":
+        field = Annotation.annotation_score
+    elif sort_by == "date":
+        field = Annotation.creation_date
+    else:
+        raise HTTPException(400, f"Invalid sort_by: {sort_by}")
+
+    # ASC / DESC
+    if sort_order == "desc":
+        query = query.order_by(desc(field))
+    else:
+        query = query.order_by(field)
+
+    # ---- EXECUTE ----
+    results = db.exec(query.offset(offset).limit(limit)).all()
+
+    return results
 
 ###############
 #   update    #
