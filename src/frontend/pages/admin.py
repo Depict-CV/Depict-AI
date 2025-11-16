@@ -8,8 +8,12 @@ API_URL = config.API_URL
 
 async def read_user_data():
     ui.label("Project Name")
+    ui.label(f"API URL: {API_URL}")
     ui.label(f"user_id: {store.user_id}")
     ui.label(f"project_id: {store.project_id}")
     ui.label(f"data_id: {store.data_id}")
-    ui.label(f"annotation_id: {store.annotation_id}")
     ui.label(f"settings_image_size: {store.settings_image_size}")
+    ui.label(f"annotation_id: {store.annotation_id}")
+    ui.label(f"label_selected: {store.label_selected}")
+    ui.label(f"sort_by: {store.sort_by}")
+    ui.label(f"sort_on: {store.sort_on}")

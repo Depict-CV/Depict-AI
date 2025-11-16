@@ -3,18 +3,18 @@ from src.frontend.utils.tags import TAG_SCORE, TAG_ASC
 
 
 class Store:
-    # session
-    user_id: int | None = None
-    project_id: int | None = None
-    data_id: int | None = None
-    annotation_id: int | None = None
+    def __init__(self):
+        # session
+        self.user_id = None
+        self.project_id = None
+        self.data_id = None
+        self.annotation_id = None
 
-    # settings
-    settings_image_size: int = 42
+        # settings
+        self.settings_image_size = 42
 
-    #annoattion filters
-    label_selected = []
-    sort_by = TAG_SCORE  # 'score' or 'date'
-    sort_on = TAG_ASC   # 'asc' or 'desc'
-
+        # annoattion filters
+        self.label_selected = []
+        self.sort_by = TAG_SCORE   # 'score' or 'date'
+        self.sort_on = TAG_ASC  # 'asc' or 'desc'
 store = Store()
