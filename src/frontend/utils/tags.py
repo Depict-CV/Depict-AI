@@ -13,7 +13,6 @@ TAG_ML_ANNOTATION = "ml annotation"
 TAG_REJECTED = "rejected"
 TAG_CERTIFIED = "certified"
 
-
 # filter tags
 TAG_SCORE = "score"
 TAG_DATE = "date"

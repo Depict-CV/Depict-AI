@@ -10,8 +10,6 @@ SENTRY_DSN = config.SENTRY_DSN
 # Initialize Sentry
 sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=True,)
 
-
-
 app = FastAPI()
 
 

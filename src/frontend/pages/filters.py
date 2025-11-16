@@ -25,4 +25,3 @@ def annotation_filters():
         ui.run_javascript('window.location.reload()')
 
     ui.button('Apply', on_click=apply)
-

@@ -4,6 +4,10 @@ from sqlmodel import Session, select, desc
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, Data, Project, User
 from datetime import datetime
+from sqlmodel import Session, select
+
+from src.backend.api.deps import get_session
+from src.backend.db.tables import Annotation, Data, Project, User
 
 router = APIRouter(prefix="/annotations", tags=["annotations"])
 
@@ -55,7 +59,6 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
 @router.get("/{annotation_id}")
 def read_annotation(annotation_id: int, db: Session = Depends(get_session)):
     return db.get(Annotation, annotation_id)
-
 
 
 @router.post("/batch")

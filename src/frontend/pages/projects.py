@@ -30,7 +30,6 @@ async def create_project():
                         if response.status_code == 200 or response.status_code == 201:
                             message.text = "Project added successfully."
                             dialog.close()
-
                         else:
                             message.text = f"Error: {response.text}"
                     except Exception as e:
@@ -91,3 +90,4 @@ async def fetch_project():
                 ui.label("No projects found.")
         else:
             ui.label("Failed to fetch projects.")
+

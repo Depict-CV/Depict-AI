@@ -2,7 +2,6 @@
 # Installation
 
 
-
 launch server ( backend ) :
 cd src/backend
 fastapi dev endpoints.py
