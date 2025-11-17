@@ -90,7 +90,7 @@ class Annotation(SQLModel, table=True):
     # description: str | None = Field(default=None, nullable=True)
     # other info
     annotation_score: float | None = Field(default=None, nullable=True)
-    creation_date: datetime | None  = Field(default=None, nullable=True)
+    creation_date: datetime | None = Field(default=None, nullable=True)
     # last_updated_date: datetime | None  = Field(default=None, nullable=True)
 
     data_id: int | None = Field(default=None, foreign_key="data.id")

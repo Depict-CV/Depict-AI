@@ -18,7 +18,7 @@ async def get_next_batch_annotations(annotation_list, image_offset, batch_size=2
                 "project_id": store.project_id,
                 "limit": batch_size,
                 "offset": image_offset,
-                "selected_labels" : store.label_selected,
+                "selected_labels": store.label_selected,
                 "sort_by": store.sort_by,
                 "sort_order": store.sort_on,
             },
@@ -33,7 +33,6 @@ async def get_next_batch_annotations(annotation_list, image_offset, batch_size=2
 
 
 async def load_random_img_infinit():
-
     # get imgs
     annotation_list = []
     annotation_list, image_offset = await get_next_batch_annotations(annotation_list, image_offset=0)

@@ -11,7 +11,7 @@ class Config:
     SENTRY_DSN = os.getenv("SENTRY_DSN")
 
     base_dir = os.path.dirname(__file__)
-    yaml_path = os.path.join(base_dir,"src" ,"config.yaml")
+    yaml_path = os.path.join(base_dir, "src", "config.yaml")
     with open(yaml_path) as f:
         yaml_config = yaml.safe_load(f)
 

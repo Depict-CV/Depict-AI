@@ -1,10 +1,7 @@
-from fastapi import APIRouter, Body, Depends, HTTPException
-from sqlmodel import Session, select, desc
-
-from src.backend.api.deps import get_session
-from src.backend.db.tables import Annotation, Data, Project, User
 from datetime import datetime
-from sqlmodel import Session, select
+
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlmodel import Session, desc, select
 
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, Data, Project, User
@@ -45,7 +42,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         status=status,
         annotation_score=annotation_score,
         label=label,
-        creation_date = datetime.now(),
+        creation_date=datetime.now(),
     )
     db.add(new_annotation)
     db.commit()
@@ -66,7 +63,6 @@ def read_annotation_by_score(
     data: dict = Body(...),
     db: Session = Depends(get_session),
 ):
-
     """
     {
       "offset": 0,
@@ -79,7 +75,7 @@ def read_annotation_by_score(
     """
     offset = data.get("offset", 0)
     limit = data.get("limit", 50)
-    project_id = data["project_id"] # required
+    project_id = data["project_id"]  # required
     selected_labels = data.get("selected_labels", [])
 
     sort_by = data.get("sort_by", "score")  # default score
@@ -98,7 +94,7 @@ def read_annotation_by_score(
     elif sort_by == "date":
         field = Annotation.creation_date
     else:
-        raise HTTPException(400, f"Invalid sort_by: {sort_by}")
+        raise HTTPException(status_code=400, detail=f"Invalid sort_by: {sort_by}")
 
     # ASC / DESC
     if sort_order == "desc":
@@ -110,6 +106,7 @@ def read_annotation_by_score(
     results = db.exec(query.offset(offset).limit(limit)).all()
 
     return results
+
 
 ###############
 #   update    #

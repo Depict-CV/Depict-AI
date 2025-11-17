@@ -1,5 +1,5 @@
 # TODO check redis for session storage
-from src.frontend.utils.tags import TAG_SCORE, TAG_ASC
+from src.frontend.utils.tags import TAG_ASC, TAG_SCORE
 
 
 class Store:
@@ -13,8 +13,10 @@ class Store:
         # settings
         self.settings_image_size = 42
 
-        # annoattion filters
+        # annotation  filters
         self.label_selected = []
-        self.sort_by = TAG_SCORE   # 'score' or 'date'
+        self.sort_by = TAG_SCORE  # 'score' or 'date'
         self.sort_on = TAG_ASC  # 'asc' or 'desc'
+
+
 store = Store()
