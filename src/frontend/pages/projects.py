@@ -11,6 +11,7 @@ API_URL = config.API_URL
 # TODO add notification with all annotation to review
 API_URL = config.API_URL
 
+
 async def create_project():
     with ui.dialog() as dialog:
         with ui.card():
@@ -72,6 +73,11 @@ async def join_project():
     dialog.open()
 
 
+def open_project(pid):
+    store.project_id = pid
+    ui.run_javascript("window.location.reload()")
+
+
 async def fetch_project():
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{API_URL}/users/{store.user_id}/projects")
@@ -80,11 +86,8 @@ async def fetch_project():
             if projects:
                 for project in projects:
                     with ui.card():
-                        ui.label(f"Project: {project.get('name', 'Unnamed')} (ID: {project.get('id')})")
-                        ui.button(
-                            "Open Project",
-                            on_click=lambda pid=project.get("id"): (setattr(store, "project_id", pid)),
-                        )
+                        ui.label(f"Project: {project.get('name', 'Unnamed')} (ID: {project['id']})")
+                        ui.button("Open Project", on_click=lambda pid=project["id"]: open_project(pid))
             else:
                 ui.label("No projects found.")
         else:

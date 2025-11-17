@@ -89,10 +89,8 @@ class Annotation(SQLModel, table=True):
     label: str | None = Field(default=None, nullable=True)
     # description: str | None = Field(default=None, nullable=True)
     # other info
-    annotation_score: float | None = Field(
-        default=None, nullable=True
-    )  # 0 is AI annotation +1 for human review individualy +0.1 annot exposed by human
-    # creation_date: datetime | None  = Field(default=None, nullable=True)
+    annotation_score: float | None = Field(default=None, nullable=True)
+    creation_date: datetime | None = Field(default=None, nullable=True)
     # last_updated_date: datetime | None  = Field(default=None, nullable=True)
 
     data_id: int | None = Field(default=None, foreign_key="data.id")

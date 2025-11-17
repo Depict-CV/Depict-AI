@@ -51,7 +51,7 @@ with ui.column().classes("ml-[70px] p-4 space-y-4"):
             ui.button(icon="close", on_click=lambda: ui.notify("request change"))
             ui.button(icon="verified", on_click=lambda: ui.notify("request change"))
     for i in range(50):
-        ui.label(f"Line {i+1}: Scrollable content here")
+        ui.label(f"Line {i + 1}: Scrollable content here")
 
 
 # Project

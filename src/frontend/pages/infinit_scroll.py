@@ -13,11 +13,14 @@ API_URL = config.API_URL
 async def get_next_batch_annotations(annotation_list, image_offset, batch_size=200):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f"{API_URL}/annotations/score",
+            f"{API_URL}/annotations/batch",
             json={
                 "project_id": store.project_id,
                 "limit": batch_size,
                 "offset": image_offset,
+                "selected_labels": store.label_selected,
+                "sort_by": store.sort_by,
+                "sort_order": store.sort_on,
             },
         )
         if response.status_code == 200:
@@ -30,7 +33,6 @@ async def get_next_batch_annotations(annotation_list, image_offset, batch_size=2
 
 
 async def load_random_img_infinit():
-
     # get imgs
     annotation_list = []
     annotation_list, image_offset = await get_next_batch_annotations(annotation_list, image_offset=0)

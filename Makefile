@@ -66,5 +66,3 @@ clean:
 .PHONY: rebuild
 rebuild: del_env create_env
 	@echo "Environment rebuilt successfully!"
-
-
