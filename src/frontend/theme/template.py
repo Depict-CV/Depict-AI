@@ -68,7 +68,6 @@ with ui.dialog() as import_export, ui.card():
     ui.label("Hello world!")
     ui.button("Close", on_click=import_export.close)
 
-
 # filters
 drawer_filters = ui.drawer(side="right", value=False, bordered=True)
 with drawer_filters:
@@ -84,5 +83,10 @@ with drawer_settings:
     ui.label("Settings")
     ui.checkbox("Enable notifications")
     ui.select(["Low", "Medium", "High"], label="Privacy Level")
+
+# home
+drawer_home = ui.drawer(side="right", value=False, bordered=True)
+with drawer_home:
+    ui.label("TODO: Home drawer content")
 
 ui.run()
