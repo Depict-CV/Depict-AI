@@ -1,4 +1,6 @@
 
+[![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://depict-cv.github.io/Depict-AI/)
+[![Docs workflow Status](https://github.com/Depict-CV/Depict-AI/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/Depict-CV/Depict-AI/actions/workflows/Docs.yml?query=branch%3Amain)
 [![Lint workflow Status](https://github.com/Depict-CV/Depict-AI/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/Depict-CV/Depict-AI/actions/workflows/Lint.yml?query=branch%3Amain)
 
 # Installation
