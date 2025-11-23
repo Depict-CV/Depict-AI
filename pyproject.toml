@@ -21,7 +21,7 @@ line-length = 120
 
 [tool.ruff]
 line-length = 120
-extend-select = ["I"]
+lint.extend-select = ["I"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

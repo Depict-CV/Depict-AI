@@ -18,7 +18,7 @@ app = FastAPI()
 
 @app.get("/sentry-debug")
 async def trigger_error():
-    division_by_zero = 1 / 0
+    return 1 / 0
 
 
 # initialize DB (creates tables if needed)

@@ -17,7 +17,7 @@ async def profile_page():
         ui.label("Depict AI").classes("text-lg font-bold text-black")
         ui.space()
         with ui.button(icon="account_circle").props("flat color=black"):
-            with ui.menu() as menu:
+            with ui.menu():
                 ui.menu_item("Support")
                 ui.menu_item("Subscription")
                 ui.separator()
