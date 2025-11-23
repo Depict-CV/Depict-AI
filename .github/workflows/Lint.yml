@@ -49,4 +49,4 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           fail: true
-          args: --config '.lychee.toml' .
+          # args: --config '.lychee.toml' . # Uncomment to use a custom config file
