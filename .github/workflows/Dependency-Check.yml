@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   pip-compatibility:
     name: Check pip dependencies
@@ -26,6 +29,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-      - name: Create conda environment
+      - name: Create and verify conda environment
         run: |
           conda env create -f environment.yml --name test-env
+          source $(conda info --base)/etc/profile.d/conda.sh
+          conda activate test-env
+          conda list
