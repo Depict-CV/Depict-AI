@@ -23,6 +23,11 @@ docs = [
     "mkdocs-include-dir-to-nav>=1.0.0",
     "mkdocs-include-markdown-plugin>=6.0.0",
 ]
+test = [
+    "pytest",
+    "pytest-cov",
+    "coverage"
+]
 
 [tool.black]
 line-length = 120
