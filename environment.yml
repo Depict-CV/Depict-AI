@@ -1,4 +1,4 @@
-﻿name: base
+name: vision_data_app
 channels:
   - defaults
 dependencies:
@@ -68,7 +68,7 @@ dependencies:
   - pygments=2.19.2
   - pyjwt=2.10.1
   - pysocks=1.7.1
-  - python=3.13.9
+  - python=3.12
   - python-dotenv=1.1.0
   - python_abi=3.13
   - readchar=4.2.1
