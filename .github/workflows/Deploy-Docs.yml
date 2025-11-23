@@ -11,6 +11,7 @@ on:
 
 jobs:
   deploy:
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     permissions:
       contents: write
