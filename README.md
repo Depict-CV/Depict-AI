@@ -1,4 +1,6 @@
 
+[![Lint workflow Status](https://github.com/Depict-CV/Depict-AI/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/Depict-CV/Depict-AI/actions/workflows/Lint.yml?query=branch%3Amain)
+
 # Installation
 
 
