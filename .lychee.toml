@@ -6,6 +6,4 @@ exclude = [
   "^http://127\\.0\\.0\\.1.*",
 ]
 
-# Cache settings
-[cache]
 cache_timeout = 86400
