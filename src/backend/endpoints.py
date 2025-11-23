@@ -36,3 +36,7 @@ app.include_router(ml.router)
 @app.get("/", tags=["root"])
 def read_root():
     return {"status": "ok", "message": "API alive"}
+
+
+# todo add endpoints for: statistics for annotation and project , health , get all images without annotations,
+# TODO refactor endpoint to limit the call ( by batch or pagination) and run 1 request instead of loop of db requests

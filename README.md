@@ -12,6 +12,7 @@ python3 main.py
 
 
 # open documentation
+cd docs
 mkdocs serve
 
 

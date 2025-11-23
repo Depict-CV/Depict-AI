@@ -241,46 +241,47 @@ async def load_random_img_infinit():
     async def check_scroll():
         nonlocal current_annot_idx
         if await ui.run_javascript("window.pageYOffset >= document.body.offsetHeight - 2 * window.innerHeight"):
-            with ui.row().classes("gap-1"):
-                annotation_item = annotation_list[current_annot_idx : current_annot_idx + 10]
-                data_ids = [item["data_id"] for item in annotation_item]
-                # make list of image_id to fetch
-                current_annot_idx += 10
-                if not data_ids:
-                    ui.notify("No more annotations to load", color="negative")
-                    return
+        #with ui.row().classes("gap-1"):
+            annotation_item = annotation_list[current_annot_idx : current_annot_idx + 10]
+            data_ids = [item["data_id"] for item in annotation_item]
+            # make list of image_id to fetch
+            current_annot_idx += 10
+            if not data_ids:
+                ui.notify("No more annotations to load", color="negative")
+                return
 
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(f"{API_URL}/data/batch", json={"data_ids": data_ids})
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"{API_URL}/data/batch", json={"data_ids": data_ids})
 
-                    image_list = response.json()
-                    image_list = [item["location"] for item in image_list]
+                image_list = response.json()
+                image_list = [item["location"] for item in image_list]
 
-                    # helper to produce a click handler that runs in the UI slot
-                    def make_click_handler(p):
-                        async def _handler(_event=None):
-                            await show_zoom(p)
+                # helper to produce a click handler that runs in the UI slot
+                def make_click_handler(p):
+                    async def _handler(_event=None):
+                        await show_zoom(p)
 
-                        return _handler
+                    return _handler
 
-                    for img_path, annot in zip(image_list, annotation_item):
-                        img = mosaic_image(img_path, annot)
-                        img.classes(f"w-{store.settings_image_size} object-cover cursor-pointer").on(
-                            "click", make_click_handler((img_path, annot))
-                        )
-                        # add annotation score 0.1 to the exposed annotation
-                        await client.patch(
-                            f"{API_URL}/annotations/",
-                            json={
-                                "id": int(annot.get("id")),
-                                "annotation_score": annot.get("annotation_score") + config.annotation["view_score"],
-                            },
-                        )
+                for img_path, annot in zip(image_list, annotation_item):
+                    img = mosaic_image(img_path, annot)
+                    img.classes(f"w-{store.settings_image_size} object-cover cursor-pointer").on(
+                        "click", make_click_handler((img_path, annot))
+                    )
+                    # add annotation score 0.1 to the exposed annotation
+                    await client.patch(
+                        f"{API_URL}/annotations/",
+                        json={
+                            "id": int(annot.get("id")),
+                            "annotation_score": annot.get("annotation_score") + config.annotation["view_score"],
+                        },
+                    )
 
     async def check_annotation_list():
         nonlocal annotation_list, image_offset, current_annot_idx
         if current_annot_idx + 50 > len(annotation_list):
             annotation_list, image_offset = await get_next_batch_annotations(annotation_list, image_offset)
 
-    ui.timer(0.1, check_scroll)
-    ui.timer(3.0, check_annotation_list)
+    with ui.row().classes("gap-1"):
+        ui.timer(0.1, check_scroll)
+        ui.timer(3.0, check_annotation_list)

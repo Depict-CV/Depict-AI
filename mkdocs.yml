@@ -1,1 +1,14 @@
-site_name: My Docs
+site_name: Depict-AI Documentation
+site_description: technical documentation for Depict-AI
+site_author: Edouard Geze, Tangi Migot
+repo_url: https://github.com/Depict-CV/Depict-AI
+
+nav:
+  - Home: index.md
+  - About: about.md
+  - Developers Guide:
+      - sentry tutorial: sentry.md
+
+theme:
+  name: readthedocs
+  language: en
