@@ -6,7 +6,7 @@ plugins:
   - search
   - include_dir_to_nav # Include all files from a directory into the navigation
   - include-markdown:
-      encoding: ascii
+      encoding: utf-8
       preserve_includer_indent: false
       dedent: false
       trailing_newlines: true
