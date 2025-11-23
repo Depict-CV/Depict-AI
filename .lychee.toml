@@ -1,0 +1,11 @@
+# Lychee configuration for link checking
+# Exclude local development URLs that won't be accessible in CI
+
+exclude = [
+  "^http://localhost.*",
+  "^http://127\\.0\\.0\\.1.*",
+]
+
+# Cache settings
+[cache]
+cache_timeout = 86400
