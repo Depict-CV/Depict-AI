@@ -4,6 +4,7 @@
 exclude = [
   "^http://localhost.*",
   "^http://127\\.0\\.0\\.1.*",
+  "https://depict-cv.github.io/Depict-AI/",
 ]
 
 cache_timeout = 86400
