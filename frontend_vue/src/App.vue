@@ -1,14 +1,40 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import LoginPage from './components/LoginPage.vue';
+import Menubar from './components/Menubar.vue';
 import Sidebar from './components/Sidebar.vue';
 import NavPanel from './components/NavPanel.vue';
 
+const isAuthenticated = ref(false);
+const currentUser = ref(null);
 const images = ref([]);
 const loading = ref(false);
 const hasMore = ref(true);
 const skip = ref(0);
 const limit = 20;
 const activeMenu = ref(null);
+
+const handleLogin = (userData) => {
+  currentUser.value = userData;
+  isAuthenticated.value = true;
+  // Store in localStorage for persistence
+  localStorage.setItem('user', JSON.stringify(userData));
+};
+
+const handleLogout = () => {
+  currentUser.value = null;
+  isAuthenticated.value = false;
+  localStorage.removeItem('user');
+};
+
+// Check for existing session
+const checkAuth = () => {
+  const user = localStorage.getItem('user');
+  if (user) {
+    currentUser.value = JSON.parse(user);
+    isAuthenticated.value = true;
+  }
+};
 
 const fetchImages = async () => {
   if (loading.value || !hasMore.value) return;
@@ -62,8 +88,11 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
-  fetchImages();
-  window.addEventListener('scroll', handleScroll);
+  checkAuth();
+  if (isAuthenticated.value) {
+    fetchImages();
+    window.addEventListener('scroll', handleScroll);
+  }
 });
 
 onUnmounted(() => {
@@ -72,21 +101,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app-layout">
-    <Sidebar 
-      :activeMenu="activeMenu" 
-      @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
-    />
+  <!-- Login Page -->
+  <LoginPage v-if="!isAuthenticated" @login="handleLogin" />
+  
+  <!-- Main App -->
+  <div v-else class="app-wrapper">
+    <Menubar :currentUser="currentUser" @logout="handleLogout" />
     
-    <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
+    <div class="app-layout">
+      <Sidebar 
+        :activeMenu="activeMenu" 
+        @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
+      />
+      
+      <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
     
     <!-- Main Content -->
     <main class="main-content">
-      <div class="sidebar-header">
-        <h2>Depict AI</h2>
-      </div>
-      <h1>Image Gallery</h1>
-      
       <div class="image-grid">
       <div v-for="image in images" :key="image.id" class="image-item">
         <img 
@@ -114,40 +145,30 @@ onUnmounted(() => {
         <p>No images found</p>
       </div>
     </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.app-layout {
-  display: flex;
+.app-wrapper {
   min-height: 100vh;
 }
 
-.sidebar-header {
-  margin-bottom: 20px;
-}
-
-.sidebar-header h2 {
-  margin: 0;
-  font-size: 24px;
-  color: #2c3e50;
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+  margin-top: 60px;
 }
 
 .main-content {
   flex: 1;
-  margin-left: 40px;
+  margin-left: 80px;
   padding: 20px;
   transition: margin-left 0.3s ease;
 }
 
 .app-layout:has(.nav-panel) .main-content {
   margin-left: calc(80px + 240px);
-}
-
-h1 {
-  text-align: center;
-  color: #243125;
-  margin-bottom: 30px;
 }
 
 .image-grid {
