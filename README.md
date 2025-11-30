@@ -1,15 +1,30 @@
 
 # Installation
 
+1. activate the poetry env
+
+`poetry env list          # show available virtual environments`
+
+`poetry env activate <path-to-env>`
 
 launch server ( backend ) :
-cd src/backend
-fastapi dev endpoints.py
 
-launch client ( frontend ) :
-cd frontend/nicegui
-python3 main.py
+`cd src/backend`
 
+`fastapi dev endpoints.py`  or `poetry run fastapi dev endpoints.py`
+
+launch client ( frontend nicegui ) :
+
+`cd frontend/nicegui`
+
+`python3 main.py`
+
+
+launch client ( frontend vue ) :
+
+`cd frontend_vue`
+
+`npm run dev`
 
 # open documentation
 cd docs
