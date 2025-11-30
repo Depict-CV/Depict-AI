@@ -36,8 +36,8 @@ const fetchImages = async () => {
       });
     }
     
-    // Stop after 100 images
-    if (skip.value >= 100) {
+    // Stop after 1000 images (or remove this check for unlimited loading)
+    if (skip.value >= 1000) {
       hasMore.value = false;
     } else {
       images.value.push(...newImages);

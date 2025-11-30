@@ -17,8 +17,18 @@ const props = defineProps({
 const emit = defineEmits(['logout', 'remove-modify-request', 'clear-modify-requests']);
 const showProfileMenu = ref(false);
 const showNotifications = ref(false);
+const showOrgModal = ref(false);
 
 const notificationCount = computed(() => props.modifyRequests.length);
+
+// Mock organization data - TODO: Replace with API call
+const organizationMembers = ref([
+  { id: 1, name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', avatar: null, status: 'active' },
+  { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Editor', avatar: null, status: 'active' },
+  { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com', role: 'Viewer', avatar: null, status: 'active' },
+  { id: 4, name: 'Alice Williams', email: 'alice.williams@example.com', role: 'Editor', avatar: null, status: 'active' },
+  { id: 5, name: 'Charlie Brown', email: 'charlie.brown@example.com', role: 'Viewer', avatar: null, status: 'inactive' }
+]);
 
 const handleLogout = () => {
   showProfileMenu.value = false;
@@ -42,6 +52,23 @@ const removeNotification = (imageId) => {
 const clearAllNotifications = () => {
   emit('clear-modify-requests');
   showNotifications.value = false;
+};
+
+const openOrgModal = () => {
+  showOrgModal.value = true;
+  showProfileMenu.value = false;
+};
+
+const closeOrgModal = () => {
+  showOrgModal.value = false;
+};
+
+const getInitials = (name) => {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
 };
 
 const handleClickOutside = (event) => {
@@ -136,7 +163,7 @@ if (typeof window !== 'undefined') {
             <span>Settings</span>
           </button>
           
-          <button class="dropdown-item">
+          <button class="dropdown-item" @click="openOrgModal">
             <Building2 :size="18" />
             <span>Organisation</span>
           </button>
@@ -147,6 +174,58 @@ if (typeof window !== 'undefined') {
             <LogOut :size="18" />
             <span>Log Out</span>
           </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Organization Modal -->
+    <div v-if="showOrgModal" class="modal-overlay" @click="closeOrgModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <div class="modal-title">
+            <Building2 :size="24" />
+            <h2>Organization Members</h2>
+          </div>
+          <button class="modal-close" @click="closeOrgModal">
+            <X :size="20" />
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="members-stats">
+            <div class="stat-item">
+              <span class="stat-value">{{ organizationMembers.length }}</span>
+              <span class="stat-label">Total Members</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ organizationMembers.filter(m => m.status === 'active').length }}</span>
+              <span class="stat-label">Active</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ organizationMembers.filter(m => m.role === 'Admin').length }}</span>
+              <span class="stat-label">Admins</span>
+            </div>
+          </div>
+          
+          <div class="members-list">
+            <div 
+              v-for="member in organizationMembers" 
+              :key="member.id" 
+              class="member-card"
+            >
+              <div class="member-avatar">
+                <span>{{ getInitials(member.name) }}</span>
+              </div>
+              <div class="member-info">
+                <div class="member-name">{{ member.name }}</div>
+                <div class="member-email">{{ member.email }}</div>
+              </div>
+              <div class="member-meta">
+                <span class="member-role" :class="'role-' + member.role.toLowerCase()">{{ member.role }}</span>
+                <span class="member-status" :class="'status-' + member.status">{{ member.status }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -446,5 +525,218 @@ if (typeof window !== 'undefined') {
   height: 1px;
   background: #e0e0e0;
   margin: 8px 0;
+}
+
+/* Organization Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #2c3e50;
+}
+
+.modal-title h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f8c8d;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f8f9fa;
+  color: #2c3e50;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.members-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #3498db;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.member-card:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+}
+
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.member-email {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.member-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.member-role,
+.member-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.member-role {
+  background: #e8f4f8;
+  color: #3498db;
+}
+
+.role-admin {
+  background: #fef5e7;
+  color: #f39c12;
+}
+
+.role-editor {
+  background: #e8f8f5;
+  color: #27ae60;
+}
+
+.role-viewer {
+  background: #e8f4f8;
+  color: #3498db;
+}
+
+.member-status {
+  background: #d5f4e6;
+  color: #27ae60;
+}
+
+.status-inactive {
+  background: #fadbd8;
+  color: #e74c3c;
 }
 </style>
