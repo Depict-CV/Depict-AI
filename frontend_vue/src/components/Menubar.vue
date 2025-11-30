@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { User, Settings, CreditCard, Building2, LogOut, ChevronDown } from 'lucide-vue-next';
+import logo from '../assets/logo.svg';
 
 const props = defineProps({
   currentUser: {
@@ -38,7 +39,7 @@ if (typeof window !== 'undefined') {
 <template>
   <header class="menubar">
     <div class="menubar-left">
-      <h1 class="app-title">Depict AI</h1>
+      <img :src="logo" alt="Depict AI" class="app-logo" />
     </div>
     
     <div class="menubar-right">
@@ -106,12 +107,10 @@ if (typeof window !== 'undefined') {
   align-items: center;
 }
 
-.app-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-  letter-spacing: -0.5px;
+.app-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .menubar-right {

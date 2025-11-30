@@ -67,9 +67,9 @@ const toggleMenu = (menu) => {
   background: #ecebee;
   color: rgba(43, 33, 33, 0);
   padding: 5px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #d0d0d0;
   position: fixed;
-  height: 100vh;
+  height: 90vh;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -114,7 +114,7 @@ const toggleMenu = (menu) => {
 }
 
 .nav-item.active {
-  background: #3498db;
+  background: #2c3e5057;
   color: white;
 }
 
