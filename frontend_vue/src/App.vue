@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Image, Upload, FolderOpen, Settings, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import Sidebar from './components/Sidebar.vue';
+import NavPanel from './components/NavPanel.vue';
 
 const images = ref([]);
 const loading = ref(false);
@@ -72,89 +73,12 @@ onUnmounted(() => {
 
 <template>
   <div class="app-layout">
+    <Sidebar 
+      :activeMenu="activeMenu" 
+      @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
+    />
     
-    <!-- Left Sidebar -->
-    <aside class="sidebar">
-      <nav class="sidebar-nav">
-        <button 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'gallery' }"
-          @click="activeMenu = activeMenu === 'gallery' ? null : 'gallery'"
-          title="Gallery"
-        >
-          <Image :size="24" />
-        </button>
-        
-        <button 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'upload' }"
-          @click="activeMenu = activeMenu === 'upload' ? null : 'upload'"
-          title="Upload"
-        >
-          <Upload :size="24" />
-        </button>
-        
-        <button 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'projects' }"
-          @click="activeMenu = activeMenu === 'projects' ? null : 'projects'"
-          title="Projects"
-        >
-          <FolderOpen :size="24" />
-        </button>
-        
-        <button 
-          class="nav-item" 
-          :class="{ active: activeMenu === 'settings' }"
-          @click="activeMenu = activeMenu === 'settings' ? null : 'settings'"
-          title="Settings"
-        >
-          <Settings :size="24" />
-        </button>
-      </nav>
-    </aside>
-
-    <!-- Extended Navigation Panel -->
-    <aside v-if="activeMenu" class="nav-panel">
-      <div class="nav-panel-header">
-        <h3>{{ activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1) }}</h3>
-      </div>
-      
-      <div class="nav-panel-content">
-        <!-- Gallery Content -->
-        <div v-if="activeMenu === 'gallery'">
-          <p class="text-gray-600">Gallery navigation</p>
-        </div>
-        
-        <!-- Upload Content -->
-        <div v-if="activeMenu === 'upload'" class="upload-panel">
-          <button class="panel-button primary">
-            <Upload :size="20" />
-            Upload
-          </button>
-          <div class="nav-buttons">
-            <button class="panel-button">
-              <ChevronLeft :size="20" />
-              Prev
-            </button>
-            <button class="panel-button">
-              <ChevronRight :size="20" />
-              Next
-            </button>
-          </div>
-        </div>
-        
-        <!-- Projects Content -->
-        <div v-if="activeMenu === 'projects'">
-          <p class="text-gray-600">Projects navigation</p>
-        </div>
-        
-        <!-- Settings Content -->
-        <div v-if="activeMenu === 'settings'">
-          <p class="text-gray-600">Settings navigation</p>
-        </div>
-      </div>
-    </aside>
+    <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
     
     <!-- Main Content -->
     <main class="main-content">
@@ -199,17 +123,6 @@ onUnmounted(() => {
   min-height: 100vh;
 }
 
-.sidebar {
-  width: 40px;
-  background: #ecebee;
-  color: rgba(43, 33, 33, 0);
-  padding: 3px;
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-}
-
 .sidebar-header {
   margin-bottom: 20px;
 }
@@ -220,132 +133,9 @@ onUnmounted(() => {
   color: #2c3e50;
 }
 
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  position: relative;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: #000000;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 16px;
-  width: 100%;
-}
-
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-item.active {
-  background: #3498db;
-  color: white;
-}
-
-.nav-item svg {
-  flex-shrink: 0;
-}
-
-.nav-panel {
-  position: fixed;
-  left: 80px;
-  top: 0;
-  width: 240px;
-  height: 100vh;
-  background: #f8f9fa;
-  border-right: 1px solid #e0e0e0;
-  padding: 20px;
-  overflow-y: auto;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.nav-panel-header {
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.nav-panel-header h3 {
-  margin: 0;
-  font-size: 20px;
-  color: #2c3e50;
-  text-transform: capitalize;
-}
-
-.nav-panel-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.upload-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.panel-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: white;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  color: #2c3e50;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  font-weight: 500;
-  flex: 1;
-}
-
-.panel-button:hover {
-  background: #f0f0f0;
-  border-color: #3498db;
-}
-
-.panel-button.primary {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
-}
-
-.panel-button.primary:hover {
-  background: #2980b9;
-  border-color: #2980b9;
-}
-
 .main-content {
   flex: 1;
-  margin-left: 80px;
+  margin-left: 40px;
   padding: 20px;
   transition: margin-left 0.3s ease;
 }
