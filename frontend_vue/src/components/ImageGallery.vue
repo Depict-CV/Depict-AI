@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, defineEmits } from 'vue';
+import { Check, Edit, Trash2, Pencil } from 'lucide-vue-next';
+
+const emit = defineEmits(['select-image', 'modify-request']);
 
 const images = ref([]);
 const loading = ref(false);
@@ -66,6 +69,37 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
 });
+
+const handleImageClick = (image) => {
+  emit('select-image', image);
+};
+
+const handleApprove = (image, event) => {
+  event.stopPropagation();
+  console.log('Approve image:', image.id);
+  // TODO: Implement API call to approve image
+  alert(`Image ${image.id} approved!`);
+};
+
+const handleModify = (image, event) => {
+  event.stopPropagation();
+  console.log('Modify image metadata:', image.id);
+  emit('modify-request', image);
+};
+
+const handleAnnotate = (image, event) => {
+  event.stopPropagation();
+  emit('select-image', image);
+};
+
+const handleDelete = (image, event) => {
+  event.stopPropagation();
+  if (confirm(`Delete image ${image.id}?`)) {
+    console.log('Delete image:', image.id);
+    // TODO: Implement API call to delete image
+    images.value = images.value.filter(img => img.id !== image.id);
+  }
+};
 </script>
 
 <template>
@@ -77,6 +111,39 @@ onUnmounted(() => {
           :alt="`Image ${image.id}`"
           loading="lazy"
         />
+        
+        <!-- Action Buttons Overlay -->
+        <div class="image-actions">
+          <button 
+            class="action-btn approve-btn" 
+            @click="handleApprove(image, $event)"
+            title="Approve image"
+          >
+            <Check :size="20" />
+          </button>
+          <button 
+            class="action-btn annotate-btn" 
+            @click="handleAnnotate(image, $event)"
+            title="Annotate image manually"
+          >
+            <Pencil :size="20" />
+          </button>
+          <button 
+            class="action-btn modify-btn" 
+            @click="handleModify(image, $event)"
+            title="Edit image metadata"
+          >
+            <Edit :size="20" />
+          </button>
+          <button 
+            class="action-btn delete-btn" 
+            @click="handleDelete(image, $event)"
+            title="Delete image"
+          >
+            <Trash2 :size="20" />
+          </button>
+        </div>
+        
         <div class="image-info">
           <span class="image-id">ID: {{ image.id }}</span>
           <span class="image-type">{{ image.type }}</span>
@@ -124,6 +191,78 @@ onUnmounted(() => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
+/* Action Buttons Overlay */
+.image-actions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.image-item:hover .image-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.approve-btn {
+  background: rgba(39, 174, 96, 0.95);
+  color: white;
+}
+
+.approve-btn:hover {
+  background: #27ae60;
+}
+
+.annotate-btn {
+  background: rgba(155, 89, 182, 0.95);
+  color: white;
+}
+
+.annotate-btn:hover {
+  background: #9b59b6;
+}
+
+.modify-btn {
+  background: rgba(52, 152, 219, 0.95);
+  color: white;
+}
+
+.modify-btn:hover {
+  background: #3498db;
+}
+
+.delete-btn {
+  background: rgba(231, 76, 60, 0.95);
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #e74c3c;
+}
+
 .image-item img {
   width: auto;
   height: 100%;
@@ -144,6 +283,7 @@ onUnmounted(() => {
   justify-content: space-between;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 5;
 }
 
 .image-item:hover .image-info {

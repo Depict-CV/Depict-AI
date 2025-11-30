@@ -5,10 +5,13 @@ import Menubar from './components/Menubar.vue';
 import Sidebar from './components/Sidebar.vue';
 import NavPanel from './components/NavPanel.vue';
 import ImageGallery from './components/ImageGallery.vue';
+import ManualAnnotationPage from './pages/ManualAnnotationPage.vue';
 
 const isAuthenticated = ref(false);
 const currentUser = ref(null);
 const activeMenu = ref(null);
+const selectedImage = ref(null);
+const modifyRequests = ref([]);
 
 const handleLogin = (userData) => {
   currentUser.value = userData;
@@ -32,6 +35,33 @@ const checkAuth = () => {
   }
 };
 
+const handleSelectImage = (image) => {
+  selectedImage.value = image;
+};
+
+const handleCloseAnnotation = () => {
+  selectedImage.value = null;
+};
+
+const handleModifyRequest = (image) => {
+  // Check if image is already in modify requests
+  const exists = modifyRequests.value.find(req => req.id === image.id);
+  if (!exists) {
+    modifyRequests.value.push({
+      ...image,
+      requestedAt: new Date().toISOString()
+    });
+  }
+};
+
+const handleRemoveModifyRequest = (imageId) => {
+  modifyRequests.value = modifyRequests.value.filter(req => req.id !== imageId);
+};
+
+const handleClearAllModifyRequests = () => {
+  modifyRequests.value = [];
+};
+
 onMounted(() => {
   checkAuth();
 });
@@ -43,21 +73,40 @@ onMounted(() => {
   
   <!-- Main App -->
   <div v-else class="app-wrapper">
-    <Menubar :currentUser="currentUser" @logout="handleLogout" />
+    <!-- Show annotation page when image is selected -->
+    <ManualAnnotationPage 
+      v-if="selectedImage" 
+      :image="selectedImage" 
+      @close="handleCloseAnnotation" 
+    />
     
-    <div class="app-layout">
-      <Sidebar 
-        :activeMenu="activeMenu" 
-        @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
+    <!-- Show gallery view when no image is selected -->
+    <template v-else>
+      <Menubar 
+        :currentUser="currentUser" 
+        :modifyRequests="modifyRequests"
+        @logout="handleLogout" 
+        @remove-modify-request="handleRemoveModifyRequest"
+        @clear-modify-requests="handleClearAllModifyRequests"
       />
       
-      <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
-    
-    <!-- Main Content -->
-    <main class="main-content">
-      <ImageGallery />
-    </main>
-    </div>
+      <div class="app-layout">
+        <Sidebar 
+          :activeMenu="activeMenu" 
+          @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
+        />
+        
+        <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
+      
+        <!-- Main Content -->
+        <main class="main-content">
+          <ImageGallery 
+            @select-image="handleSelectImage" 
+            @modify-request="handleModifyRequest"
+          />
+        </main>
+      </div>
+    </template>
   </div>
 </template>
 
