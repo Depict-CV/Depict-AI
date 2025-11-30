@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { Image, Upload, FolderOpen, Settings, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
 const images = ref([]);
 const loading = ref(false);
 const hasMore = ref(true);
 const skip = ref(0);
 const limit = 20;
-const activeMenu = ref('gallery');
+const activeMenu = ref(null);
 
 const fetchImages = async () => {
   if (loading.value || !hasMore.value) return;
@@ -71,66 +72,95 @@ onUnmounted(() => {
 
 <template>
   <div class="app-layout">
+    
     <!-- Left Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>Depict AI</h2>
-      </div>
-      
       <nav class="sidebar-nav">
         <button 
           class="nav-item" 
           :class="{ active: activeMenu === 'gallery' }"
-          @click="activeMenu = 'gallery'"
+          @click="activeMenu = activeMenu === 'gallery' ? null : 'gallery'"
+          title="Gallery"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          <span>Gallery</span>
+          <Image :size="24" />
         </button>
         
         <button 
           class="nav-item" 
           :class="{ active: activeMenu === 'upload' }"
-          @click="activeMenu = 'upload'"
+          @click="activeMenu = activeMenu === 'upload' ? null : 'upload'"
+          title="Upload"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <span>Upload</span>
+          <Upload :size="24" />
         </button>
         
         <button 
           class="nav-item" 
           :class="{ active: activeMenu === 'projects' }"
-          @click="activeMenu = 'projects'"
+          @click="activeMenu = activeMenu === 'projects' ? null : 'projects'"
+          title="Projects"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span>Projects</span>
+          <FolderOpen :size="24" />
         </button>
         
         <button 
           class="nav-item" 
           :class="{ active: activeMenu === 'settings' }"
-          @click="activeMenu = 'settings'"
+          @click="activeMenu = activeMenu === 'settings' ? null : 'settings'"
+          title="Settings"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
-          </svg>
-          <span>Settings</span>
+          <Settings :size="24" />
         </button>
       </nav>
+    </aside>
+
+    <!-- Extended Navigation Panel -->
+    <aside v-if="activeMenu" class="nav-panel">
+      <div class="nav-panel-header">
+        <h3>{{ activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1) }}</h3>
+      </div>
+      
+      <div class="nav-panel-content">
+        <!-- Gallery Content -->
+        <div v-if="activeMenu === 'gallery'">
+          <p class="text-gray-600">Gallery navigation</p>
+        </div>
+        
+        <!-- Upload Content -->
+        <div v-if="activeMenu === 'upload'" class="upload-panel">
+          <button class="panel-button primary">
+            <Upload :size="20" />
+            Upload
+          </button>
+          <div class="nav-buttons">
+            <button class="panel-button">
+              <ChevronLeft :size="20" />
+              Prev
+            </button>
+            <button class="panel-button">
+              <ChevronRight :size="20" />
+              Next
+            </button>
+          </div>
+        </div>
+        
+        <!-- Projects Content -->
+        <div v-if="activeMenu === 'projects'">
+          <p class="text-gray-600">Projects navigation</p>
+        </div>
+        
+        <!-- Settings Content -->
+        <div v-if="activeMenu === 'settings'">
+          <p class="text-gray-600">Settings navigation</p>
+        </div>
+      </div>
     </aside>
     
     <!-- Main Content -->
     <main class="main-content">
+      <div class="sidebar-header">
+        <h2>Depict AI</h2>
+      </div>
       <h1>Image Gallery</h1>
       
       <div class="image-grid">
@@ -170,20 +200,24 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  width: 240px;
+  width: 40px;
   background: #ecebee;
   color: rgba(43, 33, 33, 0);
-  padding: 20px;
+  padding: 3px;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.sidebar-header {
+  margin-bottom: 20px;
+}
+
 .sidebar-header h2 {
-  margin: 0 0 30px 0;
+  margin: 0;
   font-size: 24px;
-  color: #b420207f;
+  color: #2c3e50;
 }
 
 .sidebar-nav {
@@ -195,8 +229,9 @@ onUnmounted(() => {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  justify-content: center;
+  padding: 12px;
+  position: relative;
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -204,7 +239,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 16px;
-  text-align: left;
+  width: 100%;
 }
 
 .nav-item:hover {
@@ -220,11 +255,103 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+.nav-panel {
+  position: fixed;
+  left: 80px;
+  top: 0;
+  width: 240px;
+  height: 100vh;
+  background: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.nav-panel-header {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.nav-panel-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #2c3e50;
+  text-transform: capitalize;
+}
+
+.nav-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.panel-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.panel-button:hover {
+  background: #f0f0f0;
+  border-color: #3498db;
+}
+
+.panel-button.primary {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.panel-button.primary:hover {
+  background: #2980b9;
+  border-color: #2980b9;
+}
+
 .main-content {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 80px;
   padding: 20px;
-  max-width: calc(100% - 240px);
+  transition: margin-left 0.3s ease;
+}
+
+.app-layout:has(.nav-panel) .main-content {
+  margin-left: calc(80px + 240px);
 }
 
 h1 {
