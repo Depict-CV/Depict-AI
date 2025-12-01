@@ -1,43 +1,52 @@
 <script setup>
-import GalleryPanel from './panels/GalleryPanel.vue';
-import UploadPanel from './panels/UploadPanel.vue';
+import { computed } from 'vue';
+import ImportExportPanel from './panels/ImportExportPanel.vue';
 import ProjectsPanel from './panels/ProjectsPanel.vue';
 import FilterPanel from './panels/FilterPanel.vue';
 import StatisticsPanel from './panels/StatisticsPanel.vue';
 import AiAnnotationPanel from './panels/AiAnnotationPanel.vue';
 
-defineProps({
+const props = defineProps({
   activeMenu: {
     type: String,
     required: true
   }
+});
+
+const panelTitle = computed(() => {
+  const titles = {
+    'ArrowRightLeft': 'Import / Export',
+    'projects': 'Projects',
+    'filter': 'Filter',
+    'statistics': 'Statistics',
+    'ai-annotation': 'AI Annotation',
+    'gallery': 'Gallery'
+  };
+  return titles[props.activeMenu] || props.activeMenu.charAt(0).toUpperCase() + props.activeMenu.slice(1);
 });
 </script>
 
 <template>
   <aside class="nav-panel">
     <div class="nav-panel-header">
-      <h3>{{ activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1) }}</h3>
+      <h3>{{ panelTitle }}</h3>
     </div>
     
-    <div class="nav-panel-content">
-      <!-- Gallery Panel -->
-      <GalleryPanel v-if="activeMenu === 'gallery'" />
-      
-      <!-- Upload Panel -->
-      <UploadPanel v-if="activeMenu === 'upload'" />
-      
+    <div class="nav-panel-content">  
       <!-- Projects Panel -->
       <ProjectsPanel v-if="activeMenu === 'projects'" />
+
+      <!-- Upload/Export Panel -->
+      <ImportExportPanel v-if="activeMenu === 'ArrowRightLeft'" />
+
+      <!-- AI Annotation Panel -->
+      <AiAnnotationPanel v-if="activeMenu === 'ai-annotation'" />
       
       <!-- Filter Panel -->
       <FilterPanel v-if="activeMenu === 'filter'" />
       
       <!-- Statistics Panel -->
       <StatisticsPanel v-if="activeMenu === 'statistics'" />
-      
-      <!-- AI Annotation Panel -->
-      <AiAnnotationPanel v-if="activeMenu === 'ai-annotation'" />
     </div>
   </aside>
 </template>
