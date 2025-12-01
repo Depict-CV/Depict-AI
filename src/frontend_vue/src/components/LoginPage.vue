@@ -58,29 +58,76 @@ const validateForm = () => {
   return Object.keys(errors.value).length === 0;
 };
 
+const hashPassword = async (password) => {
+  // Simple hash function - in production, use a proper hashing library
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 const handleSubmit = async () => {
   if (!validateForm()) return;
   
   loading.value = true;
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const hashedPassword = await hashPassword(formData.value.password);
     
-    // TODO: Replace with actual API call
-    // const response = await fetch('/api/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(formData.value)
-    // });
-    
-    // For now, just emit the login event
-    emit('login', {
-      email: formData.value.email,
-      username: formData.value.username || 'User'
-    });
+    if (isLogin.value) {
+      // Login
+      const response = await fetch('http://localhost:8000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.value.email, // Backend expects username field
+          hashed_password: hashedPassword
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+      
+      const data = await response.json();
+      
+      // Emit login event with user data
+      emit('login', {
+        email: formData.value.email,
+        username: formData.value.email,
+        user_id: data.user_id
+      });
+    } else {
+      // Sign up
+      const response = await fetch('http://localhost:8000/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.value.username,
+          email: formData.value.email,
+          hashed_password: hashedPassword,
+          permission: 'view only' // Default permission
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Signup failed');
+      }
+      
+      const data = await response.json();
+      
+      // Automatically log in after successful signup
+      emit('login', {
+        email: formData.value.email,
+        username: formData.value.username,
+        user_id: data.user_id
+      });
+    }
   } catch (error) {
-    errors.value.general = 'An error occurred. Please try again.';
+    errors.value.general = error.message || 'An error occurred. Please try again.';
   } finally {
     loading.value = false;
   }
@@ -203,7 +250,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b9ffb 0%, #ffffff 100%);
   padding: 20px;
 }
 
@@ -333,7 +380,7 @@ const handleSubmit = async () => {
 .submit-button {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg,  #8b9ffb 0%, #5b79ff 100%);
   color: white;
   border: none;
   border-radius: 8px;

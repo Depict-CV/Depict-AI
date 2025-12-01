@@ -11,7 +11,7 @@ launch server ( backend ) :
 
 `cd src/backend`
 
-`fastapi dev endpoints.py`  or `poetry run fastapi dev endpoints.py`
+`fastapi dev endpoints.py`
 
 launch client ( frontend nicegui ) :
 
