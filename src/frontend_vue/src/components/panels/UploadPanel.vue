@@ -1,5 +1,19 @@
 <script setup>
-import { Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ref } from 'vue'
+
+const exportFormat = ref('csv')
+
+const formats = [
+  { label: 'CSV', value: 'csv' },
+  { label: 'JSON', value: 'json' },
+  { label: 'XML', value: 'xml' }
+]
+
+const handleExport = () => {
+  // TODO: call your real export logic / API
+  console.log('Exporting in format:', exportFormat.value)
+}
 </script>
 
 <template>
@@ -8,6 +22,22 @@ import { Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next';
       <Upload :size="20" />
       Upload
     </button>
+
+    <div class="export-row">
+      <select v-model="exportFormat" class="export-select">
+        <option
+          v-for="format in formats"
+          :key="format.value"
+          :value="format.value"
+        >
+          {{ format.label }}
+        </option>
+      </select>
+      <button class="panel-button" @click="handleExport">
+        Export ({{ exportFormat.toUpperCase() }})
+      </button>
+    </div>
+
     <div class="nav-buttons">
       <button class="panel-button">
         <ChevronLeft :size="20" />
@@ -26,6 +56,21 @@ import { Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next';
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+.export-row {
+  display: flex;
+  gap: 10px;
+}
+
+.export-select {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  font-size: 14px;
+  color: #2c3e50;
+  background: white;
 }
 
 .nav-buttons {

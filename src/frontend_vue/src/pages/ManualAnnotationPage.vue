@@ -858,7 +858,7 @@ onMounted(() => {
 
 /* Main Area */
 .annotation-main {
-  background: #e74c3c;
+  background: #ffffff;
   color: white;
 }
 
