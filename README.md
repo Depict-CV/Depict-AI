@@ -22,7 +22,7 @@ launch client ( frontend nicegui ) :
 
 launch client ( frontend vue ) :
 
-`cd frontend_vue`
+`cd src/frontend_vue`
 
 `npm run dev`
 
