@@ -50,8 +50,8 @@ const handleSaveSettings = (settingsData) => {
 
         <button 
           class="nav-item" 
-          :class="{ active: activeMenu === 'ArrowRightLeft' }"
-          @click="toggleMenu('ArrowRightLeft')"
+          :class="{ active: activeMenu === 'import_export' }"
+          @click="toggleMenu('import_export')"
           title="Import / Export"
         >
           <ArrowRightLeft :size="24" />
