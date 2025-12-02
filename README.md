@@ -19,17 +19,15 @@ launch client ( frontend nicegui ) :
 
 `python3 main.py`
 
-
 launch client ( frontend vue ) :
 
-`cd src/frontend_vue`
+`cd src/frontend`
 
 `npm run dev`
 
 # open documentation
 cd docs
 mkdocs serve
-
 
 # launch monitoring tool
 Self-host Sentry locally
@@ -38,6 +36,6 @@ Sentry can run locally using Docker:
 
 docker run -d --name sentry -p 9000:9000 sentry
 
-Visit http://localhost:9000 to access the Sentry dashboard.
+Visit <http://localhost:9000> to access the Sentry dashboard.
 
 Create a project to get the local DSN (usually http://<host>:9000/<project_id>).

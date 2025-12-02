@@ -1,7 +1,7 @@
 """
-OAuth2 Social Login Providers (Google, Microsoft, Facebook)
+OAuth2 Social Login Providers (Google, Microsoft, GitHub)
 """
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 from typing import Optional
@@ -9,13 +9,13 @@ import httpx
 from datetime import timedelta
 import secrets
 
-from ..db.database import get_session
 from ..db.tables import User
 from .auth import create_access_token
+from .deps import get_session
 from config import (
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI,
     MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, MICROSOFT_REDIRECT_URI,
-    FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET, FACEBOOK_REDIRECT_URI,
+    GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URI,
     FRONTEND_URL
 )
 
@@ -46,7 +46,7 @@ async def google_login():
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, state: str, session: Session = get_session):
+async def google_callback(code: str, state: str, session: Session = Depends(get_session)):
     """Handle Google OAuth2 callback and create/login user"""
     # Verify state
     if state not in oauth_states or oauth_states[state] != "google":
@@ -122,7 +122,7 @@ async def microsoft_login():
 
 
 @router.get("/microsoft/callback")
-async def microsoft_callback(code: str, state: str, session: Session = get_session):
+async def microsoft_callback(code: str, state: str, session: Session = Depends(get_session)):
     """Handle Microsoft OAuth2 callback and create/login user"""
     # Verify state
     if state not in oauth_states or oauth_states[state] != "microsoft":
@@ -177,30 +177,30 @@ async def microsoft_callback(code: str, state: str, session: Session = get_sessi
     return RedirectResponse(f"{FRONTEND_URL}?token={jwt_token}")
 
 
-# ==================== FACEBOOK OAUTH2 ====================
+# ==================== GITHUB OAUTH2 ====================
 
-@router.get("/facebook/login")
-async def facebook_login():
-    """Redirect user to Facebook OAuth2 login page"""
+@router.get("/github/login")
+async def github_login():
+    """Redirect user to GitHub OAuth2 login page"""
     state = secrets.token_urlsafe(32)
-    oauth_states[state] = "facebook"
+    oauth_states[state] = "github"
     
-    facebook_auth_url = (
-        f"https://www.facebook.com/v18.0/dialog/oauth?"
-        f"client_id={FACEBOOK_CLIENT_ID}&"
-        f"redirect_uri={FACEBOOK_REDIRECT_URI}&"
+    github_auth_url = (
+        f"https://github.com/login/oauth/authorize?"
+        f"client_id={GITHUB_CLIENT_ID}&"
+        f"redirect_uri={GITHUB_REDIRECT_URI}&"
         f"state={state}&"
-        f"scope=email,public_profile"
+        f"scope=user:email"
     )
     
-    return RedirectResponse(facebook_auth_url)
+    return RedirectResponse(github_auth_url)
 
 
-@router.get("/facebook/callback")
-async def facebook_callback(code: str, state: str, session: Session = get_session):
-    """Handle Facebook OAuth2 callback and create/login user"""
+@router.get("/github/callback")
+async def github_callback(code: str, state: str, session: Session = Depends(get_session)):
+    """Handle GitHub OAuth2 callback and create/login user"""
     # Verify state
-    if state not in oauth_states or oauth_states[state] != "facebook":
+    if state not in oauth_states or oauth_states[state] != "github":
         raise HTTPException(status_code=400, detail="Invalid state parameter")
     
     # Remove used state
@@ -208,13 +208,14 @@ async def facebook_callback(code: str, state: str, session: Session = get_sessio
     
     # Exchange code for token
     async with httpx.AsyncClient() as client:
-        token_response = await client.get(
-            "https://graph.facebook.com/v18.0/oauth/access_token",
-            params={
+        token_response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
                 "code": code,
-                "client_id": FACEBOOK_CLIENT_ID,
-                "client_secret": FACEBOOK_CLIENT_SECRET,
-                "redirect_uri": FACEBOOK_REDIRECT_URI
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "redirect_uri": GITHUB_REDIRECT_URI
             }
         )
         
@@ -222,29 +223,42 @@ async def facebook_callback(code: str, state: str, session: Session = get_sessio
             raise HTTPException(status_code=400, detail="Failed to get access token")
         
         token_data = token_response.json()
-        access_token = token_data["access_token"]
+        access_token = token_data.get("access_token")
         
-        # Get user info from Facebook
+        if not access_token:
+            raise HTTPException(status_code=400, detail="No access token received")
+        
+        # Get user info from GitHub
         user_response = await client.get(
-            "https://graph.facebook.com/me",
-            params={
-                "fields": "id,name,email",
-                "access_token": access_token
-            }
+            "https://api.github.com/user",
+            headers={"Authorization": f"Bearer {access_token}"}
         )
         
         if user_response.status_code != 200:
             raise HTTPException(status_code=400, detail="Failed to get user info")
         
         user_info = user_response.json()
+        
+        # Get user email if not public
+        email = user_info.get("email")
+        if not email:
+            emails_response = await client.get(
+                "https://api.github.com/user/emails",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            if emails_response.status_code == 200:
+                emails = emails_response.json()
+                primary_email = next((e for e in emails if e.get("primary")), None)
+                if primary_email:
+                    email = primary_email.get("email")
     
     # Find or create user
     user = await get_or_create_oauth_user(
         session=session,
-        email=user_info.get("email"),
-        username=user_info.get("name", f"user_{user_info['id']}"),
-        oauth_provider="facebook",
-        oauth_id=user_info["id"]
+        email=email,
+        username=user_info.get("login", f"github_{user_info['id']}"),
+        oauth_provider="github",
+        oauth_id=str(user_info["id"])
     )
     
     # Create JWT token
