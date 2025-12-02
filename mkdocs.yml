@@ -1,5 +1,6 @@
+<<<<<<< HEAD
 site_name: Depict-AI Documentation
-site_description: technical documentation for Depict-AI
+site_description: technical documentation for Depict-AI , Image data tool for computer vision
 site_author: Edouard Geze, Tangi Migot
 repo_url: https://github.com/Depict-CV/Depict-AI
 
@@ -12,3 +13,16 @@ nav:
 theme:
   name: readthedocs
   language: en
+
+plugins:
+  - search
+  - include_dir_to_nav # Include all files from a directory into the navigation
+  - include-markdown:
+      encoding: utf-8
+      preserve_includer_indent: false
+      dedent: false
+      trailing_newlines: true
+      comments: true
+      rewrite_relative_urls: true
+      heading_offset: 0
+      recursive: true

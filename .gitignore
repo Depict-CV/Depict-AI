@@ -4,6 +4,8 @@ node_modules/
 *.pyc
 *.png
 __pycache__/
+site/
+*.egg-info/
 
 Todo.py
 .env
