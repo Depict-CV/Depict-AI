@@ -16,6 +16,7 @@ help:
 	@echo "  make test         : Run tests with pytest"
 	@echo "  make backend      : Start FastAPI backend server"
 	@echo "  make frontend     : Start Vue.js frontend dev server"
+	@echo "  make api-docs     : Generate OpenAPI documentation from FastAPI"
 	@echo "  make docs         : Start documentation server with mkdocs"
 	@echo "  make clean        : Cleanup pycache and build artifacts"
 	@echo "  make rebuild      : Remove venv and reinstall dependencies"
@@ -49,6 +50,12 @@ backend:
 frontend:
 	@echo "Starting Vue.js frontend dev server..."
 	cd src/frontend && npm run dev
+
+# Generate API documentation from FastAPI
+.PHONY: api-docs
+api-docs:
+	@echo "Generating OpenAPI specification..."
+	$(POETRY_RUN) python scripts/generate_api_docs.py
 
 # Start documentation server
 .PHONY: docs
