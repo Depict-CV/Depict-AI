@@ -1,68 +1,76 @@
-# Environment name
-CONDA_ENV = Depict-AI
+# Project name
+PROJECT = Depict-AI
 PYTHON = python
 
-# Poetry flags
-POETRY_INSTALL = poetry install --no-root
-POETRY_CONFIG = poetry config virtualenvs.create false --local
+# Poetry commands
+POETRY = poetry
+POETRY_INSTALL = $(POETRY) install
+POETRY_RUN = $(POETRY) run
 
 # Default target
 .PHONY: help
 help:
 	@echo "Available commands:"
-	@echo "  make del_env      : Delete the Conda environment"
-	@echo "  make create_env   : Create Conda env and install packages with Poetry"
-	@echo "  make activate     : Activate the Conda environment (interactive shell)"
 	@echo "  make install      : Install Python dependencies with Poetry"
+	@echo "  make shell        : Activate Poetry virtual environment shell"
 	@echo "  make test         : Run tests with pytest"
-	@echo "  make clean        : Run pre-commit hooks and cleanup pycache"
-	@echo "  make jupyter      : Launch Jupyter notebook/lab"
-	@echo "  make rebuild      : Recreate env from scratch"
-
-# Delete Conda environment
-.PHONY: del_env
-del_env:
-	conda env remove -n $(CONDA_ENV) -y
-
-# Create Conda environment
-.PHONY: create_env
-create_env:
-	@echo "Creating Conda environment '$(CONDA_ENV)'..."
-	conda create -n $(CONDA_ENV) python=3.12 -y
-	@echo "Activating environment..."
-	conda activate $(CONDA_ENV) && \
-	echo "Configuring Poetry to use current environment..." && \
-	$(POETRY_CONFIG) && \
-	echo "Installing Python dependencies..." && \
-	$(POETRY_INSTALL)
-
-# Activate environment interactively
-.PHONY: activate
-activate:
-	@echo "Activating Conda environment '$(CONDA_ENV)'..."
-	conda activate $(CONDA_ENV) && exec $$SHELL
+	@echo "  make backend      : Start FastAPI backend server"
+	@echo "  make frontend     : Start Vue.js frontend dev server"
+	@echo "  make docs         : Start documentation server with mkdocs"
+	@echo "  make clean        : Cleanup pycache and build artifacts"
+	@echo "  make rebuild      : Remove venv and reinstall dependencies"
 
 # Install or update dependencies with Poetry
 .PHONY: install
 install:
-	$(POETRY_CONFIG)
+	@echo "Installing dependencies with Poetry..."
 	$(POETRY_INSTALL)
+
+# Activate Poetry shell
+.PHONY: shell
+shell:
+	@echo "Activating Poetry virtual environment..."
+	$(POETRY) shell
 
 # Run tests
 .PHONY: test
 test:
 	@echo "Running tests..."
-	pytest
+	$(POETRY_RUN) pytest
 
-# Clean project (pre-commit + pycache)
+# Start backend server
+.PHONY: backend
+backend:
+	@echo "Starting FastAPI backend server..."
+	cd src/backend && $(POETRY_RUN) fastapi dev endpoints.py
+
+# Start frontend dev server
+.PHONY: frontend
+frontend:
+	@echo "Starting Vue.js frontend dev server..."
+	cd src/frontend && npm run dev
+
+# Start documentation server
+.PHONY: docs
+docs:
+	@echo "Starting documentation server..."
+	cd docs && $(POETRY_RUN) mkdocs serve
+
+# Clean project (pycache + build artifacts)
 .PHONY: clean
 clean:
-	@echo "Running pre-commit hooks..."
-	pre-commit run --all-files
 	@echo "Cleaning __pycache__ folders..."
-	find . -name "__pycache__" -type d -exec rm -rf {} +
+	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	@echo "Cleaning .pyc files..."
+	find . -name "*.pyc" -delete 2>/dev/null || true
+	@echo "Cleaning build artifacts..."
+	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .coverage 2>/dev/null || true
 
-# Rebuild environment from scratch
+# Remove virtual environment and reinstall
 .PHONY: rebuild
-rebuild: del_env create_env
+rebuild:
+	@echo "Removing Poetry virtual environment..."
+	$(POETRY) env remove --all || true
+	@echo "Reinstalling dependencies..."
+	$(POETRY_INSTALL)
 	@echo "Environment rebuilt successfully!"

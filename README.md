@@ -1,41 +1,101 @@
 
-# Installation
+# Depict AI
 
-1. activate the poetry env
+Image data tool for computer vision from raw images to model training/fine-tuning.
 
-`poetry env list          # show available virtual environments`
+## Installation
 
-`poetry env activate <path-to-env>`
+### Prerequisites
+- Python 3.12+
+- Poetry
+- Node.js & npm
 
-launch server ( backend ) :
+### Setup
 
-`cd src/backend`
+1. **Install Python dependencies:**
+   ```bash
+   poetry install
+   ```
 
-`fastapi dev endpoints.py`
+2. **Install frontend dependencies:**
+   ```bash
+   cd src/frontend
+   npm install
+   ```
 
-launch client ( frontend nicegui ) :
+## Quick Start
 
-`cd frontend/nicegui`
+### Using Makefile
 
-`python3 main.py`
+```bash
+# Install all dependencies
+make install
 
-launch client ( frontend vue ) :
+# Start backend server
+make backend
 
-`cd src/frontend`
+# Start frontend (in another terminal)
+make frontend
 
-`npm run dev`
+# Start documentation
+make docs
 
-# open documentation
+# Run tests
+make test
+
+# Activate Poetry shell
+make shell
+```
+
+### Manual Commands
+
+**Backend (FastAPI):**
+```bash
+cd src/backend
+poetry run fastapi dev endpoints.py
+# or
+poetry shell
+fastapi dev endpoints.py
+```
+
+**Frontend (Vue.js):**
+```bash
+cd src/frontend
+npm run dev
+```
+
+**Documentation:**
+```bash
 cd docs
-mkdocs serve
+poetry run mkdocs serve
+```
 
-# launch monitoring tool
-Self-host Sentry locally
+## OAuth2 Setup
 
-Sentry can run locally using Docker:
+The application supports social login with:
+- Google
+- Microsoft
+- GitHub
 
+See [`docs/oauth2_setup.md`](docs/oauth2_setup.md) for detailed setup instructions.
+
+## Testing
+
+Run tests with:
+```bash
+make test
+# or
+poetry run pytest
+```
+
+## Monitoring (Optional)
+
+Self-host Sentry locally with Docker:
+
+```bash
 docker run -d --name sentry -p 9000:9000 sentry
+```
 
-Visit <http://localhost:9000> to access the Sentry dashboard.
+Visit http://localhost:9000 to access the Sentry dashboard.
 
-Create a project to get the local DSN (usually http://<host>:9000/<project_id>).
+Create a project to get the local DSN (usually `http://<host>:9000/<project_id>`).
