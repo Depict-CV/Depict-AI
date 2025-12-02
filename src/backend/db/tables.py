@@ -37,6 +37,10 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     hashed_password: str
     permission: PermissionEnum
+    
+    # OAuth2 fields
+    oauth_provider: str | None = Field(default=None, nullable=True)  # "google", "microsoft", "facebook"
+    oauth_id: str | None = Field(default=None, nullable=True)  # Provider's user ID
 
     data: List["Data"] = Relationship(back_populates="author")
     # Relation many-to-many

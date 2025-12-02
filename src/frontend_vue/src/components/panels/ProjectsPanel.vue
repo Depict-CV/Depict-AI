@@ -1,90 +1,161 @@
 <script setup>
-import { ref } from 'vue';
-import { Plus, UserPlus, FolderOpen, Users, Calendar } from 'lucide-vue-next';
+import { ref, onMounted } from 'vue';
+import { Plus, UserPlus, FolderOpen, Users, Calendar, AlertCircle } from 'lucide-vue-next';
 
-// Mock projects data - TODO: Replace with API call
-const projects = ref([
-  { 
-    id: 1, 
-    name: 'Wildlife Dataset', 
-    description: 'Animal classification project',
-    members: 5, 
-    images: 1250, 
-    status: 'active',
-    createdAt: '2025-11-15',
-    role: 'Admin'
-  },
-  { 
-    id: 2, 
-    name: 'Medical Imaging', 
-    description: 'X-ray annotation project',
-    members: 3, 
-    images: 840, 
-    status: 'active',
-    createdAt: '2025-11-20',
-    role: 'Editor'
-  },
-  { 
-    id: 3, 
-    name: 'Retail Products', 
-    description: 'Product detection and labeling',
-    members: 8, 
-    images: 2100, 
-    status: 'active',
-    createdAt: '2025-10-10',
-    role: 'Viewer'
-  },
-  { 
-    id: 4, 
-    name: 'Traffic Analysis', 
-    description: 'Vehicle and pedestrian tracking',
-    members: 4, 
-    images: 560, 
-    status: 'archived',
-    createdAt: '2025-09-05',
-    role: 'Editor'
-  }
-]);
+const projects = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-const createProject = () => {
-  console.log('Creating new project...');
-  const projectName = prompt('Enter project name:');
-  if (projectName) {
-    projects.value.unshift({
-      id: Date.now(),
-      name: projectName,
-      description: 'New project',
-      members: 1,
-      images: 0,
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0],
-      role: 'Admin'
+// Fetch user's projects from API
+const fetchProjects = async () => {
+  loading.value = true;
+  error.value = null;
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:8000/projects/my-projects', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch projects: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    projects.value = data.map(p => ({
+      ...p,
+      createdAt: p.created_at
+    }));
+  } catch (err) {
+    console.error('Error fetching projects:', err);
+    error.value = err.message;
+  } finally {
+    loading.value = false;
   }
 };
 
-const joinProject = () => {
-  console.log('Joining project...');
-  const projectCode = prompt('Enter project code to join:');
-  if (projectCode) {
-    alert(`Joining project with code: ${projectCode}`);
+const createProject = async () => {
+  const projectName = prompt('Enter project name:');
+  if (!projectName) return;
+
+  const description = prompt('Enter project description (optional):') || '';
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch('http://localhost:8000/projects/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: projectName,
+        description: description
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to create project');
+    }
+
+    const newProject = await response.json();
+    projects.value.unshift({
+      ...newProject,
+      createdAt: newProject.created_at
+    });
+
+    alert(`Project "${projectName}" created successfully!`);
+  } catch (err) {
+    console.error('Error creating project:', err);
+    alert(`Error: ${err.message}`);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const joinProject = async () => {
+  const projectCode = prompt('Enter project code/name to join:');
+  if (!projectCode) return;
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`http://localhost:8000/projects/join/${encodeURIComponent(projectCode)}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to join project');
+    }
+
+    const result = await response.json();
+    alert(result.message);
+    
+    // Refresh projects list
+    await fetchProjects();
+  } catch (err) {
+    console.error('Error joining project:', err);
+    alert(`Error: ${err.message}`);
+  } finally {
+    loading.value = false;
   }
 };
 
 const selectProject = (project) => {
   console.log('Selected project:', project);
+  // TODO: Implement project navigation/switching
   alert(`Opening project: ${project.name}`);
 };
+
+// Fetch projects on component mount
+onMounted(() => {
+  fetchProjects();
+});
 </script>
 
 <template>
   <div class="projects-panel">
+    <!-- Error Message -->
+    <div v-if="error" class="error-banner">
+      <AlertCircle :size="16" />
+      <span>{{ error }}</span>
+      <button @click="fetchProjects" class="retry-btn">Retry</button>
+    </div>
+
+    <!-- Action Buttons -->
     <div class="project-actions">
-      <button class="panel-button primary" @click="createProject">
+      <button class="panel-button primary" @click="createProject" :disabled="loading">
         <Plus :size="20" />
-        Create Project
+        {{ loading ? 'Loading...' : 'Create Project' }}
       </button>
-      <button class="panel-button secondary" @click="joinProject">
+      <button class="panel-button secondary" @click="joinProject" :disabled="loading">
         <UserPlus :size="20" />
         Join Project
       </button>
@@ -93,6 +164,12 @@ const selectProject = (project) => {
     <div class="projects-list">
       <div class="projects-header">
         <h4>My Projects ({{ projects.length }})</h4>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading && projects.length === 0" class="loading-projects">
+        <div class="spinner"></div>
+        <p>Loading projects...</p>
       </div>
       
       <div 
@@ -132,7 +209,8 @@ const selectProject = (project) => {
         </div>
       </div>
       
-      <div v-if="projects.length === 0" class="empty-projects">
+      <!-- Empty State -->
+      <div v-if="!loading && projects.length === 0" class="empty-projects">
         <FolderOpen :size="48" />
         <p>No projects yet</p>
         <small>Create or join a project to get started</small>
@@ -349,9 +427,65 @@ const selectProject = (project) => {
   font-size: 14px;
   font-weight: 600;
 }
-
 .empty-projects small {
   font-size: 12px;
   color: #95a5a6;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.retry-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  background: #c33;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.retry-btn:hover {
+  background: #a22;
+}
+
+.loading-projects {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #7f8c8d;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.panel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

@@ -24,6 +24,41 @@ const handleLogout = () => {
   currentUser.value = null;
   isAuthenticated.value = false;
   localStorage.removeItem('user');
+  localStorage.removeItem('token');
+};
+
+// Check for OAuth token in URL (from OAuth redirect)
+const checkOAuthToken = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+    // Store the token
+    localStorage.setItem('token', token);
+    
+    // Fetch user info using the token
+    try {
+      const response = await fetch('http://localhost:8000/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        handleLogin({
+          email: userData.email,
+          username: userData.username,
+          user_id: userData.id
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+    }
+    
+    // Clean URL by removing token parameter
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 };
 
 // Check for existing session
@@ -62,7 +97,10 @@ const handleClearAllModifyRequests = () => {
   modifyRequests.value = [];
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // Check for OAuth token first (from OAuth redirect)
+  await checkOAuthToken();
+  // Then check for existing session
   checkAuth();
 });
 </script>

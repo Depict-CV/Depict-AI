@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import config
-from src.backend.api import annotations, auth, data, ml, projects, users
+from src.backend.api import annotations, auth, data, ml, oauth2, projects, users
 from src.backend.db.database import init_db
 
 SENTRY_DSN = config.SENTRY_DSN
@@ -37,6 +37,7 @@ init_db()
 # include routers split across backend/api
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(oauth2.router)
 app.include_router(projects.router)
 app.include_router(data.router)
 app.include_router(annotations.router)
