@@ -66,18 +66,9 @@ npm run dev
 
 **Documentation:**
 ```bash
-cd docs
 poetry run mkdocs serve
 ```
 
-## OAuth2 Setup
-
-The application supports social login with:
-- Google
-- Microsoft
-- GitHub
-
-See [`docs/oauth2_setup.md`](docs/oauth2_setup.md) for detailed setup instructions.
 
 ## Testing
 
