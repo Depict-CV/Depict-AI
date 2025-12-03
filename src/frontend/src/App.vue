@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useAuth, useUser } from '@clerk/vue';
 import LoginPage from './components/LoginPage.vue';
 import Menubar from './components/Menubar.vue';
 import Sidebar from './components/Sidebar.vue';
@@ -7,67 +8,39 @@ import NavPanel from './components/NavPanel.vue';
 import ImageGallery from './components/ImageGallery.vue';
 import ManualAnnotationPage from './pages/ManualAnnotationPage.vue';
 
+const { isSignedIn, signOut } = useAuth();
+const { user } = useUser();
+
 const isAuthenticated = ref(false);
 const currentUser = ref(null);
 const activeMenu = ref(null);
 const selectedImage = ref(null);
 const modifyRequests = ref([]);
 
-const handleLogin = (userData) => {
-  currentUser.value = userData;
+// Watch Clerk auth state changes
+watch([isSignedIn, user], ([signedIn, clerkUser]) => {
+  if (signedIn && clerkUser) {
+    isAuthenticated.value = true;
+    currentUser.value = {
+      email: clerkUser.primaryEmailAddress?.emailAddress || '',
+      username: clerkUser.username || clerkUser.firstName || 'User',
+      user_id: clerkUser.id,
+    };
+  } else {
+    isAuthenticated.value = false;
+    currentUser.value = null;
+  }
+}, { immediate: true });
+
+const handleLogin = () => {
+  // Clerk handles login - just update local state
   isAuthenticated.value = true;
-  // Store in localStorage for persistence
-  localStorage.setItem('user', JSON.stringify(userData));
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
+  await signOut();
   currentUser.value = null;
   isAuthenticated.value = false;
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
-};
-
-// Check for OAuth token in URL (from OAuth redirect)
-const checkOAuthToken = async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  
-  if (token) {
-    // Store the token
-    localStorage.setItem('token', token);
-    
-    // Fetch user info using the token
-    try {
-      const response = await fetch('http://localhost:8000/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        handleLogin({
-          email: userData.email,
-          username: userData.username,
-          user_id: userData.id
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch user info:', error);
-    }
-    
-    // Clean URL by removing token parameter
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-};
-
-// Check for existing session
-const checkAuth = () => {
-  const user = localStorage.getItem('user');
-  if (user) {
-    currentUser.value = JSON.parse(user);
-    isAuthenticated.value = true;
-  }
 };
 
 const handleSelectImage = (image) => {
@@ -96,13 +69,6 @@ const handleRemoveModifyRequest = (imageId) => {
 const handleClearAllModifyRequests = () => {
   modifyRequests.value = [];
 };
-
-onMounted(async () => {
-  // Check for OAuth token first (from OAuth redirect)
-  await checkOAuthToken();
-  // Then check for existing session
-  checkAuth();
-});
 </script>
 
 <template>

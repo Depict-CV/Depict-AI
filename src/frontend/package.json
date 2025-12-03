@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/vue": "^1.17.1",
     "lucide-vue-next": "^0.555.0",
     "vue": "^3.5.25"
   },

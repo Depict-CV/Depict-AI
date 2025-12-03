@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from src.backend.api.deps import get_session, get_current_user
+from src.backend.api.clerk_auth import get_current_clerk_user, get_session
 from src.backend.db.tables import Project, ProjectUserLink, User
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -38,7 +38,7 @@ class ProjectCreate(BaseModel):
 def create_project(
     project_data: ProjectCreate, 
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_clerk_user)
 ):
     """Create a new project with the current user as owner"""
     project = Project(
@@ -115,7 +115,7 @@ def add_user_to_project(project_id: int, user_id: int, db: Session = Depends(get
 @router.get("/my-projects", response_model=list[ProjectResponse])
 def get_user_projects(
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_clerk_user)
 ):
     """Get all projects for the current user"""
     # Get all project links for the user
@@ -157,7 +157,7 @@ def get_user_projects(
 @router.get("/all")
 def read_all_projects(
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_clerk_user)
 ):
     """Get all projects (admin only - add permission check if needed)"""
     projects = db.exec(select(Project)).all()
@@ -178,7 +178,7 @@ def read_project(project_id: int, db: Session = Depends(get_session)):
 def join_project_by_code(
     project_code: str, 
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_clerk_user)
 ):
     """Join a project using a project code/name"""
     statement = select(Project).where(Project.name == project_code)

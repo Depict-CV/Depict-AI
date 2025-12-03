@@ -32,6 +32,11 @@ class Config:
     
     # Frontend URL for OAuth redirects
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    
+    # Clerk Configuration
+    CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
+    CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "")
+    CLERK_ISSUER = os.getenv("CLERK_ISSUER", "")
 
     base_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(base_dir, "src", "config.yaml")

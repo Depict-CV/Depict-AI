@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { Plus, UserPlus, FolderOpen, Users, Calendar, AlertCircle } from 'lucide-vue-next';
+import { useApi } from '../../composables/useApi';
 
+const api = useApi();
 const projects = ref([]);
 const loading = ref(false);
 const error = ref(null);
@@ -12,24 +14,7 @@ const fetchProjects = async () => {
   error.value = null;
   
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch('http://localhost:8000/projects/my-projects', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch projects: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    const data = await api.get('/projects/my-projects');
     projects.value = data.map(p => ({
       ...p,
       createdAt: p.created_at
@@ -52,29 +37,11 @@ const createProject = async () => {
   error.value = null;
 
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch('http://localhost:8000/projects/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: projectName,
-        description: description
-      })
+    const newProject = await api.post('/projects/', {
+      name: projectName,
+      description: description
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to create project');
-    }
-
-    const newProject = await response.json();
     projects.value.unshift({
       ...newProject,
       createdAt: newProject.created_at
@@ -97,26 +64,8 @@ const joinProject = async () => {
   error.value = null;
 
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch(`http://localhost:8000/projects/join/${encodeURIComponent(projectCode)}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to join project');
-    }
-
-    const result = await response.json();
-    alert(result.message);
+    const result = await api.post(`/projects/join/${encodeURIComponent(projectCode)}`, {});
+    alert(result.message || 'Successfully joined project!');
     
     // Refresh projects list
     await fetchProjects();
