@@ -1,8 +1,15 @@
+import sys
+from pathlib import Path
+from typing import Optional
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select
 from jose import JWTError, jwt
-from typing import Optional
 
 from src.backend.db.database import engine
 from src.backend.db.tables import User

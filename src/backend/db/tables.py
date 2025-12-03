@@ -35,11 +35,11 @@ class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
-    hashed_password: str
+    hashed_password: str | None = Field(default=None, nullable=True)  # Nullable for OAuth users
     permission: PermissionEnum
     
-    # OAuth2 fields
-    oauth_provider: str | None = Field(default=None, nullable=True)  # "google", "microsoft", "facebook"
+    # OAuth2 fields (Clerk, Google, Microsoft, GitHub)
+    oauth_provider: str | None = Field(default=None, nullable=True)  # "clerk", "google", "microsoft", "github"
     oauth_id: str | None = Field(default=None, nullable=True)  # Provider's user ID
 
     data: List["Data"] = Relationship(back_populates="author")

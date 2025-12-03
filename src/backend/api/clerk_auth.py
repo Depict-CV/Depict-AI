@@ -2,8 +2,14 @@
 Clerk JWT authentication for FastAPI.
 Validates Clerk-issued JWTs and maps to local User model.
 """
+import sys
+from pathlib import Path
 from functools import lru_cache
 from typing import Any, Dict, Optional
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 import httpx
 from fastapi import Depends, HTTPException, status
@@ -136,10 +142,14 @@ async def get_current_clerk_user(
         if existing_username:
             username = f"{username}_{clerk_user_id[:8]}"
         
+        existing_email = session.exec(select(User).where(User.email == (email or f"{clerk_user_id}@clerk.local"))).first()
+        if existing_email:
+            email = f"{clerk_user_id}@clerk.local"
+        
         user = User(
             username=username,
             email=email or f"{clerk_user_id}@clerk.local",
-            hashed_password="",  # Not used for OAuth users
+            hashed_password=None,  # Not used for OAuth users
             permission=PermissionEnum.VIEW_ONLY,  # Default permission
             oauth_provider="clerk",
             oauth_id=clerk_user_id,
@@ -147,6 +157,23 @@ async def get_current_clerk_user(
         session.add(user)
         session.commit()
         session.refresh(user)
+    else:
+        # Update existing user's email/username if changed in Clerk
+        updated = False
+        if email and user.email != email:
+            user.email = email
+            updated = True
+        if username and user.username != username:
+            # Check username isn't taken by another user
+            existing = session.exec(select(User).where(User.username == username, User.id != user.id)).first()
+            if not existing:
+                user.username = username
+                updated = True
+        
+        if updated:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
     
     return user
 
