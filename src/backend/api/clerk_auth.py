@@ -24,6 +24,32 @@ import config
 bearer_scheme = HTTPBearer(auto_error=True)
 
 
+async def get_mock_test_user(session: Session) -> User:
+    """
+    Returns a mock test user for development/testing when DISABLE_AUTH=true.
+    Creates the user if it doesn't exist.
+    """
+    # Look for existing test user
+    statement = select(User).where(User.username == "test_user")
+    user = session.exec(statement).first()
+    
+    if not user:
+        # Create test user
+        user = User(
+            username="test_user",
+            email="test@example.com",
+            hashed_password=None,
+            permission=PermissionEnum.FULL_ACCESS,  # Give full access for testing
+            oauth_provider="test",
+            oauth_id="test_user_001",
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    
+    return user
+
+
 def get_session():
     """Dependency that yields a SQLModel Session."""
     with Session(engine) as session:
@@ -82,7 +108,13 @@ async def get_current_clerk_user(
     - Extracts user info from token (sub, email)
     - Creates or retrieves User from database
     - Maps Clerk user to local User model with oauth_provider='clerk'
+    
+    If DISABLE_AUTH=true in config, returns a mock test user without validation.
     """
+    # Development/Testing bypass
+    if config.config.DISABLE_AUTH:
+        return await get_mock_test_user(session)
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

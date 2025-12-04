@@ -16,6 +16,8 @@ help:
 	@echo "  make test         : Run tests with pytest"
 	@echo "  make backend      : Start FastAPI backend server"
 	@echo "  make frontend     : Start Vue.js frontend dev server"
+	@echo "  make frontend-nuxt: Start Nuxt 3 frontend dev server"
+	@echo "  make build-nuxt   : Build Nuxt 3 for production"
 	@echo "  make api-docs     : Generate OpenAPI documentation from FastAPI"
 	@echo "  make docs         : Start documentation server with mkdocs"
 	@echo "  make clean        : Cleanup pycache and build artifacts"
@@ -50,6 +52,18 @@ backend:
 frontend:
 	@echo "Starting Vue.js frontend dev server..."
 	cd src/frontend && npm run dev
+
+# Start Nuxt 3 frontend dev server
+.PHONY: frontend-nuxt
+frontend-nuxt:
+	@echo "Starting Nuxt 3 frontend dev server..."
+	cd src/frontend_nuxt && npm run dev
+
+# Build Nuxt 3 for production
+.PHONY: build-nuxt
+build-nuxt:
+	@echo "Building Nuxt 3 for production..."
+	cd src/frontend_nuxt && npm run build
 
 # Generate API documentation from FastAPI
 .PHONY: api-docs
