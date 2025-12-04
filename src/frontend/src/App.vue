@@ -76,7 +76,7 @@ const handleClearAllModifyRequests = () => {
   <LoginPage v-if="!isAuthenticated" @login="handleLogin" />
   
   <!-- Main App -->
-  <div v-else class="app-wrapper">
+  <div v-else class="min-h-screen bg-gray-50">
     <!-- Show annotation page when image is selected -->
     <ManualAnnotationPage 
       v-if="selectedImage" 
@@ -94,7 +94,7 @@ const handleClearAllModifyRequests = () => {
         @clear-modify-requests="handleClearAllModifyRequests"
       />
       
-      <div class="app-layout">
+      <div class="flex min-h-[calc(100vh-60px)] mt-[60px]">
         <Sidebar 
           :activeMenu="activeMenu" 
           @update:activeMenu="(menu) => activeMenu = activeMenu === menu ? null : menu"
@@ -103,7 +103,10 @@ const handleClearAllModifyRequests = () => {
         <NavPanel v-if="activeMenu" :activeMenu="activeMenu" />
       
         <!-- Main Content -->
-        <main class="main-content">
+        <main 
+          class="flex-1 p-5 transition-[margin-left] duration-300 ease-in-out"
+          :class="activeMenu ? 'ml-[320px]' : 'ml-20'"
+        >
           <ImageGallery 
             @select-image="handleSelectImage" 
             @modify-request="handleModifyRequest"
@@ -113,26 +116,3 @@ const handleClearAllModifyRequests = () => {
     </template>
   </div>
 </template>
-
-<style scoped>
-.app-wrapper {
-  min-height: 100vh;
-}
-
-.app-layout {
-  display: flex;
-  min-height: calc(100vh - 60px);
-  margin-top: 60px;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 80px;
-  padding: 20px;
-  transition: margin-left 0.3s ease;
-}
-
-.app-layout:has(.nav-panel) .main-content {
-  margin-left: calc(80px + 240px);
-}
-</style>
