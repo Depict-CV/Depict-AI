@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { FolderOpen, BarChart3, Bot, Settings, User, ChevronDown, Download, Upload, Microscope, Filter } from 'lucide-vue-next'
+import { FolderOpen, Image, BarChart3, Bot, Settings, User, ChevronDown, Download, Upload, Microscope, Filter } from 'lucide-vue-next'
 
 const { isSignedIn, user, signOut } = useAuth()
 
@@ -14,6 +14,29 @@ if (!isSignedIn.value) {
 
 const activeMenu = ref(null)
 const projects = ref([])
+const selectedProject = ref(null)
+const showImageGallery = ref(false)
+const selectedImage = ref(null)
+const showModifyDialog = ref(false)
+
+const handleSelectProject = (project) => {
+  selectedProject.value = project
+  showImageGallery.value = true
+  activeMenu.value = null
+}
+
+const handleSelectImage = (image) => {
+  selectedImage.value = image
+  // TODO: Navigate to annotation page
+  console.log('Selected image for annotation:', image)
+}
+
+const handleModifyRequest = (image) => {
+  selectedImage.value = image
+  showModifyDialog.value = true
+  // TODO: Show modify dialog
+  console.log('Modify image:', image)
+}
 
 // Mock organization data - TODO: Replace with API call
 const organizationMembers = ref([
@@ -97,6 +120,19 @@ onMounted(async () => {
               title="Projects"
             >
               <FolderOpen :size="24" />
+            </button>
+            
+            <button 
+              @click="showImageGallery = !showImageGallery; activeMenu = null"
+              :class="[
+                'w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-200',
+                showImageGallery
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              ]"
+              title="Images"
+            >
+              <Image :size="24" />
             </button>
             
             <button 
@@ -187,7 +223,7 @@ onMounted(async () => {
         class="w-80 bg-white shadow-lg fixed left-20 top-16 bottom-0 z-30 overflow-y-auto"
       >
         <div class="p-6">
-          <ProjectsPanel v-if="activeMenu === 'projects'" :projects="projects" @refreshProjects="fetchProjects" />
+          <ProjectsPanel v-if="activeMenu === 'projects'" :projects="projects" @refreshProjects="fetchProjects" @selectProject="handleSelectProject" />
           <StatsPanel v-if="activeMenu === 'stats'" />
           <AIPanel v-if="activeMenu === 'ai'" />
           <SubscriptionPanel v-if="activeMenu === 'subscription'" />
@@ -213,7 +249,32 @@ onMounted(async () => {
           activeMenu ? 'ml-[400px]' : 'ml-20'
         ]"
       >
-        <div class="max-w-7xl mx-auto">
+        <!-- Image Gallery View -->
+        <div v-if="showImageGallery" class="max-w-7xl mx-auto">
+          <div class="mb-6 flex items-center justify-between">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-900">Images</h2>
+              <p class="text-gray-600 mt-1">
+                <span v-if="selectedProject">Project: {{ selectedProject.name }}</span>
+                <span v-else>All Images</span>
+              </p>
+            </div>
+            <button 
+              @click="showImageGallery = false; selectedProject = null"
+              class="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+          <ImageGallery 
+            :project-id="selectedProject?.id"
+            @selectImage="handleSelectImage"
+            @modifyRequest="handleModifyRequest"
+          />
+        </div>
+        
+        <!-- Dashboard View -->
+        <div v-else class="max-w-7xl mx-auto">
           <div class="card">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">Welcome to Depict AI</h2>
             <p class="text-gray-600 text-lg mb-6">

@@ -19,7 +19,7 @@ Image data tool for computer vision from raw images to model training/fine-tunin
 
 2. **Install frontend dependencies:**
    ```bash
-   cd src/frontend
+   cd src/frontend_vue
    npm install
    ```
 

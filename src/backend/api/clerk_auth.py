@@ -21,7 +21,7 @@ from src.backend.db.tables import User, PermissionEnum
 from src.backend.db.database import engine
 import config
 
-bearer_scheme = HTTPBearer(auto_error=True)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_mock_test_user(session: Session) -> User:
@@ -39,7 +39,7 @@ async def get_mock_test_user(session: Session) -> User:
             username="test_user",
             email="test@example.com",
             hashed_password=None,
-            permission=PermissionEnum.FULL_ACCESS,  # Give full access for testing
+            permission=PermissionEnum.CAN_CERTIFY,  # Give highest permission for testing
             oauth_provider="test",
             oauth_id="test_user_001",
         )
@@ -98,8 +98,8 @@ def get_signing_key(token: str) -> Optional[Dict[str, Any]]:
 
 
 async def get_current_clerk_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     session: Session = Depends(get_session),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> User:
     """
     FastAPI dependency that validates Clerk JWT and returns the authenticated User.
@@ -114,6 +114,14 @@ async def get_current_clerk_user(
     # Development/Testing bypass
     if config.config.DISABLE_AUTH:
         return await get_mock_test_user(session)
+    
+    # Check if credentials were provided
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
