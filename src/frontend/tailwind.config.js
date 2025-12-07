@@ -1,8 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
+    "./components/**/*.{js,vue,ts}",
+    "./layouts/**/*.vue",
+    "./pages/**/*.vue",
+    "./plugins/**/*.{js,ts}",
+    "./app.vue",
   ],
   theme: {
     extend: {
@@ -12,10 +15,6 @@ export default {
           DEFAULT: '#2563eb',
           dark: '#1d4ed8',
         },
-      },
-      spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
       },
     },
   },

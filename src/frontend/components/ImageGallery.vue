@@ -121,46 +121,57 @@ const handleDelete = async (image, event) => {
 </script>
 
 <template>
-  <div class="image-gallery">
-    <div class="image-grid">
-      <div v-for="image in images" :key="image.id" class="image-item">
+  <div class="w-full">
+    <div class="flex flex-wrap gap-1.5 mb-5">
+      <div 
+        v-for="image in images" 
+        :key="image.id" 
+        class="relative overflow-hidden rounded-lg bg-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-[250px] group"
+      >
         <img 
           :src="image.location" 
           :alt="`Image ${image.id}`"
           loading="lazy"
-          class="image-img"
+          class="w-auto h-full object-cover block"
         />
         
         <!-- Status Badge -->
-        <div class="status-badge" :class="`status-${image.status}`">
+        <div 
+          class="absolute top-2 right-2 px-2 py-1 rounded-xl text-xs font-semibold uppercase z-[5] backdrop-blur-sm"
+          :class="{
+            'bg-amber-400/90 text-amber-900': image.status === 'pending',
+            'bg-blue-500/90 text-blue-950': image.status === 'annotated',
+            'bg-green-500/90 text-green-950': image.status === 'approved'
+          }"
+        >
           {{ image.status }}
         </div>
         
         <!-- Action Buttons Overlay -->
-        <div class="image-actions">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <button 
-            class="action-btn approve-btn" 
+            class="w-11 h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-green-600/95 hover:bg-green-600 text-white"
             @click="handleApprove(image, $event)"
             title="Approve image"
           >
             <Check :size="20" />
           </button>
           <button 
-            class="action-btn annotate-btn" 
+            class="w-11 h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-purple-600/95 hover:bg-purple-600 text-white"
             @click="handleAnnotate(image, $event)"
             title="Annotate image manually"
           >
             <Pencil :size="20" />
           </button>
           <button 
-            class="action-btn modify-btn" 
+            class="w-11 h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-blue-500/95 hover:bg-blue-500 text-white"
             @click="handleModify(image, $event)"
             title="Edit image metadata"
           >
             <Edit :size="20" />
           </button>
           <button 
-            class="action-btn delete-btn" 
+            class="w-11 h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-red-500/95 hover:bg-red-500 text-white"
             @click="handleDelete(image, $event)"
             title="Delete image"
           >
@@ -168,240 +179,60 @@ const handleDelete = async (image, event) => {
           </button>
         </div>
         
-        <div class="image-info">
-          <span class="image-id">ID: {{ image.id }}</span>
-          <span class="image-type">{{ image.type }}</span>
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 text-white text-xs flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[5]">
+          <span>ID: {{ image.id }}</span>
+          <span>{{ image.type }}</span>
         </div>
       </div>
     </div>
     
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
+    <div v-if="loading" class="text-center py-10">
+      <div class="border-4 border-gray-200 border-t-blue-500 rounded-full w-10 h-10 animate-spin mx-auto mb-2.5"></div>
       <p class="text-gray-600">Loading more images...</p>
     </div>
     
-    <div v-if="!hasMore && images.length > 0" class="end-message">
+    <div v-if="!hasMore && images.length > 0" class="text-center py-10">
       <p class="text-gray-500">No more images to load</p>
     </div>
     
-    <div v-if="images.length === 0 && !loading" class="empty-message">
+    <div v-if="images.length === 0 && !loading" class="text-center py-10">
       <p class="text-gray-500">No images found</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.image-gallery {
-  width: 100%;
-}
-
-.image-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 20px;
-}
-
-.image-item {
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
-  height: 250px;
-  border-radius: 8px;
-  background: #f3f4f6;
-}
-
-.image-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.image-img {
-  width: auto;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Status Badge */
-.status-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  z-index: 5;
-  backdrop-filter: blur(4px);
-}
-
-.status-pending {
-  background: rgba(251, 191, 36, 0.9);
-  color: #78350f;
-}
-
-.status-annotated {
-  background: rgba(59, 130, 246, 0.9);
-  color: #1e3a8a;
-}
-
-.status-approved {
-  background: rgba(34, 197, 94, 0.9);
-  color: #14532d;
-}
-
-/* Action Buttons Overlay */
-.image-actions {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  gap: 12px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 10;
-}
-
-.image-item:hover .image-actions {
-  opacity: 1;
-}
-
-.action-btn {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.approve-btn {
-  background: rgba(39, 174, 96, 0.95);
-  color: white;
-}
-
-.approve-btn:hover {
-  background: #27ae60;
-}
-
-.annotate-btn {
-  background: rgba(155, 89, 182, 0.95);
-  color: white;
-}
-
-.annotate-btn:hover {
-  background: #9b59b6;
-}
-
-.modify-btn {
-  background: rgba(52, 152, 219, 0.95);
-  color: white;
-}
-
-.modify-btn:hover {
-  background: #3498db;
-}
-
-.delete-btn {
-  background: rgba(231, 76, 60, 0.95);
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #e74c3c;
-}
-
-.image-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  padding: 8px;
-  color: white;
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 5;
-}
-
-.image-item:hover .image-info {
-  opacity: 1;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-}
-
-.spinner {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 10px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.end-message,
-.empty-message {
-  text-align: center;
-  padding: 40px;
-}
-
-/* Responsive design */
+/* Responsive design - Tailwind breakpoints: sm:640px md:768px lg:1024px xl:1280px */
 @media (max-width: 1200px) {
-  .image-grid {
-    gap: 8px;
+  .flex-wrap {
+    gap: 0.5rem;
   }
   
-  .image-item {
+  .h-\[250px\] {
     height: 220px;
   }
 }
 
 @media (max-width: 900px) {
-  .image-grid {
-    gap: 10px;
+  .flex-wrap {
+    gap: 0.625rem;
   }
   
-  .image-item {
+  .h-\[250px\] {
     height: 200px;
   }
 }
 
 @media (max-width: 600px) {
-  .image-grid {
-    gap: 12px;
+  .flex-wrap {
+    gap: 0.75rem;
   }
   
-  .image-item {
+  .h-\[250px\] {
     height: 180px;
   }
   
-  .action-btn {
+  .w-11 {
     width: 36px;
     height: 36px;
   }
