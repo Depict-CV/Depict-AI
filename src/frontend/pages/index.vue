@@ -39,15 +39,21 @@ const handleSelectImage = (image) => {
 
 const handleModifyRequest = (image) => {
   // Add change request to notification center
-  changeRequests.value.push({
+  const newRequest = {
     id: Date.now(),
     imageId: image.id,
     image: image,
     type: 'annotation_change',
     status: 'pending',
     createdAt: new Date().toISOString(),
-    project: selectedProject.value?.name || 'Unknown Project'
-  })
+    project: selectedProject.value?.name || 'Unknown Project',
+    projectId: selectedProject.value?.id
+  }
+  
+  changeRequests.value.push(newRequest)
+  
+  // Save to localStorage
+  saveNotificationsToStorage()
   
   console.log('Change request added:', image)
 }
@@ -96,14 +102,35 @@ const getRoleFromPermission = (permission) => {
   return roleMap[permission] || 'Viewer'
 }
 
+const saveNotificationsToStorage = () => {
+  try {
+    localStorage.setItem('changeRequests', JSON.stringify(changeRequests.value))
+  } catch (error) {
+    console.error('Failed to save notifications:', error)
+  }
+}
+
+const loadNotificationsFromStorage = () => {
+  try {
+    const saved = localStorage.getItem('changeRequests')
+    if (saved) {
+      changeRequests.value = JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('Failed to load notifications:', error)
+  }
+}
+
 const removeChangeRequest = (requestId) => {
   changeRequests.value = changeRequests.value.filter(req => req.id !== requestId)
+  saveNotificationsToStorage()
 }
 
 const markAsCompleted = (requestId) => {
   const request = changeRequests.value.find(req => req.id === requestId)
   if (request) {
     request.status = 'completed'
+    saveNotificationsToStorage()
   }
 }
 
@@ -126,6 +153,9 @@ onMounted(async () => {
       console.error('Failed to restore selected project:', error)
     }
   }
+  
+  // Load notifications from localStorage
+  loadNotificationsFromStorage()
 })
 </script>
 
