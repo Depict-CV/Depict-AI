@@ -126,7 +126,7 @@ const handleDelete = async (image, event) => {
       <div 
         v-for="image in images" 
         :key="image.id" 
-        class="relative overflow-hidden rounded-lg bg-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-[250px] group"
+        class="relative overflow-hidden bg-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-[250px] group"
       >
         <img 
           :src="image.location" 
@@ -166,7 +166,7 @@ const handleDelete = async (image, event) => {
           <button 
             class="w-11 h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-blue-500/95 hover:bg-blue-500 text-white"
             @click="handleModify(image, $event)"
-            title="Edit image metadata"
+            title="Request annotation change"
           >
             <Edit :size="20" />
           </button>

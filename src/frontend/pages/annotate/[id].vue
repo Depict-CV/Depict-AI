@@ -113,8 +113,9 @@ const setupKonva = (img) => {
   const container = stageContainer.value
   if (!container) return
   
-  const containerWidth = container.clientWidth
-  const containerHeight = container.clientHeight
+  // Wait for DOM to fully render
+  const containerWidth = container.parentElement?.clientWidth || window.innerWidth - 350
+  const containerHeight = container.parentElement?.clientHeight || window.innerHeight - 100
   
   // Calculate scaling to fit image
   const scale = Math.min(
@@ -2245,6 +2246,8 @@ onUnmounted(() => {
   cursor: crosshair;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   background: white;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* Canvas Hints */

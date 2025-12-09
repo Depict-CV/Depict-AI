@@ -44,9 +44,7 @@ def create_project(
     project = Project(
         name=project_data.name,
         description=project_data.description,
-        owner_id=current_user.id,
-        status="active",
-        created_at=datetime.now()
+        owner_id=current_user.id
     )
     db.add(project)
     db.commit()
@@ -71,8 +69,8 @@ def create_project(
         name=project.name,
         description=project.description,
         owner_id=project.owner_id,
-        status=project.status,
-        created_at=project.created_at,
+        status="active",
+        created_at=datetime.now(),
         members=2 if ai_user else 1,  # Owner + AI user
         images=0,
         role="Admin"
@@ -144,8 +142,8 @@ def get_user_projects(
             name=project.name,
             description=project.description,
             owner_id=project.owner_id,
-            status=project.status,
-            created_at=project.created_at,
+            status="active",
+            created_at=datetime.now(),
             members=member_count,
             images=image_count,
             role=role

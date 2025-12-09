@@ -34,6 +34,13 @@ def get_user_projects(user_id: int, db: Session = Depends(get_session)):
 ###############
 #    read     #
 ###############
+@router.get("/")
+def get_all_users(db: Session = Depends(get_session)):
+    """Get all users in the system"""
+    users = db.exec(select(User)).all()
+    return users
+
+
 @router.get("/{user_id}")
 def read_user(user_id: int, db: Session = Depends(get_session)):
     user = db.get(User, user_id)

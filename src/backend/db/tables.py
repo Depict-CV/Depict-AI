@@ -97,10 +97,11 @@ class Annotation(SQLModel, table=True):
     creation_date: datetime | None = Field(default=None, nullable=True)
     # last_updated_date: datetime | None  = Field(default=None, nullable=True)
 
+    # annotation colud be another image as well
+
     data_id: int | None = Field(default=None, foreign_key="data.id")
     author_id: int | None = Field(default=None, foreign_key="user.id")
     project_id: int | None = Field(default=None, foreign_key="project.id")
 
 
-# TODO add organization table ( a comapny can only its project not form other company)
 # TODO maybe add the list of labels that exist in the project

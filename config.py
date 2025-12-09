@@ -22,9 +22,6 @@ class Config:
     CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
     CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "")
     CLERK_ISSUER = os.getenv("CLERK_ISSUER", "")
-    
-    # Development/Testing: Disable authentication (use with caution!)
-    DISABLE_AUTH = os.getenv("DISABLE_AUTH", "false").lower() == "true"
 
     base_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(base_dir, "src", "config.yaml")

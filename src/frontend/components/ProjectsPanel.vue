@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { Plus, Users, Search, X } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { Plus, Search, X, UserPlus } from 'lucide-vue-next'
 
 const props = defineProps({
   projects: {
@@ -14,13 +14,30 @@ const emit = defineEmits(['selectProject', 'refreshProjects'])
 const api = useApi()
 
 const showCreateDialog = ref(false)
-const showJoinDialog = ref(false)
 const newProjectName = ref('')
 const newProjectDescription = ref('')
-const joinProjectCode = ref('')
 const isCreating = ref(false)
-const isJoining = ref(false)
+const joiningProjectId = ref(null)
 const errorMessage = ref('')
+const allProjects = ref([])
+
+// Fetch all projects on mount
+const fetchAllProjects = async () => {
+  try {
+    allProjects.value = await api.get('/projects/all')
+  } catch (error) {
+    console.error('Failed to fetch all projects:', error)
+  }
+}
+
+onMounted(() => {
+  fetchAllProjects()
+})
+
+// Check if user is a member of a project
+const isMember = (project) => {
+  return props.projects.some(p => p.id === project.id)
+}
 
 const handleCreateProject = async () => {
   if (!newProjectName.value.trim()) return
@@ -29,10 +46,14 @@ const handleCreateProject = async () => {
   errorMessage.value = ''
   
   try {
-    const newProject = await api.post('/projects/', {
-      name: newProjectName.value,
-      description: newProjectDescription.value
-    })
+    const payload = {
+      name: newProjectName.value.trim(),
+      description: newProjectDescription.value.trim() || undefined
+    }
+    
+    const newProject = await api.post('/projects/', payload)
+    
+    console.log('Project created successfully:', newProject)
     
     // Reset form
     newProjectName.value = ''
@@ -46,35 +67,30 @@ const handleCreateProject = async () => {
     alert(`Project "${newProject.name}" created successfully!`)
   } catch (error) {
     console.error('Failed to create project:', error)
-    errorMessage.value = error.data?.detail || 'Failed to create project. Please try again.'
+    errorMessage.value = error?.data?.detail || error?.message || 'Failed to create project. Please try again.'
   } finally {
     isCreating.value = false
   }
 }
 
-const handleJoinProject = async () => {
-  if (!joinProjectCode.value.trim()) return
-  
-  isJoining.value = true
-  errorMessage.value = ''
+const handleJoinProject = async (project) => {
+  joiningProjectId.value = project.id
   
   try {
-    await api.post(`/projects/join/${joinProjectCode.value}`)
-    
-    // Reset form
-    joinProjectCode.value = ''
-    showJoinDialog.value = false
+    await api.post(`/projects/join/${project.name}`)
     
     // Refresh the projects list
     emit('refreshProjects')
+    await fetchAllProjects()
     
     // Show success message
-    alert('Successfully joined project!')
+    alert(`Successfully joined "${project.name}"!`)
   } catch (error) {
     console.error('Failed to join project:', error)
-    errorMessage.value = error.data?.detail || 'Failed to join project. Please check the code and try again.'
+    const message = error?.data?.detail || error?.message || 'Failed to join project.'
+    alert(message)
   } finally {
-    isJoining.value = false
+    joiningProjectId.value = null
   }
 }
 
@@ -90,7 +106,7 @@ const selectProject = (project) => {
     <h2 class="text-2xl font-bold mb-6">My Projects</h2>
     
     <!-- Action Buttons -->
-    <div class="space-y-2 mb-6">
+    <div class="mb-6">
       <button 
         @click="showCreateDialog = true"
         class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
@@ -98,35 +114,51 @@ const selectProject = (project) => {
         <Plus :size="18" />
         <span>Create Project</span>
       </button>
-      
-      <button 
-        @click="showJoinDialog = true"
-        class="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
-      >
-        <Users :size="18" />
-        <span>Join Project</span>
-      </button>
     </div>
     
     <!-- Projects List -->
-    <div v-if="projects.length === 0" class="text-center py-12">
+    <div v-if="allProjects.length === 0" class="text-center py-12">
       <Search :size="48" class="mx-auto text-gray-300 mb-3" />
       <p class="text-gray-500 text-sm">No projects yet</p>
-      <p class="text-gray-400 text-xs mt-1">Create or join a project to get started</p>
+      <p class="text-gray-400 text-xs mt-1">Create a project to get started</p>
     </div>
     
     <div v-else class="space-y-3">
       <div 
-        v-for="project in projects" 
+        v-for="project in allProjects" 
         :key="project.id"
-        @click="selectProject(project)"
-        class="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+        class="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+        :class="{ 'cursor-pointer': isMember(project) }"
+        @click="isMember(project) ? selectProject(project) : null"
       >
-        <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
-        <p class="text-sm text-gray-500 mt-1">{{ project.description || 'No description' }}</p>
-        <div class="flex gap-4 mt-3 text-xs text-gray-400">
-          <span>{{ project.images || 0 }} images</span>
-          <span>{{ project.members || 0 }} members</span>
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
+            <p class="text-sm text-gray-500 mt-1">{{ project.description || 'No description' }}</p>
+            <div class="flex gap-4 mt-3 text-xs text-gray-400">
+              <span>{{ project.images || 0 }} images</span>
+              <span>{{ project.members || 0 }} members</span>
+            </div>
+          </div>
+          
+          <!-- Join Button for non-member projects -->
+          <button
+            v-if="!isMember(project)"
+            @click.stop="handleJoinProject(project)"
+            :disabled="joiningProjectId === project.id"
+            class="ml-3 flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+          >
+            <UserPlus :size="16" />
+            <span>{{ joiningProjectId === project.id ? 'Joining...' : 'Join' }}</span>
+          </button>
+          
+          <!-- Member Badge -->
+          <div
+            v-else
+            class="ml-3 px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg"
+          >
+            Member
+          </div>
         </div>
       </div>
     </div>
@@ -182,46 +214,6 @@ const selectProject = (project) => {
               class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
             >
               {{ isCreating ? 'Creating...' : 'Create' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Join Project Dialog -->
-    <div v-if="showJoinDialog" class="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4" @click="showJoinDialog = false">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-        <div class="space-y-4">
-          <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-            {{ errorMessage }}
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Project Invite Code *</label>
-            <input 
-              v-model="joinProjectCode"
-              type="text" 
-              placeholder="e.g., ABC123XYZ"
-              :disabled="isJoining"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase disabled:bg-gray-100"
-            />
-            <p class="text-xs text-gray-500 mt-2">Enter the invite code shared by the project owner</p>
-          </div>
-          
-          <div class="flex gap-3 pt-4">
-            <button 
-              @click="showJoinDialog = false"
-              :disabled="isJoining"
-              class="flex-1 px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button 
-              @click="handleJoinProject"
-              :disabled="!joinProjectCode.trim() || isJoining"
-              class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
-            >
-              {{ isJoining ? 'Joining...' : 'Join' }}
             </button>
           </div>
         </div>

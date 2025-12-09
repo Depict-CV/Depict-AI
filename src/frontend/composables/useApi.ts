@@ -7,7 +7,7 @@ export const useApi = () => {
       throw new Error('Not authenticated')
     }
 
-    const token = await $clerk.session.getToken({ template: 'default' })
+    const token = await $clerk.session.getToken()
 
     return $fetch(`${config.public.apiBaseUrl}${endpoint}`, {
       ...options,

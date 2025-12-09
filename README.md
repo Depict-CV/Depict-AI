@@ -45,6 +45,8 @@ make test
 
 # Activate Poetry shell
 make shell
+or
+poetry env activate
 ```
 
 ### Manual Commands
