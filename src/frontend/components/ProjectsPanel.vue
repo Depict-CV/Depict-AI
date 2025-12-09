@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Plus, Search, X, UserPlus } from 'lucide-vue-next'
+import { Plus, Search, X, UserPlus, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   projects: {
@@ -63,8 +63,7 @@ const handleCreateProject = async () => {
     // Refresh the projects list
     emit('refreshProjects')
     
-    // Show success message
-    alert(`Project "${newProject.name}" created successfully!`)
+
   } catch (error) {
     console.error('Failed to create project:', error)
     errorMessage.value = error?.data?.detail || error?.message || 'Failed to create project. Please try again.'
@@ -83,14 +82,30 @@ const handleJoinProject = async (project) => {
     emit('refreshProjects')
     await fetchAllProjects()
     
-    // Show success message
-    alert(`Successfully joined "${project.name}"!`)
+    
   } catch (error) {
     console.error('Failed to join project:', error)
     const message = error?.data?.detail || error?.message || 'Failed to join project.'
     alert(message)
   } finally {
     joiningProjectId.value = null
+  }
+}
+
+const handleDeleteProject = async (project, event) => {
+  event.stopPropagation()
+  
+  try {
+    await api.delete(`/projects/${project.id}`)
+    
+    // Refresh the projects list
+    emit('refreshProjects')
+    await fetchAllProjects()
+    
+  } catch (error) {
+    console.error('Failed to delete project:', error)
+    const message = error?.data?.detail || error?.message || 'Failed to delete project.'
+    alert(message)
   }
 }
 
@@ -127,38 +142,52 @@ const selectProject = (project) => {
       <div 
         v-for="project in allProjects" 
         :key="project.id"
-        class="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+        class="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all relative"
         :class="{ 'cursor-pointer': isMember(project) }"
         @click="isMember(project) ? selectProject(project) : null"
       >
-        <div class="flex items-start justify-between">
+        <div class="flex items-start justify-between mb-2">
           <div class="flex-1">
             <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
             <p class="text-sm text-gray-500 mt-1">{{ project.description || 'No description' }}</p>
-            <div class="flex gap-4 mt-3 text-xs text-gray-400">
-              <span>{{ project.images || 0 }} images</span>
-              <span>{{ project.members || 0 }} members</span>
+          </div>
+          
+          <div class="flex items-center gap-2 ml-3">
+            <!-- Join Button for non-member projects -->
+            <button
+              v-if="!isMember(project)"
+              @click.stop="handleJoinProject(project)"
+              :disabled="joiningProjectId === project.id"
+              class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+            >
+              <UserPlus :size="16" />
+              <span>{{ joiningProjectId === project.id ? 'Joining...' : 'Join' }}</span>
+            </button>
+            
+            <!-- Member Badge -->
+            <div
+              v-else
+              class="px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg"
+            >
+              Member
             </div>
           </div>
-          
-          <!-- Join Button for non-member projects -->
-          <button
-            v-if="!isMember(project)"
-            @click.stop="handleJoinProject(project)"
-            :disabled="joiningProjectId === project.id"
-            class="ml-3 flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
-          >
-            <UserPlus :size="16" />
-            <span>{{ joiningProjectId === project.id ? 'Joining...' : 'Join' }}</span>
-          </button>
-          
-          <!-- Member Badge -->
-          <div
-            v-else
-            class="ml-3 px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg"
-          >
-            Member
+        </div>
+        
+        <div class="flex items-end justify-between">
+          <div class="flex gap-4 text-xs text-gray-400">
+            <span>{{ project.images || 0 }} images</span>
+            <span>{{ project.members || 0 }} members</span>
           </div>
+          
+          <!-- Delete Button at bottom right -->
+          <button
+            @click="handleDeleteProject(project, $event)"
+            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete project"
+          >
+            <Trash2 :size="18" />
+          </button>
         </div>
       </div>
     </div>

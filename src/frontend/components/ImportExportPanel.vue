@@ -2,34 +2,93 @@
 import { ref } from 'vue'
 import { Upload, Download, FileJson, FileImage, Database } from 'lucide-vue-next'
 
+const props = defineProps({
+  projectId: {
+    type: Number,
+    default: null
+  }
+})
+
 const selectedProject = ref(null)
 const exportFormat = ref('json')
 const importFile = ref(null)
 const isExporting = ref(false)
 const isImporting = ref(false)
+const selectedImages = ref([])
+const folderPath = ref('')
+
+const api = useApi()
+const { user } = useAuth()
 
 const handleFileUpload = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    importFile.value = file
+  const files = Array.from(event.target.files)
+  const imageFiles = files.filter(file => file.type.startsWith('image/'))
+  
+  if (imageFiles.length > 0) {
+    selectedImages.value = imageFiles
+    if (imageFiles[0].webkitRelativePath) {
+      folderPath.value = imageFiles[0].webkitRelativePath.split('/')[0]
+    } else {
+      folderPath.value = `${imageFiles.length} image(s)`
+    }
+  } else {
+    // Single file upload (non-image)
+    const file = files[0]
+    if (file) {
+      importFile.value = file
+    }
   }
 }
 
 const handleImport = async () => {
-  if (!importFile.value) return
-  
-  isImporting.value = true
-  try {
-    // TODO: Implement actual import logic with API
-    console.log('Importing:', importFile.value.name)
-    await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-    alert('Import successful!')
-  } catch (error) {
-    console.error('Import failed:', error)
-    alert('Import failed!')
-  } finally {
-    isImporting.value = false
-    importFile.value = null
+  // Check if importing images or annotation file
+  if (selectedImages.value.length > 0) {
+    // Import images
+    const currentProjectId = props.projectId
+    if (!currentProjectId) {
+      alert('Please select a project first')
+      return
+    }
+    
+    isImporting.value = true
+    try {
+      // Prepare data for batch upload
+      const dataList = selectedImages.value.map(file => ({
+        location: URL.createObjectURL(file), // Temporary - should upload to storage first
+        user_id: user.value.id,
+        project_id: currentProjectId,
+        type: 'image'
+      }))
+      
+      // Call batch endpoint
+      const result = await api.post('/data/add_batch', dataList)
+      
+      alert(`Successfully loaded ${result.created} images! ${result.skipped} duplicates were skipped.`)
+      
+      // Clear selection
+      selectedImages.value = []
+      folderPath.value = ''
+    } catch (error) {
+      console.error('Failed to import images:', error)
+      alert('Failed to import images')
+    } finally {
+      isImporting.value = false
+    }
+  } else if (importFile.value) {
+    // Import annotation file
+    isImporting.value = true
+    try {
+      // TODO: Implement actual import logic with API
+      console.log('Importing:', importFile.value.name)
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+      alert('Import successful!')
+    } catch (error) {
+      console.error('Import failed:', error)
+      alert('Import failed!')
+    } finally {
+      isImporting.value = false
+      importFile.value = null
+    }
   }
 }
 
@@ -119,25 +178,44 @@ const handleExport = async () => {
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Images or Folder</label>
             <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
               <input 
                 type="file" 
                 @change="handleFileUpload"
-                accept=".json,.csv,.zip"
+                webkitdirectory
+                directory
+                multiple
+                accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.tiff,.tif,.ico"
                 class="hidden" 
                 id="file-upload"
               />
               <label for="file-upload" class="cursor-pointer">
                 <Upload :size="32" class="mx-auto text-gray-400 mb-2" />
                 <p class="text-sm text-gray-600 mb-1">
-                  <span class="text-blue-600 font-medium">Click to upload</span> or drag and drop
+                  <span class="text-blue-600 font-medium">Click to select folder</span> with images
                 </p>
-                <p class="text-xs text-gray-500">JSON, CSV, or ZIP (max 100MB)</p>
+                <p class="text-xs text-gray-500">Supported: JPG, PNG, GIF, BMP, WEBP, SVG, TIFF</p>
               </label>
             </div>
             
-            <div v-if="importFile" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div v-if="selectedImages.length > 0" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <FileImage :size="18" class="text-blue-600" />
+                  <span class="text-sm font-medium text-gray-900">{{ folderPath }}</span>
+                </div>
+                <button 
+                  @click="selectedImages = []; folderPath = ''"
+                  class="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  Clear
+                </button>
+              </div>
+              <p class="text-xs text-gray-600">{{ selectedImages.length }} images selected</p>
+            </div>
+
+            <div v-else-if="importFile" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <FileJson :size="18" class="text-blue-600" />
                 <span class="text-sm font-medium text-gray-900">{{ importFile.name }}</span>
@@ -159,12 +237,12 @@ const handleExport = async () => {
           
           <button 
             @click="handleImport"
-            :disabled="!importFile || isImporting"
+            :disabled="(!importFile && selectedImages.length === 0) || isImporting"
             class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Upload :size="18" />
-            <span v-if="!isImporting">Import Data</span>
-            <span v-else>Importing...</span>
+            <span v-if="!isImporting">{{ selectedImages.length > 0 ? 'Load Images to Database' : 'Import Data' }}</span>
+            <span v-else>{{ selectedImages.length > 0 ? 'Loading...' : 'Importing...' }}</span>
           </button>
         </div>
       </div>

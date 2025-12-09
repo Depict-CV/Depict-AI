@@ -25,6 +25,10 @@ const handleSelectProject = (project) => {
   selectedProject.value = project
   showImageGallery.value = true
   activeMenu.value = null
+  // Persist selected project to sessionStorage
+  if (project) {
+    sessionStorage.setItem('selectedProject', JSON.stringify(project))
+  }
 }
 
 const handleSelectImage = (image) => {
@@ -112,6 +116,16 @@ const openChangeRequest = (request) => {
 onMounted(async () => {
   await fetchProjects()
   await fetchOrganizationMembers()
+  
+  // Restore selected project from sessionStorage
+  const savedProject = sessionStorage.getItem('selectedProject')
+  if (savedProject) {
+    try {
+      selectedProject.value = JSON.parse(savedProject)
+    } catch (error) {
+      console.error('Failed to restore selected project:', error)
+    }
+  }
 })
 </script>
 
@@ -273,7 +287,7 @@ onMounted(async () => {
           <ProjectsPanel v-if="activeMenu === 'projects'" :projects="projects" @refreshProjects="fetchProjects" @selectProject="handleSelectProject" />
           <StatsPanel v-if="activeMenu === 'stats'" />
           <AIPanel v-if="activeMenu === 'ai'" />
-          <ImportExportPanel v-if="activeMenu === 'import-export'" />
+          <ImportExportPanel v-if="activeMenu === 'import-export'" :projectId="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel v-if="activeMenu === 'filter'" />
         </div>
