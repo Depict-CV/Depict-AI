@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Check, Edit, Trash2, Pencil } from 'lucide-vue-next'
 
 const emit = defineEmits(['selectImage', 'modifyRequest'])
@@ -19,7 +19,7 @@ const skip = ref(0)
 const limit = 20
 
 const fetchImages = async () => {
-  if (loading.value || !hasMore.value) return
+  if (loading.value || !hasMore.value || !props.projectId) return
   
   loading.value = true
   try {
@@ -74,8 +74,26 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
-  fetchImages()
+  if (props.projectId) {
+    fetchImages()
+  }
   window.addEventListener('scroll', handleScroll)
+})
+
+// Watch for projectId changes
+watch(() => props.projectId, (newProjectId) => {
+  if (newProjectId) {
+    // Reset state when project changes
+    images.value = []
+    skip.value = 0
+    hasMore.value = true
+    fetchImages()
+  } else {
+    // Clear images when no project selected
+    images.value = []
+    skip.value = 0
+    hasMore.value = true
+  }
 })
 
 onUnmounted(() => {
@@ -195,7 +213,11 @@ const handleDelete = async (image, event) => {
       <p class="text-gray-500">No more images to load</p>
     </div>
     
-    <div v-if="images.length === 0 && !loading" class="text-center py-10">
+    <div v-if="!projectId" class="text-center py-20">
+      <p class="text-gray-500 text-lg">Please select a project first</p>
+    </div>
+    
+    <div v-else-if="images.length === 0 && !loading" class="text-center py-10">
       <p class="text-gray-500">No images found</p>
     </div>
   </div>

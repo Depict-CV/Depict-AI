@@ -56,7 +56,12 @@ def create_data_batch(data_list: List[dict] = Body(...), db: Session = Depends(g
             skipped_items.append({"location": location, "reason": "already exists"})
             continue
 
-        user = db.get(User, user_id)
+        # Try to get user by ID (integer) first, then by oauth_id (string)
+        user = db.get(User, user_id) if isinstance(user_id, int) else None
+        if not user:
+            # Try to find by oauth_id
+            user_statement = select(User).where(User.oauth_id == str(user_id))
+            user = db.exec(user_statement).first()
         if not user:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
 
@@ -64,7 +69,7 @@ def create_data_batch(data_list: List[dict] = Body(...), db: Session = Depends(g
         if not project:
             raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
 
-        new_data = Data(location=location, author_id=user_id, project_id=project_id, type=data_type)
+        new_data = Data(location=location, author_id=user.id, project_id=project_id, type=data_type)
         db.add(new_data)
         created_items.append(new_data)
 

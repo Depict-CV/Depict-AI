@@ -16,6 +16,7 @@ const isExporting = ref(false)
 const isImporting = ref(false)
 const selectedImages = ref([])
 const folderPath = ref('')
+const basePath = ref('')
 
 const api = useApi()
 const { user } = useAuth()
@@ -25,7 +26,10 @@ const handleFileUpload = (event) => {
   const imageFiles = files.filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length > 0) {
-    selectedImages.value = imageFiles
+    selectedImages.value = imageFiles.map(file => ({
+      file: file,
+      path: file.path || file.webkitRelativePath || file.name // Full path (Electron) or relative path
+    }))
     if (imageFiles[0].webkitRelativePath) {
       folderPath.value = imageFiles[0].webkitRelativePath.split('/')[0]
     } else {
@@ -53,12 +57,25 @@ const handleImport = async () => {
     isImporting.value = true
     try {
       // Prepare data for batch upload
-      const dataList = selectedImages.value.map(file => ({
-        location: URL.createObjectURL(file), // Temporary - should upload to storage first
-        user_id: user.value.id,
-        project_id: currentProjectId,
-        type: 'image'
-      }))
+      // TODO: Upload files to remote storage (S3, MinIO) and use remote URLs
+      // For now, using local file paths
+      const dataList = selectedImages.value.map(item => {
+        // Construct full path: base path + relative path
+        let fullPath = item.path
+        if (basePath.value && !item.path.includes(basePath.value)) {
+          // Normalize path separators
+          const normalizedBase = basePath.value.replace(/\\/g, '/')
+          const normalizedRelative = item.path.replace(/\\/g, '/')
+          fullPath = `${normalizedBase}/${normalizedRelative}`.replace(/\/+/g, '/')
+        }
+        
+        return {
+          location: fullPath, // Full local file path
+          user_id: user.value.id,
+          project_id: currentProjectId,
+          type: 'image'
+        }
+      })
       
       // Call batch endpoint
       const result = await api.post('/data/add_batch', dataList)
@@ -177,6 +194,17 @@ const handleExport = async () => {
         </div>
         
         <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Base Directory Path</label>
+            <input 
+              v-model="basePath"
+              type="text"
+              placeholder="e.g., C:/Users/YourName/Pictures or /home/user/images"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">Enter the full path to the folder containing your images</p>
+          </div>
+          
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Upload Images or Folder</label>
             <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
