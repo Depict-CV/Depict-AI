@@ -88,8 +88,26 @@ def create_data_batch(data_list: List[dict] = Body(...), db: Session = Depends(g
 ###############
 #    read     #
 ###############
+@router.get("/")
+def read_data_paginated(
+    project_id: int = Query(..., description="Project ID to fetch data for"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of records to return"),
+    db: Session = Depends(get_session)
+):
+    """Get paginated data for a project"""
+    print("="*100)
+    print("API CALL: /data/ - Fetching data for project_id:", project_id, "skip:", skip, "limit:", limit)
+    print("="*100)
+    statement = select(Data).where(Data.project_id == project_id).offset(skip).limit(limit)
+    data_list = db.exec(statement).all()
+    print(f"Found {len(data_list)} records")
+    return data_list
+
+
 @router.get("/non_labeled")
 def read_non_labeled_data(project_id: int = Query(...), db: Session = Depends(get_session)):
+    print("1"*100)
     statement = select(Data).where(
         (Data.project_id == project_id)
         & (~Data.id.in_(select(Annotation.data_id).where(Annotation.project_id == project_id)))
@@ -100,6 +118,7 @@ def read_non_labeled_data(project_id: int = Query(...), db: Session = Depends(ge
 
 @router.post("/batch")
 def read_data_batch(data_ids: dict = Body(...), db: Session = Depends(get_session)):
+    print("2"*100)
     ids = data_ids["data_ids"]
     if not ids or not isinstance(ids, list):
         raise HTTPException(status_code=400, detail="data_ids must be a non-empty list")

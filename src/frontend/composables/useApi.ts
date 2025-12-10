@@ -20,7 +20,21 @@ export const useApi = () => {
   }
 
   return {
-    get: (endpoint: string) => apiFetch(endpoint),
+    get: (endpoint: string, params?: any) => {
+      // Build query string from params
+      if (params) {
+        const queryString = new URLSearchParams(
+          Object.entries(params).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== null) {
+              acc[key] = String(value)
+            }
+            return acc
+          }, {} as Record<string, string>)
+        ).toString()
+        endpoint = queryString ? `${endpoint}?${queryString}` : endpoint
+      }
+      return apiFetch(endpoint)
+    },
     post: (endpoint: string, data: any) => apiFetch(endpoint, { method: 'POST', body: data }),
     put: (endpoint: string, data: any) => apiFetch(endpoint, { method: 'PUT', body: data }),
     delete: (endpoint: string) => apiFetch(endpoint, { method: 'DELETE' }),

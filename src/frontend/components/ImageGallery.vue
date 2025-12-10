@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Check, Edit, Trash2, Pencil } from 'lucide-vue-next'
+import { Check, Edit, Trash2, Pencil, Database, Image as ImageIcon } from 'lucide-vue-next'
 
 const emit = defineEmits(['selectImage', 'modifyRequest'])
 
@@ -17,50 +17,98 @@ const loading = ref(false)
 const hasMore = ref(true)
 const skip = ref(0)
 const limit = 20
+const useMockData = ref(false) // Default to database images
 
 const fetchImages = async () => {
   if (loading.value || !hasMore.value || !props.projectId) return
   
   loading.value = true
   try {
-    // TODO: Replace with actual API call when backend endpoint is ready
-    // const response = await api.get(`/images?project_id=${props.projectId}&skip=${skip.value}&limit=${limit}`)
-    // images.value.push(...response.images)
-    // hasMore.value = response.has_more
-    
-    // Mock data for now
-    const shapes = ['square', 'portrait', 'landscape']
-    const dimensions = {
-      square: { width: 400, height: 400 },
-      portrait: { width: 300, height: 450 },
-      landscape: { width: 450, height: 300 }
-    }
-    
-    const newImages = []
-    for (let i = 0; i < limit; i++) {
-      const imageId = skip.value + i + 1
-      const shape = shapes[Math.floor(Math.random() * shapes.length)]
-      const { width, height } = dimensions[shape]
+    if (useMockData.value) {
+      // Mock data
+      const shapes = ['square', 'portrait', 'landscape']
+      const dimensions = {
+        square: { width: 400, height: 400 },
+        portrait: { width: 300, height: 450 },
+        landscape: { width: 450, height: 300 }
+      }
       
-      newImages.push({
-        id: imageId,
-        location: `https://picsum.photos/${width}/${height}?random=${imageId}`,
-        type: shape,
-        status: ['pending', 'annotated', 'approved'][Math.floor(Math.random() * 3)]
-      })
-    }
-    
-    if (skip.value >= 1000) {
-      hasMore.value = false
+      const newImages = []
+      for (let i = 0; i < limit; i++) {
+        const imageId = skip.value + i + 1
+        const shape = shapes[Math.floor(Math.random() * shapes.length)]
+        const { width, height } = dimensions[shape]
+        
+        newImages.push({
+          id: imageId,
+          location: `https://picsum.photos/${width}/${height}?random=${imageId}`,
+          type: shape,
+          status: ['pending', 'annotated', 'approved'][Math.floor(Math.random() * 3)]
+        })
+      }
+      
+      if (skip.value >= 1000) {
+        hasMore.value = false
+      } else {
+        images.value.push(...newImages)
+        skip.value += limit
+      }
     } else {
+      // Real data from database
+      const response = await api.get('/data/', {
+        project_id: props.projectId,
+        skip: skip.value,
+        limit: limit
+      })
+      
+      console.log('Database response:', response)
+      console.log('Number of images fetched:', response.length)
+      
+      // Transform database response to match expected format
+      const newImages = response.map(item => {
+        console.log('Item location:', item.location)
+        
+        // Check if location is a URL or file path
+        let imageUrl = item.location
+        if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
+          // Local file path - serve through backend
+          const encodedPath = encodeURIComponent(item.location)
+          imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
+          console.log('Converted to backend URL:', imageUrl)
+        }
+        
+        return {
+          id: item.id,
+          location: imageUrl,
+          type: item.type,
+          status: 'pending' // TODO: Get actual status from annotations
+        }
+      })
+      
+      console.log('Transformed images:', newImages)
+      
       images.value.push(...newImages)
       skip.value += limit
+      
+      // If we got fewer images than limit, we've reached the end
+      if (newImages.length < limit) {
+        hasMore.value = false
+      }
     }
   } catch (error) {
     console.error('Error fetching images:', error)
   } finally {
     loading.value = false
   }
+}
+
+const toggleDataSource = () => {
+  useMockData.value = !useMockData.value
+  // Reset and reload
+  images.value = []
+  skip.value = 0
+  hasMore.value = true
+  fetchImages()
 }
 
 const handleScroll = () => {
@@ -119,6 +167,8 @@ const handleModify = (image, event) => {
 
 const handleAnnotate = (image, event) => {
   event.stopPropagation()
+  // Store image data in sessionStorage for the annotation page
+  sessionStorage.setItem('currentImage', JSON.stringify(image))
   // Navigate to annotation page
   navigateTo(`/annotate/${image.id}`)
 }
@@ -140,6 +190,42 @@ const handleDelete = async (image, event) => {
 
 <template>
   <div class="w-full">
+    <!-- Toggle Button -->
+    <div class="flex items-center justify-between mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium text-gray-700">Data Source:</span>
+        <div class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
+          <button
+            @click="useMockData ? null : toggleDataSource()"
+            :class="[
+              'px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+              useMockData 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-100'
+            ]"
+          >
+            <ImageIcon :size="16" />
+            <span>Mock Images</span>
+          </button>
+          <button
+            @click="!useMockData ? null : toggleDataSource()"
+            :class="[
+              'px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+              !useMockData 
+                ? 'bg-blue-600 text-white shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-100'
+            ]"
+          >
+            <Database :size="16" />
+            <span>Database Images</span>
+          </button>
+        </div>
+      </div>
+      <div class="text-xs text-gray-500">
+        {{ images.length }} images loaded
+      </div>
+    </div>
+    
     <div class="flex flex-wrap gap-1.5 mb-5">
       <div 
         v-for="image in images" 
@@ -218,7 +304,10 @@ const handleDelete = async (image, event) => {
     </div>
     
     <div v-else-if="images.length === 0 && !loading" class="text-center py-10">
-      <p class="text-gray-500">No images found</p>
+      <p class="text-gray-500 text-lg">No images found in this project</p>
+      <p class="text-gray-400 text-sm mt-2">
+        {{ useMockData ? 'Switch to Database Images to see real data' : 'Import images using the Import/Export panel' }}
+      </p>
     </div>
   </div>
 </template>

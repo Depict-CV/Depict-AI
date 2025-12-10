@@ -1031,11 +1031,16 @@ onMounted(async () => {
   await fetchImage()
   
   if (stageContainer.value && image.value) {
+    // Load the image
     const img = new Image()
-    img.crossOrigin = 'Anonymous'
+    img.crossOrigin = 'anonymous'
     img.onload = () => {
       setupKonva(img)
       addHistoryEntry('opened', 'Image opened for annotation')
+    }
+    img.onerror = (error) => {
+      console.error('Failed to load image:', error)
+      loading.value = false
     }
     img.src = image.value.location
   }
