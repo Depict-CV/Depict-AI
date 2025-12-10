@@ -20,6 +20,13 @@ const selectedImage = ref(null)
 const showModifyDialog = ref(false)
 const changeRequests = ref([])
 const showNotificationCenter = ref(false)
+const currentFilters = ref({})
+
+const handleApplyFilters = (filters) => {
+  currentFilters.value = filters
+  activeMenu.value = null // Close filter panel
+  console.log('Filters applied:', filters)
+}
 
 const handleSelectProject = (project) => {
   selectedProject.value = project
@@ -164,7 +171,7 @@ onMounted(async () => {
     <!-- Top Navigation Bar -->
     <header class="fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-100 z-50 flex items-center justify-between px-8">
       <div class="flex items-center gap-2">
-        <h1 class="text-xl font-bold text-blue-950">Depict</h1>
+        <h1 class="text-xl font-bold text-blue-950">Depict AI</h1>
       </div>
       
       <div class="flex items-center gap-4 relative">
@@ -319,7 +326,10 @@ onMounted(async () => {
           <AIPanel v-if="activeMenu === 'ai'" :projectId="selectedProject?.id" />
           <ImportExportPanel v-if="activeMenu === 'import-export'" :projectId="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
-          <FilterPanel v-if="activeMenu === 'filter'" />
+          <FilterPanel 
+            v-if="activeMenu === 'filter'" 
+            @applyFilters="handleApplyFilters"
+          />
         </div>
       </aside>
       
@@ -471,6 +481,7 @@ onMounted(async () => {
           </div>
           <ImageGallery 
             :project-id="selectedProject?.id"
+            :filters="currentFilters"
             @selectImage="handleSelectImage"
             @modifyRequest="handleModifyRequest"
           />

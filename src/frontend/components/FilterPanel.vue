@@ -1,11 +1,18 @@
 <script setup>
 import { ref } from 'vue'
-import { Filter, X, Calendar, Tag, User, CheckSquare } from 'lucide-vue-next'
+import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown } from 'lucide-vue-next'
+
+const emit = defineEmits(['applyFilters'])
 
 const selectedDateRange = ref('all')
 const selectedStatus = ref([])
 const selectedTags = ref([])
 const selectedUsers = ref([])
+
+const showDateRange = ref(false)
+const showStatus = ref(false)
+const showTags = ref(false)
+const showUsers = ref(false)
 
 const dateRanges = [
   { value: 'all', label: 'All Time' },
@@ -16,10 +23,11 @@ const dateRanges = [
 ]
 
 const statuses = [
-  { value: 'annotated', label: 'Annotated', color: 'green' },
-  { value: 'in-progress', label: 'In Progress', color: 'yellow' },
-  { value: 'pending', label: 'Pending', color: 'gray' },
-  { value: 'reviewed', label: 'Reviewed', color: 'blue' }
+  { value: 'to review', label: 'To Review', color: 'blue' },
+  { value: 'human annotation', label: 'Human Annotation', color: 'purple' },
+  { value: 'ml annotation', label: 'ML Annotation', color: 'amber' },
+  { value: 'certified', label: 'Certified', color: 'green' },
+  { value: 'rejected', label: 'Rejected', color: 'red' }
 ]
 
 const tags = [
@@ -67,14 +75,13 @@ const clearAllFilters = () => {
 }
 
 const applyFilters = () => {
-  // TODO: Implement filter logic with API
-  console.log('Applying filters:', {
+  // Emit filters to parent component
+  emit('applyFilters', {
     dateRange: selectedDateRange.value,
     status: selectedStatus.value,
     tags: selectedTags.value,
     users: selectedUsers.value
   })
-  alert('Filters applied!')
 }
 </script>
 
@@ -93,11 +100,21 @@ const applyFilters = () => {
     <div class="space-y-6">
       <!-- Date Range Filter -->
       <div>
-        <div class="flex items-center gap-2 mb-3">
-          <Calendar :size="18" class="text-gray-600" />
-          <h3 class="font-semibold text-gray-900">Date Range</h3>
-        </div>
-        <div class="space-y-2">
+        <button
+          @click="showDateRange = !showDateRange"
+          class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <Calendar :size="18" class="text-gray-600" />
+            <h3 class="font-semibold text-gray-900">Date Range</h3>
+          </div>
+          <ChevronDown 
+            :size="18" 
+            class="text-gray-400 transition-transform"
+            :class="{ 'rotate-180': showDateRange }"
+          />
+        </button>
+        <div v-if="showDateRange" class="mt-2 space-y-2">
           <label 
             v-for="range in dateRanges" 
             :key="range.value"
@@ -115,12 +132,25 @@ const applyFilters = () => {
       </div>
 
       <!-- Status Filter -->
-      <div class="pb-6 border-b border-gray-200">
-        <div class="flex items-center gap-2 mb-3">
-          <CheckSquare :size="18" class="text-gray-600" />
-          <h3 class="font-semibold text-gray-900">Status</h3>
-        </div>
-        <div class="space-y-2">
+      <div>
+        <button
+          @click="showStatus = !showStatus"
+          class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <CheckSquare :size="18" class="text-gray-600" />
+            <h3 class="font-semibold text-gray-900">Status</h3>
+            <span v-if="selectedStatus.length > 0" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              {{ selectedStatus.length }}
+            </span>
+          </div>
+          <ChevronDown 
+            :size="18" 
+            class="text-gray-400 transition-transform"
+            :class="{ 'rotate-180': showStatus }"
+          />
+        </button>
+        <div v-if="showStatus" class="mt-2 space-y-2">
           <label 
             v-for="status in statuses" 
             :key="status.value"
@@ -136,8 +166,10 @@ const applyFilters = () => {
               :class="[
                 'w-3 h-3 rounded-full',
                 status.color === 'green' ? 'bg-green-500' :
-                status.color === 'yellow' ? 'bg-yellow-500' :
                 status.color === 'blue' ? 'bg-blue-500' :
+                status.color === 'purple' ? 'bg-purple-500' :
+                status.color === 'amber' ? 'bg-amber-400' :
+                status.color === 'red' ? 'bg-red-500' :
                 'bg-gray-400'
               ]"
             ></span>
@@ -147,12 +179,25 @@ const applyFilters = () => {
       </div>
 
       <!-- Tags Filter -->
-      <div class="pb-6 border-b border-gray-200">
-        <div class="flex items-center gap-2 mb-3">
-          <Tag :size="18" class="text-gray-600" />
-          <h3 class="font-semibold text-gray-900">Tags</h3>
-        </div>
-        <div class="flex flex-wrap gap-2">
+      <div>
+        <button
+          @click="showTags = !showTags"
+          class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <Tag :size="18" class="text-gray-600" />
+            <h3 class="font-semibold text-gray-900">Tags</h3>
+            <span v-if="selectedTags.length > 0" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              {{ selectedTags.length }}
+            </span>
+          </div>
+          <ChevronDown 
+            :size="18" 
+            class="text-gray-400 transition-transform"
+            :class="{ 'rotate-180': showTags }"
+          />
+        </button>
+        <div v-if="showTags" class="mt-2 flex flex-wrap gap-2">
           <button
             v-for="tag in tags"
             :key="tag"
@@ -171,11 +216,24 @@ const applyFilters = () => {
 
       <!-- Users Filter -->
       <div>
-        <div class="flex items-center gap-2 mb-3">
-          <User :size="18" class="text-gray-600" />
-          <h3 class="font-semibold text-gray-900">Annotators</h3>
-        </div>
-        <div class="space-y-2">
+        <button
+          @click="showUsers = !showUsers"
+          class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <User :size="18" class="text-gray-600" />
+            <h3 class="font-semibold text-gray-900">Annotators</h3>
+            <span v-if="selectedUsers.length > 0" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              {{ selectedUsers.length }}
+            </span>
+          </div>
+          <ChevronDown 
+            :size="18" 
+            class="text-gray-400 transition-transform"
+            :class="{ 'rotate-180': showUsers }"
+          />
+        </button>
+        <div v-if="showUsers" class="mt-2 space-y-2">
           <label 
             v-for="annotator in users" 
             :key="annotator.id"

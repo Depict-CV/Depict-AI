@@ -142,7 +142,7 @@ def approve_data_annotations(
     
     # Update all annotations to CERTIFIED status
     for annotation in annotations:
-        annotation.status = "CERTIFIED"
+        annotation.status = "certified"
     
     db.commit()
     
@@ -150,7 +150,67 @@ def approve_data_annotations(
         "message": f"Approved {len(annotations)} annotation(s) for data ID {data_id}",
         "data_id": data_id,
         "updated_count": len(annotations),
-        "status": "CERTIFIED"
+        "status": "certified"
+    }
+
+
+@router.post("/reject/{data_id}")
+def reject_data_annotations(
+    data_id: int,
+    db: Session = Depends(get_session)
+):
+    """Reject all annotations for a specific data item by setting status to REJECTED"""
+    # Get all annotations for this data item
+    statement = select(Annotation).where(Annotation.data_id == data_id)
+    annotations = db.exec(statement).all()
+    
+    if not annotations:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No annotations found for data ID {data_id}"
+        )
+    
+    # Update all annotations to REJECTED status
+    for annotation in annotations:
+        annotation.status = "rejected"
+    
+    db.commit()
+    
+    return {
+        "message": f"Rejected {len(annotations)} annotation(s) for data ID {data_id}",
+        "data_id": data_id,
+        "updated_count": len(annotations),
+        "status": "rejected"
+    }
+
+
+@router.post("/request-review/{data_id}")
+def request_review_data_annotations(
+    data_id: int,
+    db: Session = Depends(get_session)
+):
+    """Request review for all annotations for a specific data item by setting status to TO_REVIEW"""
+    # Get all annotations for this data item
+    statement = select(Annotation).where(Annotation.data_id == data_id)
+    annotations = db.exec(statement).all()
+    
+    if not annotations:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No annotations found for data ID {data_id}"
+        )
+    
+    # Update all annotations to TO_REVIEW status
+    for annotation in annotations:
+        annotation.status = "to review"
+    
+    db.commit()
+    
+    return {
+        "message": f"Requested review for {len(annotations)} annotation(s) for data ID {data_id}",
+        "data_id": data_id,
+        "updated_count": len(annotations),
+        "status": "to review"
     }
 
 
