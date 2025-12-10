@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlmodel import Session, desc, select
 
 from src.backend.api.deps import get_session
@@ -53,6 +53,19 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
 ###############
 #    read     #
 ###############
+@router.get("/")
+def get_annotations(
+    project_id: int = Query(..., description="Project ID to fetch annotations for"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(1000, ge=1, le=10000, description="Maximum number of records to return"),
+    db: Session = Depends(get_session)
+):
+    """Get all annotations for a project with pagination"""
+    statement = select(Annotation).where(Annotation.project_id == project_id).offset(skip).limit(limit)
+    annotations = db.exec(statement).all()
+    return annotations
+
+
 @router.get("/{annotation_id}")
 def read_annotation(annotation_id: int, db: Session = Depends(get_session)):
     return db.get(Annotation, annotation_id)
@@ -111,6 +124,36 @@ def read_annotation_by_score(
 ###############
 #   update    #
 ###############
+@router.post("/approve/{data_id}")
+def approve_data_annotations(
+    data_id: int,
+    db: Session = Depends(get_session)
+):
+    """Approve all annotations for a specific data item by setting status to CERTIFIED"""
+    # Get all annotations for this data item
+    statement = select(Annotation).where(Annotation.data_id == data_id)
+    annotations = db.exec(statement).all()
+    
+    if not annotations:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No annotations found for data ID {data_id}"
+        )
+    
+    # Update all annotations to CERTIFIED status
+    for annotation in annotations:
+        annotation.status = "CERTIFIED"
+    
+    db.commit()
+    
+    return {
+        "message": f"Approved {len(annotations)} annotation(s) for data ID {data_id}",
+        "data_id": data_id,
+        "updated_count": len(annotations),
+        "status": "CERTIFIED"
+    }
+
+
 @router.patch("/")
 def update_annotation(data: dict = Body(...), db: Session = Depends(get_session)):
     annotation_id = data["id"]

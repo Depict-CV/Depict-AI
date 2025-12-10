@@ -43,7 +43,7 @@ const fetchImages = async () => {
           id: imageId,
           location: `https://picsum.photos/${width}/${height}?random=${imageId}`,
           type: shape,
-          status: ['pending', 'annotated', 'approved'][Math.floor(Math.random() * 3)]
+          status: ['to review', 'human annotation', 'ml annotation', 'certified'][Math.floor(Math.random() * 4)]
         })
       }
       
@@ -64,6 +64,25 @@ const fetchImages = async () => {
       console.log('Database response:', response)
       console.log('Number of images fetched:', response.length)
       
+      // Fetch annotations to get status for each image
+      let annotationsMap = {}
+      try {
+        const annotations = await api.get('/annotations/', {
+          project_id: props.projectId,
+          skip: 0,
+          limit: 10000
+        })
+        
+        // Create a map of data_id to status (use the first annotation's status)
+        annotations.forEach(ann => {
+          if (!annotationsMap[ann.data_id]) {
+            annotationsMap[ann.data_id] = ann.status
+          }
+        })
+      } catch (error) {
+        console.error('Failed to fetch annotations:', error)
+      }
+      
       // Transform database response to match expected format
       const newImages = response.map(item => {
         console.log('Item location:', item.location)
@@ -81,7 +100,7 @@ const fetchImages = async () => {
           id: item.id,
           location: imageUrl,
           type: item.type,
-          status: 'pending' // TODO: Get actual status from annotations
+          status: annotationsMap[item.id] || 'to review'
         }
       })
       
@@ -151,12 +170,21 @@ onUnmounted(() => {
 const handleApprove = async (image, event) => {
   event.stopPropagation()
   try {
-    // TODO: Implement API call
-    // await api.post(`/images/${image.id}/approve`)
-    console.log('Approve image:', image.id)
-    alert(`Image ${image.id} approved!`)
+    // Call the approve endpoint
+    const response = await api.post(`/annotations/approve/${image.id}`)
+    console.log('Approve response:', response)
+    
+    // Update the image status in the UI
+    const imageIndex = images.value.findIndex(img => img.id === image.id)
+    if (imageIndex !== -1) {
+      images.value[imageIndex].status = 'certified'
+    }
+    
+    // Show success message
+    alert(`Image ${image.id} approved! ${response.updated_count} annotation(s) certified.`)
   } catch (error) {
     console.error('Failed to approve image:', error)
+    alert(`Failed to approve image: ${error?.data?.detail || error?.message || 'Unknown error'}`)
   }
 }
 
@@ -243,9 +271,11 @@ const handleDelete = async (image, event) => {
         <div 
           class="absolute top-2 right-2 px-2 py-1 rounded-xl text-xs font-semibold uppercase z-[5] backdrop-blur-sm"
           :class="{
-            'bg-amber-400/90 text-amber-900': image.status === 'pending',
-            'bg-blue-500/90 text-blue-950': image.status === 'annotated',
-            'bg-green-500/90 text-green-950': image.status === 'approved'
+            'bg-amber-400/90 text-amber-900': image.status === 'to review',
+            'bg-blue-500/90 text-blue-950': image.status === 'human annotation',
+            'bg-purple-500/90 text-purple-950': image.status === 'ml annotation',
+            'bg-green-500/90 text-green-950': image.status === 'certified',
+            'bg-red-500/90 text-red-950': image.status === 'rejected'
           }"
         >
           {{ image.status }}

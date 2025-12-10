@@ -157,11 +157,46 @@ def read_all_projects(
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_clerk_user)
 ):
-    """Get all projects (admin only - add permission check if needed)"""
+    """Get all projects with image and annotation counts"""
+    from src.backend.db.tables import Data, Annotation
+    
     projects = db.exec(select(Project)).all()
     if not projects:
         return []
-    return projects
+    
+    # Enrich projects with counts
+    enriched_projects = []
+    for project in projects:
+        # Count images
+        image_count = db.exec(
+            select(Data).where(Data.project_id == project.id)
+        ).all()
+        
+        # Count annotations
+        annotation_count = db.exec(
+            select(Annotation).where(Annotation.project_id == project.id)
+        ).all()
+        
+        # Count members
+        member_count = db.exec(
+            select(ProjectUserLink).where(ProjectUserLink.project_id == project.id)
+        ).all()
+        
+        # Create enriched project dict
+        project_dict = {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "owner_id": project.owner_id,
+            "status": project.status,
+            "created_at": project.created_at,
+            "images": len(image_count),
+            "annotations": len(annotation_count),
+            "members": len(member_count)
+        }
+        enriched_projects.append(project_dict)
+    
+    return enriched_projects
 
 
 @router.get("/{project_id}")

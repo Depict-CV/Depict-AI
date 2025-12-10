@@ -158,16 +158,16 @@ const selectProject = (project) => {
               v-if="!isMember(project)"
               @click.stop="handleJoinProject(project)"
               :disabled="joiningProjectId === project.id"
-              class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-xs font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
             >
-              <UserPlus :size="16" />
+              <UserPlus :size="14" />
               <span>{{ joiningProjectId === project.id ? 'Joining...' : 'Join' }}</span>
             </button>
             
             <!-- Member Badge -->
             <div
               v-else
-              class="px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg"
+              class="px-2.5 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-lg"
             >
               Member
             </div>
@@ -177,16 +177,17 @@ const selectProject = (project) => {
         <div class="flex items-end justify-between">
           <div class="flex gap-4 text-xs text-gray-400">
             <span>{{ project.images || 0 }} images</span>
+            <span>{{ project.annotations || 0 }} annotations</span>
             <span>{{ project.members || 0 }} members</span>
           </div>
           
           <!-- Delete Button at bottom right -->
           <button
             @click="handleDeleteProject(project, $event)"
-            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete project"
           >
-            <Trash2 :size="18" />
+            <Trash2 :size="16" />
           </button>
         </div>
       </div>

@@ -315,7 +315,7 @@ onMounted(async () => {
       >
         <div class="p-6">
           <ProjectsPanel v-if="activeMenu === 'projects'" :projects="projects" @refreshProjects="fetchProjects" @selectProject="handleSelectProject" />
-          <StatsPanel v-if="activeMenu === 'stats'" />
+          <StatsPanel v-if="activeMenu === 'stats'" :projectId="selectedProject?.id" />
           <AIPanel v-if="activeMenu === 'ai'" :projectId="selectedProject?.id" />
           <ImportExportPanel v-if="activeMenu === 'import-export'" :projectId="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
