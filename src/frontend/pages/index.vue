@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, ArrowLeftRight, Microscope, Filter, Bell, X, Trash2, CheckCircle } from 'lucide-vue-next'
+import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, ArrowLeftRight, Microscope, Filter, Bell, X, Trash2, CheckCircle, Settings2 } from 'lucide-vue-next'
 
 const { isSignedIn, user, signOut } = useAuth()
 
@@ -300,6 +300,22 @@ onMounted(async () => {
             </button>
             
           </div>
+
+          <!-- Bottom Section -->
+          <div class="mt-auto flex flex-col items-center gap-1">
+            <button 
+              @click="activeMenu = activeMenu === 'project-settings' ? null : 'project-settings'"
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                activeMenu === 'project-settings' 
+                  ? 'bg-blue-950 text-white' 
+                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
+              ]"
+              title="Project Settings"
+            >
+              <Settings2 :size="20" />
+            </button>
+          </div>
         </nav>
       </aside>
 
@@ -318,6 +334,10 @@ onMounted(async () => {
             v-if="activeMenu === 'filter'" 
             :projectId="selectedProject?.id"
             @applyFilters="handleApplyFilters"
+          />
+          <ProjectSettingsPanel 
+            v-if="activeMenu === 'project-settings'"
+            :projectId="selectedProject?.id"
           />
         </div>
       </aside>

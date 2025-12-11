@@ -51,6 +51,7 @@ class Project(SQLModel, table=True):
     name: str = Field(index=True, unique=True)
     description: str | None = Field(default=None, nullable=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime | None = Field(default=None, nullable=True)
 
     # Relation many-to-many
     users: List[User] = Relationship(back_populates="projects", link_model=ProjectUserLink)

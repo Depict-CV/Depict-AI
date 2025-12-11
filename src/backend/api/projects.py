@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import Session, select, func
 from pydantic import BaseModel
-from typing import Optional, Dict, List, Any
+from typing import Optional
 from datetime import datetime
 
 from src.backend.api.clerk_auth import get_current_clerk_user, get_session
@@ -16,7 +16,6 @@ class ProjectResponse(BaseModel):
     name: str
     description: Optional[str] = None
     owner_id: Optional[int] = None
-    status: str = "active"
     created_at: datetime
     members: int = 0
     images: int = 0
@@ -69,11 +68,8 @@ def create_project(
         name=project.name,
         description=project.description,
         owner_id=project.owner_id,
-        status="active",
         created_at=datetime.now(),
-        members=2 if ai_user else 1,  # Owner + AI user
         images=0,
-        role="Admin"
     )
 
 
@@ -154,8 +150,7 @@ def get_user_projects(
 
 @router.get("/all")
 def read_all_projects(
-    db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_clerk_user)
+    db: Session = Depends(get_session)
 ):
     """Get all projects with image and annotation counts"""
     from src.backend.db.tables import Data, Annotation
@@ -188,7 +183,6 @@ def read_all_projects(
             "name": project.name,
             "description": project.description,
             "owner_id": project.owner_id,
-            "status": project.status,
             "created_at": project.created_at,
             "images": len(image_count),
             "annotations": len(annotation_count),
