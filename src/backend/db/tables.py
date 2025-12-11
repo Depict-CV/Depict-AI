@@ -35,8 +35,11 @@ class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
-    hashed_password: str
     permission: PermissionEnum
+    
+    # OAuth2 fields (Clerk, Google, Microsoft, GitHub)
+    oauth_provider: str | None = Field(default=None, nullable=True)  # "clerk", "google", "microsoft", "github"
+    oauth_id: str | None = Field(default=None, nullable=True)  # Provider's user ID
 
     data: List["Data"] = Relationship(back_populates="author")
     # Relation many-to-many
@@ -93,10 +96,11 @@ class Annotation(SQLModel, table=True):
     creation_date: datetime | None = Field(default=None, nullable=True)
     # last_updated_date: datetime | None  = Field(default=None, nullable=True)
 
+    # annotation colud be another image as well
+
     data_id: int | None = Field(default=None, foreign_key="data.id")
     author_id: int | None = Field(default=None, foreign_key="user.id")
     project_id: int | None = Field(default=None, foreign_key="project.id")
 
 
-# TODO add organization table ( a comapny can only its project not form other company)
 # TODO maybe add the list of labels that exist in the project

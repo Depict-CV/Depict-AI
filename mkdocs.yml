@@ -1,10 +1,44 @@
-site_name: Depict AI
-site_description: Image data tool for computer vision
+site_name: Depict-AI Documentation
+site_description: technical documentation for Depict-AI , Image data tool for computer vision
+site_author: Edouard Geze, Tangi Migot
+repo_url: https://github.com/Depict-CV/Depict-AI
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: installation.md
+      - Quick Start: quickstart.md
+      - OAuth2 Setup: oauth2_setup.md
+  - Backend (FastAPI):
+      - Overview: backend/overview.md
+      - API Reference: backend/api.md
+      - Database Models: backend/models.md
+      - Authentication: backend/authentication.md
+      - Testing: backend/tests.md
+  - Frontend (Vue.js):
+      - Overview: frontend/overview.md
+      - Components: frontend/components.md
+      - State Management: frontend/state.md
+      - Routing: frontend/routing.md
+      - Styling: frontend/styling.md
+  - Architecture:
+      - System Design: architecture/design.md
+      - Database Schema: architecture/database.md
+      - API Flow: architecture/api-flow.md
+  - Deployment:
+      - Docker Setup: deployment/docker.md
+      - Production: deployment/production.md
+  - Developers Guide:
+      - Contributing: contributing.md
+      - Code Style: code-style.md
+      - Sentry Tutorial: sentry.md
+
 theme:
-  name: material
+  name: readthedocs
+  language: en
+
 plugins:
   - search
-  - include_dir_to_nav # Include all files from a directory into the navigation
   - include-markdown:
       encoding: utf-8
       preserve_includer_indent: false
@@ -14,3 +48,16 @@ plugins:
       rewrite_relative_urls: true
       heading_offset: 0
       recursive: true
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details

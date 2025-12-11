@@ -1,8 +1,16 @@
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 import sentry_sdk
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import config
-from src.backend.api import annotations, auth, data, ml, projects, users
+from src.backend.api import annotations, data, images, ml, projects, users, test_auth, notifications
 from src.backend.db.database import init_db
 
 SENTRY_DSN = config.SENTRY_DSN
@@ -15,6 +23,15 @@ sentry_sdk.init(
 
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/sentry-debug")
 async def trigger_error():
@@ -26,13 +43,19 @@ init_db()
 
 # include routers split across backend/api
 app.include_router(users.router)
-app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(data.router)
 app.include_router(annotations.router)
 app.include_router(ml.router)
+app.include_router(images.router)
+app.include_router(test_auth.router)
+app.include_router(notifications.router)
 
 
 @app.get("/", tags=["root"])
 def read_root():
     return {"status": "ok", "message": "API alive"}
+
+
+# todo add endpoints for: statistics for annotation and project , health , get all images without annotations,
+# TODO refactor endpoint to limit the call ( by batch or pagination) and run 1 request instead of loop of db requests
