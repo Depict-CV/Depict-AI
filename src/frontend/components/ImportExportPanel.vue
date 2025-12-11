@@ -73,6 +73,7 @@ const handleImport = async () => {
           location: fullPath, // Full local file path
           user_id: user.value.id,
           project_id: currentProjectId,
+          creation_date: new Date().toISOString(),
           type: 'image'
         }
       })

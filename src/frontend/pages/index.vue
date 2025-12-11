@@ -57,7 +57,8 @@ const handleModifyRequest = (image) => {
     projectId: selectedProject.value?.id
   }
   
-  changeRequests.value.push(newRequest)
+  // Add to the beginning of the array (top of the list)
+  changeRequests.value.unshift(newRequest)
   
   // Save to localStorage
   saveNotificationsToStorage()
@@ -134,11 +135,9 @@ const removeChangeRequest = (requestId) => {
 }
 
 const markAsCompleted = (requestId) => {
-  const request = changeRequests.value.find(req => req.id === requestId)
-  if (request) {
-    request.status = 'completed'
-    saveNotificationsToStorage()
-  }
+  // Remove the request instead of marking it as completed
+  changeRequests.value = changeRequests.value.filter(req => req.id !== requestId)
+  saveNotificationsToStorage()
 }
 
 const openChangeRequest = (request) => {
@@ -357,7 +356,6 @@ onMounted(async () => {
               v-for="request in changeRequests" 
               :key="request.id"
               class="p-4 hover:bg-gray-50 transition-colors"
-              :class="{ 'opacity-50': request.status === 'completed' }"
             >
               <div class="flex items-start gap-3">
                 <!-- Image Thumbnail -->
@@ -385,13 +383,6 @@ onMounted(async () => {
                     
                     <!-- Status Badge -->
                     <span 
-                      v-if="request.status === 'completed'"
-                      class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded"
-                    >
-                      Done
-                    </span>
-                    <span 
-                      v-else
                       class="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded"
                     >
                       Pending
@@ -401,7 +392,6 @@ onMounted(async () => {
                   <!-- Actions -->
                   <div class="flex gap-2 mt-3">
                     <button
-                      v-if="request.status === 'pending'"
                       @click="openChangeRequest(request)"
                       class="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
                     >
@@ -409,7 +399,6 @@ onMounted(async () => {
                     </button>
                     
                     <button
-                      v-if="request.status === 'pending'"
                       @click="markAsCompleted(request.id)"
                       class="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors"
                       title="Mark as completed"

@@ -1,4 +1,4 @@
-from typing import List
+from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import Session, select
@@ -56,9 +56,10 @@ def infer_batch(payload: dict = Body(...), db: Session = Depends(get_session)):
                     annotation = Annotation(
                         status=AnnotationStatus.ML_ANNOTATION,
                         label=result["class_name"],
-                        annotation_score=None,  # Could add confidence score
+                        annotation_score=0,
                         data_id=data_item.id,
-                        project_id=project_id
+                        project_id=project_id,
+                        creation_date=datetime.now()
                     )
                     db.add(annotation)
                     
@@ -156,7 +157,8 @@ def infer_project(payload: dict = Body(...), db: Session = Depends(get_session))
                     label=result["class_name"],
                     annotation_score=None,
                     data_id=data_item.id,
-                    project_id=project_id
+                    project_id=project_id,
+                    creation_date=datetime.now()
                 )
                 db.add(annotation)
                 
