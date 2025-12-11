@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, ArrowLeftRight, Microscope, Filter, Bell, X, Trash2, CheckCircle, Settings2 } from 'lucide-vue-next'
+import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, Download, Upload, Microscope, Filter, Bell, X, Trash2, CheckCircle, Settings2 } from 'lucide-vue-next'
 
 const { isSignedIn, user, signOut } = useAuth()
 
@@ -235,16 +235,29 @@ onMounted(async () => {
             </button>
 
             <button 
-              @click="activeMenu = activeMenu === 'import-export' ? null : 'import-export'"
+              @click="activeMenu = activeMenu === 'import' ? null : 'import'"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-                activeMenu === 'import-export' 
+                activeMenu === 'import' 
                   ? 'bg-blue-950 text-white' 
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
               ]"
-              title="Import/Export"
+              title="Import"
             >
-              <ArrowLeftRight :size="20" />
+              <Download :size="20" />
+            </button>
+
+            <button 
+              @click="activeMenu = activeMenu === 'export' ? null : 'export'"
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                activeMenu === 'export' 
+                  ? 'bg-blue-950 text-white' 
+                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
+              ]"
+              title="Export"
+            >
+              <Upload :size="20" />
             </button>
 
             <button 
@@ -328,7 +341,8 @@ onMounted(async () => {
           <ProjectsPanel v-if="activeMenu === 'projects'" :projects="projects" @refreshProjects="fetchProjects" @selectProject="handleSelectProject" />
           <StatsPanel v-if="activeMenu === 'stats'" :projectId="selectedProject?.id" />
           <AIPanel v-if="activeMenu === 'ai'" :projectId="selectedProject?.id" />
-          <ImportExportPanel v-if="activeMenu === 'import-export'" :projectId="selectedProject?.id" />
+          <ImportPanel v-if="activeMenu === 'import'" :projectId="selectedProject?.id" />
+          <ExportPanel v-if="activeMenu === 'export'" :projectId="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel 
             v-if="activeMenu === 'filter'" 
