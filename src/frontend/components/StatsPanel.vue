@@ -28,51 +28,24 @@ const fetchStats = async () => {
   
   loading.value = true
   try {
-    // Fetch all data for the project
-    const [imagesResponse, annotationsResponse] = await Promise.all([
-      api.get('/data/', { project_id: props.projectId, skip: 0, limit: 1000 }),
-      api.get('/annotations/', { project_id: props.projectId })
-    ])
+    // Use the new statistics endpoint
+    const statistics = await api.get(`/projects/${props.projectId}/statistics`)
     
-    const images = imagesResponse || []
-    const annotations = annotationsResponse || []
+    // Update stats with response
+    stats.value.totalImages = statistics.total_images
+    stats.value.totalAnnotations = statistics.total_annotations
+    stats.value.annotatedImages = statistics.annotated_images
+    stats.value.pendingImages = statistics.pending_images
+    stats.value.completionRate = statistics.completion_rate
     
-    // Calculate statistics
-    stats.value.totalImages = images.length
-    stats.value.totalAnnotations = annotations.length
-    
-    // Count images by status
-    const imageIds = new Set(annotations.map(a => a.data_id))
-    stats.value.annotatedImages = imageIds.size
-    stats.value.pendingImages = images.length - imageIds.size
-    stats.value.approvedImages = annotations.filter(a => a.status === 'APPROVED').length
-    
-    // Completion rate
-    stats.value.completionRate = images.length > 0 
-      ? Math.round((stats.value.annotatedImages / images.length) * 100) 
-      : 0
-    
-    // Annotations by type
-    const byType = {}
-    annotations.forEach(ann => {
-      const type = ann.annotation_type || 'unknown'
-      byType[type] = (byType[type] || 0) + 1
-    })
-    stats.value.annotationsByType = byType
+    // Annotations by status
+    stats.value.annotationsByType = statistics.by_status || {}
     
     // Annotations by label
-    const byLabel = {}
-    annotations.forEach(ann => {
-      if (ann.label) {
-        byLabel[ann.label] = (byLabel[ann.label] || 0) + 1
-      }
-    })
-    stats.value.annotationsByLabel = byLabel
+    stats.value.annotationsByLabel = statistics.by_label || {}
     
-    // Recent activity (last 5 annotations)
-    stats.value.recentActivity = annotations
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 5)
+    // Recent activity
+    stats.value.recentActivity = statistics.recent_activity || []
     
   } catch (error) {
     console.error('Failed to fetch statistics:', error)
@@ -138,10 +111,10 @@ const formatDate = (dateString) => {
 
     <div v-else class="stats-content">
       <!-- Overview Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="flex flex-col gap-1 mb-6">
         <div class="stat-card">
           <div class="stat-icon bg-blue-100 text-blue-600">
-            <ImageIcon :size="24" />
+            <ImageIcon :size="15" />
           </div>
           <div class="stat-info">
             <p class="stat-label">Total Images</p>
@@ -151,7 +124,7 @@ const formatDate = (dateString) => {
 
         <div class="stat-card">
           <div class="stat-icon bg-green-100 text-green-600">
-            <CheckCircle :size="24" />
+            <CheckCircle :size="15" />
           </div>
           <div class="stat-info">
             <p class="stat-label">Annotated</p>
@@ -161,7 +134,7 @@ const formatDate = (dateString) => {
 
         <div class="stat-card">
           <div class="stat-icon bg-amber-100 text-amber-600">
-            <Clock :size="24" />
+            <Clock :size="15" />
           </div>
           <div class="stat-info">
             <p class="stat-label">Pending</p>
@@ -171,7 +144,7 @@ const formatDate = (dateString) => {
 
         <div class="stat-card">
           <div class="stat-icon bg-purple-100 text-purple-600">
-            <Tag :size="24" />
+            <Tag :size="15" />
           </div>
           <div class="stat-info">
             <p class="stat-label">Annotations</p>
@@ -199,10 +172,10 @@ const formatDate = (dateString) => {
       </div>
 
       <!-- Two Column Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="flex flex-col gap-6 mb-6">
         <!-- Annotations by Type -->
         <div class="chart-card">
-          <h3 class="chart-title">Annotations by Type</h3>
+          <h3 class="chart-title">Annotations by Status</h3>
           <div v-if="Object.keys(stats.annotationsByType).length === 0" class="empty-chart">
             <AlertCircle :size="32" class="text-gray-300 mb-2" />
             <p class="text-gray-400 text-sm">No annotations yet</p>
@@ -337,7 +310,7 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 20px;
+  padding: 5px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -353,8 +326,8 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 25px;
+  height: 25px;
   border-radius: 12px;
   flex-shrink: 0;
 }

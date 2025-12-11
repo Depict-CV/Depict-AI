@@ -1,8 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown } from 'lucide-vue-next'
+import { useApi } from '../composables/useApi'
+
+const props = defineProps({
+  projectId: {
+    type: Number,
+    required: true
+  }
+})
 
 const emit = defineEmits(['applyFilters'])
+const api = useApi()
 
 const selectedDateRange = ref('all')
 const selectedStatus = ref([])
@@ -13,6 +22,9 @@ const showDateRange = ref(false)
 const showStatus = ref(false)
 const showTags = ref(false)
 const showUsers = ref(false)
+
+const tags = ref([])
+const users = ref([])
 
 const dateRanges = [
   { value: 'all', label: 'All Time' },
@@ -30,15 +42,37 @@ const statuses = [
   { value: 'rejected', label: 'Rejected', color: 'red' }
 ]
 
-const tags = [
-  'vehicle', 'person', 'animal', 'building', 'outdoor', 'indoor'
-]
+const fetchTags = async () => {
+  try {
+    const annotations = await api.get(`/annotations/?project_id=${props.projectId}`)
+    // Extract unique tags from annotations
+    const uniqueTags = new Set()
+    annotations.forEach(annotation => {
+      if (annotation.label) {
+        uniqueTags.add(annotation.label)
+      }
+    })
+    tags.value = Array.from(uniqueTags).sort()
+  } catch (error) {
+    console.error('Error fetching tags:', error)
+  }
+}
 
-const users = [
-  { id: 1, name: 'John Doe' },
-  { id: 2, name: 'Jane Smith' },
-  { id: 3, name: 'Bob Johnson' }
-]
+const fetchUsers = async () => {
+  try {
+    if (!props.projectId) return
+    
+    const projectUsers = await api.get(`/projects/${props.projectId}/users`)
+    users.value = projectUsers
+  } catch (error) {
+    console.error('Error fetching users:', error)
+  }
+}
+
+onMounted(async () => {
+  await fetchTags()
+  await fetchUsers()
+})
 
 const toggleStatus = (status) => {
   const index = selectedStatus.value.indexOf(status)
@@ -198,6 +232,9 @@ const applyFilters = () => {
           />
         </button>
         <div v-if="showTags" class="mt-2 flex flex-wrap gap-2">
+          <div v-if="tags.length === 0" class="text-sm text-gray-500 p-3">
+            No tags found in annotations
+          </div>
           <button
             v-for="tag in tags"
             :key="tag"

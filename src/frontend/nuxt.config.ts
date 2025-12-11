@@ -24,7 +24,7 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Image data tool for computer vision' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
       ]
     }
   },

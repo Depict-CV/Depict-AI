@@ -301,17 +301,6 @@ onMounted(async () => {
             </button>
             
           </div>
-          
-          <!-- Settings at bottom -->
-          <div class="mt-auto mb-4">
-            <button 
-              @click="showSettingsDialog = true"
-              class="w-10 h-10 rounded-lg flex items-center justify-center transition-colors text-gray-400 hover:text-blue-950 hover:bg-blue-50"
-              title="Settings"
-            >
-              <Settings :size="20" />
-            </button>
-          </div>
         </nav>
       </aside>
 
@@ -328,6 +317,7 @@ onMounted(async () => {
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel 
             v-if="activeMenu === 'filter'" 
+            :projectId="selectedProject?.id"
             @applyFilters="handleApplyFilters"
           />
         </div>

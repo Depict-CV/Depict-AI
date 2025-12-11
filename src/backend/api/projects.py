@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, List, Any
 from datetime import datetime
 
 from src.backend.api.clerk_auth import get_current_clerk_user, get_session
-from src.backend.db.tables import Project, ProjectUserLink, User
+from src.backend.db.tables import Project, ProjectUserLink, User, Data, Annotation
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -199,8 +199,118 @@ def read_all_projects(
     return enriched_projects
 
 
+@router.get("/{project_id}/users")
+def get_project_users(
+    project_id: int,
+    db: Session = Depends(get_session)
+):
+    """Get all users connected to a project"""
+    
+    # Verify project exists
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get all user links for this project
+    statement = select(ProjectUserLink).where(ProjectUserLink.project_id == project_id)
+    links = db.exec(statement).all()
+    
+    # Get user details for each link
+    users = []
+    for link in links:
+        user = db.get(User, link.user_id)
+        if user:
+            users.append({
+                "id": user.id,
+                "name": user.username,
+                "email": user.email,
+                "role": link.role
+            })
+    
+    return users
+
+
+@router.get("/{project_id}/statistics")
+def get_project_statistics(
+    project_id: int,
+    db: Session = Depends(get_session)
+):
+    """Get comprehensive statistics for a project using database aggregation"""
+    
+    # Verify project exists
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Total images count
+    total_images = db.exec(
+        select(func.count(Data.id)).where(Data.project_id == project_id)
+    ).one()
+    
+    # Total annotations count
+    total_annotations = db.exec(
+        select(func.count(Annotation.id)).where(Annotation.project_id == project_id)
+    ).one()
+    
+    # Annotated images (unique data_ids with annotations)
+    annotated_images = db.exec(
+        select(func.count(func.distinct(Annotation.data_id)))
+        .where(Annotation.project_id == project_id)
+    ).one()
+    
+    # Annotations by status
+    status_results = db.exec(
+        select(Annotation.status, func.count(Annotation.id))
+        .where(Annotation.project_id == project_id)
+        .group_by(Annotation.status)
+    ).all()
+    by_status = {status: count for status, count in status_results}
+    
+    # Annotations by label
+    label_results = db.exec(
+        select(Annotation.label, func.count(Annotation.id))
+        .where(Annotation.project_id == project_id, Annotation.label.isnot(None))
+        .group_by(Annotation.label)
+    ).all()
+    by_label = {label: count for label, count in label_results}
+    
+    # Recent activity (last 10 annotations)
+    recent_activity = db.exec(
+        select(Annotation)
+        .where(Annotation.project_id == project_id)
+        .order_by(Annotation.creation_date.desc())
+        .limit(10)
+    ).all()
+    
+    # Calculate completion rate
+    completion_rate = round((annotated_images / total_images * 100) if total_images > 0 else 0, 2)
+    
+    return {
+        "total_images": total_images,
+        "total_annotations": total_annotations,
+        "annotated_images": annotated_images,
+        "pending_images": total_images - annotated_images,
+        "completion_rate": completion_rate,
+        "by_status": by_status,
+        "by_label": by_label,
+        "recent_activity": [
+            {
+                "id": ann.id,
+                "data_id": ann.data_id,
+                "label": ann.label,
+                "status": ann.status,
+                "annotation_score": ann.annotation_score,
+                "creation_date": ann.creation_date.isoformat() if ann.creation_date else None,
+                "author_id": ann.author_id
+            }
+            for ann in recent_activity
+        ]
+    }
+
+
 @router.get("/{project_id}")
 def read_project(project_id: int, db: Session = Depends(get_session)):
+    """Get a specific project by ID"""
     project = db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
