@@ -12,27 +12,59 @@ const bucketName = ref('')
 const accessKeyId = ref('')
 const secretAccessKey = ref('')
 const useSSL = ref(false)
+const autoSync = ref(true)
+const syncInterval = ref(24) // hours
+
+const api = useApi()
 
 const handleTestConnection = async () => {
-  // TODO: Implement connection test
-  console.log('Testing connection...', {
-    endpointUrl: endpointUrl.value,
-    bucketName: bucketName.value,
-    useSSL: useSSL.value
-  })
-  alert('Connection test not yet implemented')
+  try {
+    const response = await api.post(`/projects/${props.projectId}/minio/test`, {
+      endpoint: endpointUrl.value,
+      bucket_name: bucketName.value,
+      access_key: accessKeyId.value,
+      secret_key: secretAccessKey.value,
+      use_ssl: useSSL.value
+    })
+    
+    if (response.bucket_exists) {
+      alert('✓ Connection successful!\n\n' + 
+            'Bucket exists: Yes\n' +
+            'Read access: ' + (response.has_read_access ? 'Yes' : 'No'))
+    } else {
+      alert('⚠ Connection established but bucket not found.\n\n' + response.message)
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.detail || error.message || 'Unknown error'
+    alert('✗ Connection failed!\n\n' + errorMsg)
+    console.error('MinIO test error:', error)
+  }
 }
 
 const handleSaveSettings = async () => {
-  // TODO: Implement save to backend
-  console.log('Saving settings...', {
-    projectId: props.projectId,
-    endpointUrl: endpointUrl.value,
-    bucketName: bucketName.value,
-    accessKeyId: accessKeyId.value,
-    useSSL: useSSL.value
-  })
-  alert('Settings saved successfully!')
+  try {
+    const response = await api.post(`/projects/${props.projectId}/minio/configure`, {
+      endpoint: endpointUrl.value,
+      bucket_name: bucketName.value,
+      access_key: accessKeyId.value,
+      secret_key: secretAccessKey.value,
+      use_ssl: useSSL.value,
+      auto_sync: autoSync.value,
+      sync_interval_hours: syncInterval.value
+    })
+    
+    const synced = response.images_synced || 0
+    const skipped = response.images_skipped || 0
+    
+    alert('✓ Settings saved and sync completed!\n\n' +
+          `Images imported: ${synced}\n` +
+          `Images skipped (duplicates): ${skipped}\n` +
+          `Auto-sync: ${response.auto_sync_enabled ? 'Enabled' : 'Disabled'}`)
+  } catch (error) {
+    const errorMsg = error.response?.data?.detail || error.message || 'Unknown error'
+    alert('✗ Save failed!\n\n' + errorMsg)
+    console.error('MinIO save error:', error)
+  }
 }
 </script>
 
@@ -114,6 +146,49 @@ const handleSaveSettings = async () => {
             <label for="use-ssl" class="text-xs font-medium text-gray-600">
               Use SSL/TLS
             </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Auto-Sync Configuration -->
+      <div>
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Synchronization Settings</h3>
+        
+        <div class="space-y-4">
+          <!-- Auto Sync -->
+          <div class="flex items-center gap-2">
+            <input 
+              v-model="autoSync"
+              type="checkbox"
+              id="auto-sync"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label for="auto-sync" class="text-xs font-medium text-gray-600">
+              Enable automatic synchronization
+            </label>
+          </div>
+          
+          <!-- Sync Interval -->
+          <div v-if="autoSync">
+            <label class="block text-xs font-medium text-gray-600 mb-1">
+              Sync Interval (hours)
+            </label>
+            <select 
+              v-model="syncInterval"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option :value="1">Every hour</option>
+              <option :value="6">Every 6 hours</option>
+              <option :value="12">Every 12 hours</option>
+              <option :value="24">Every 24 hours (Daily)</option>
+              <option :value="168">Every 7 days (Weekly)</option>
+            </select>
+          </div>
+          
+          <div class="bg-amber-50 border border-amber-200 rounded-md p-3">
+            <p class="text-xs text-amber-800">
+              <strong>Auto-sync:</strong> When enabled, all images from the MinIO bucket will be automatically imported to the database and kept in sync at the specified interval.
+            </p>
           </div>
         </div>
       </div>

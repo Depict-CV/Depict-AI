@@ -1,12 +1,57 @@
 from typing import List
+import os
+from pathlib import Path
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlmodel import Session, select
+from pydantic import BaseModel
 
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, Data, Project, User
 
 router = APIRouter(prefix="/data", tags=["data"])
+
+
+class ScanDirectoryRequest(BaseModel):
+    directory_path: str
+
+
+# Supported image extensions
+IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.tif', '.ico'}
+
+
+@router.post("/scan-directory")
+def scan_directory(request: ScanDirectoryRequest):
+    """Scan a directory recursively for image files"""
+    directory_path = request.directory_path
+    
+    # Validate directory exists
+    if not os.path.exists(directory_path):
+        raise HTTPException(status_code=404, detail=f"Directory not found: {directory_path}")
+    
+    if not os.path.isdir(directory_path):
+        raise HTTPException(status_code=400, detail=f"Path is not a directory: {directory_path}")
+    
+    # Scan for images
+    image_files = []
+    try:
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                # Check if file has image extension
+                file_ext = Path(file).suffix.lower()
+                if file_ext in IMAGE_EXTENSIONS:
+                    full_path = os.path.join(root, file)
+                    # Normalize path separators
+                    normalized_path = full_path.replace('\\', '/')
+                    image_files.append(normalized_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error scanning directory: {str(e)}")
+    
+    return {
+        "directory": directory_path,
+        "images": image_files,
+        "count": len(image_files)
+    }
 
 
 ###############
