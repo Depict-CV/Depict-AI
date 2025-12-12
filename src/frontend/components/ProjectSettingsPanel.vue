@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { Settings2 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -8,32 +8,72 @@ const props = defineProps({
 
 // Cloud storage form data
 const endpointUrl = ref('')
-const bucketName = ref('')
 const accessKeyId = ref('')
 const secretAccessKey = ref('')
 const useSSL = ref(false)
-const autoSync = ref(true)
-const syncInterval = ref(24) // hours
+const isLoading = ref(false)
 
 const api = useApi()
+
+// Load MinIO configuration when project changes
+const loadMinIOConfig = async () => {
+  if (!props.projectId) return
+  
+  isLoading.value = true
+  try {
+    const response = await api.get(`/projects/${props.projectId}/minio/config`)
+    
+    if (response.configured) {
+      endpointUrl.value = response.endpoint
+      accessKeyId.value = response.access_key
+      secretAccessKey.value = response.secret_key
+      useSSL.value = response.use_ssl
+    } else {
+      // Reset form if no config exists
+      resetForm()
+    }
+  } catch (error) {
+    console.error('Failed to load MinIO config:', error)
+    // Reset form on error
+    resetForm()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const resetForm = () => {
+  endpointUrl.value = ''
+  accessKeyId.value = ''
+  secretAccessKey.value = ''
+  useSSL.value = false
+}
+
+// Watch for project ID changes
+watch(() => props.projectId, (newProjectId) => {
+  if (newProjectId) {
+    loadMinIOConfig()
+  } else {
+    resetForm()
+  }
+}, { immediate: true })
+
+// Load on mount
+onMounted(() => {
+  if (props.projectId) {
+    loadMinIOConfig()
+  }
+})
 
 const handleTestConnection = async () => {
   try {
     const response = await api.post(`/projects/${props.projectId}/minio/test`, {
       endpoint: endpointUrl.value,
-      bucket_name: bucketName.value,
       access_key: accessKeyId.value,
       secret_key: secretAccessKey.value,
       use_ssl: useSSL.value
     })
     
-    if (response.bucket_exists) {
-      alert('✓ Connection successful!\n\n' + 
-            'Bucket exists: Yes\n' +
-            'Read access: ' + (response.has_read_access ? 'Yes' : 'No'))
-    } else {
-      alert('⚠ Connection established but bucket not found.\n\n' + response.message)
-    }
+    alert('✓ MinIO connection successful!\n\nServer is accessible and credentials are valid.')
   } catch (error) {
     const errorMsg = error.response?.data?.detail || error.message || 'Unknown error'
     alert('✗ Connection failed!\n\n' + errorMsg)
@@ -43,23 +83,14 @@ const handleTestConnection = async () => {
 
 const handleSaveSettings = async () => {
   try {
-    const response = await api.post(`/projects/${props.projectId}/minio/configure`, {
+    await api.post(`/projects/${props.projectId}/minio/configure`, {
       endpoint: endpointUrl.value,
-      bucket_name: bucketName.value,
       access_key: accessKeyId.value,
       secret_key: secretAccessKey.value,
-      use_ssl: useSSL.value,
-      auto_sync: autoSync.value,
-      sync_interval_hours: syncInterval.value
+      use_ssl: useSSL.value
     })
     
-    const synced = response.images_synced || 0
-    const skipped = response.images_skipped || 0
-    
-    alert('✓ Settings saved and sync completed!\n\n' +
-          `Images imported: ${synced}\n` +
-          `Images skipped (duplicates): ${skipped}\n` +
-          `Auto-sync: ${response.auto_sync_enabled ? 'Enabled' : 'Disabled'}`)
+    alert('✓ Settings saved successfully!')
   } catch (error) {
     const errorMsg = error.response?.data?.detail || error.message || 'Unknown error'
     alert('✗ Save failed!\n\n' + errorMsg)
@@ -78,6 +109,11 @@ const handleSaveSettings = async () => {
       <p class="text-gray-400 text-xs mt-1">Select a project to configure settings</p>
     </div>
     
+    <div v-else-if="isLoading" class="text-center py-8">
+      <Settings2 :size="48" class="mx-auto text-blue-300 mb-3 animate-pulse" />
+      <p class="text-gray-500 text-sm">Loading configuration...</p>
+    </div>
+    
     <div v-else class="space-y-6">
       <div>
         <h3 class="text-sm font-semibold text-gray-700 mb-3">MinIO Storage Configuration</h3>
@@ -92,19 +128,6 @@ const handleSaveSettings = async () => {
               v-model="endpointUrl"
               type="text"
               placeholder="http://localhost:9000"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <!-- Bucket Name -->
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">
-              Bucket Name
-            </label>
-            <input 
-              v-model="bucketName"
-              type="text"
-              placeholder="my-bucket"
               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -150,49 +173,6 @@ const handleSaveSettings = async () => {
         </div>
       </div>
       
-      <!-- Auto-Sync Configuration -->
-      <div>
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">Synchronization Settings</h3>
-        
-        <div class="space-y-4">
-          <!-- Auto Sync -->
-          <div class="flex items-center gap-2">
-            <input 
-              v-model="autoSync"
-              type="checkbox"
-              id="auto-sync"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label for="auto-sync" class="text-xs font-medium text-gray-600">
-              Enable automatic synchronization
-            </label>
-          </div>
-          
-          <!-- Sync Interval -->
-          <div v-if="autoSync">
-            <label class="block text-xs font-medium text-gray-600 mb-1">
-              Sync Interval (hours)
-            </label>
-            <select 
-              v-model="syncInterval"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option :value="1">Every hour</option>
-              <option :value="6">Every 6 hours</option>
-              <option :value="12">Every 12 hours</option>
-              <option :value="24">Every 24 hours (Daily)</option>
-              <option :value="168">Every 7 days (Weekly)</option>
-            </select>
-          </div>
-          
-          <div class="bg-amber-50 border border-amber-200 rounded-md p-3">
-            <p class="text-xs text-amber-800">
-              <strong>Auto-sync:</strong> When enabled, all images from the MinIO bucket will be automatically imported to the database and kept in sync at the specified interval.
-            </p>
-          </div>
-        </div>
-      </div>
-      
       <!-- Action Buttons -->
       <div class="flex gap-2 pt-4 border-t border-gray-200">
         <button 
@@ -205,7 +185,7 @@ const handleSaveSettings = async () => {
           @click="handleSaveSettings"
           class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors"
         >
-          Save Settings
+          Save Credentials
         </button>
       </div>
       
