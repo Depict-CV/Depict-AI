@@ -13,48 +13,43 @@ resnet50.eval()
 
 def load_image_from_location(location, minio_config=None):
     """Load image from either local path or MinIO URL
-    
+
     Args:
         location: File path or minio://bucket/path URL
         minio_config: Dict with endpoint, access_key, secret_key, use_ssl (optional)
     """
-    if location.startswith('minio://'):
+    if location.startswith("minio://"):
         # Parse MinIO URL: minio://bucket/path
-        parts = location.replace('minio://', '').split('/', 1)
+        parts = location.replace("minio://", "").split("/", 1)
         if len(parts) != 2:
             raise ValueError(f"Invalid MinIO URL format: {location}")
-        
+
         bucket_name, object_path = parts
-        
+
         # Use provided config or fall back to environment variables
         if minio_config:
-            endpoint = minio_config.get('endpoint', 'localhost:9000')
-            access_key = minio_config.get('access_key', 'minioadmin')
-            secret_key = minio_config.get('secret_key', 'minioadmin')
-            use_ssl = minio_config.get('use_ssl', False)
+            endpoint = minio_config.get("endpoint", "localhost:9000")
+            access_key = minio_config.get("access_key", "minioadmin")
+            secret_key = minio_config.get("secret_key", "minioadmin")
+            use_ssl = minio_config.get("use_ssl", False)
         else:
-            endpoint = os.getenv('MINIO_ENDPOINT', 'localhost:9000')
-            access_key = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
-            secret_key = os.getenv('MINIO_SECRET_KEY', 'minioadmin')
-            use_ssl = os.getenv('MINIO_USE_SSL', 'false').lower() == 'true'
-        
+            endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+            access_key = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+            secret_key = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+            use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+
         # Remove http/https prefix if present
-        endpoint = endpoint.replace('http://', '').replace('https://', '')
-        
+        endpoint = endpoint.replace("http://", "").replace("https://", "")
+
         # Create MinIO client
-        client = Minio(
-            endpoint,
-            access_key=access_key,
-            secret_key=secret_key,
-            secure=use_ssl
-        )
-        
+        client = Minio(endpoint, access_key=access_key, secret_key=secret_key, secure=use_ssl)
+
         # Download image to BytesIO
         response = client.get_object(bucket_name, object_path)
         image_data = BytesIO(response.read())
         response.close()
         response.release_conn()
-        
+
         return Image.open(image_data)
     else:
         # Local file path

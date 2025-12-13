@@ -18,7 +18,6 @@ help:
 	@echo "  make frontend     : Start Vue.js frontend dev server"
 	@echo "  make frontend-nuxt: Start Nuxt 3 frontend dev server"
 	@echo "  make build-nuxt   : Build Nuxt 3 for production"
-	@echo "  make api-docs     : Generate OpenAPI documentation from FastAPI"
 	@echo "  make docs         : Start documentation server with mkdocs"
 	@echo "  make clean        : Cleanup pycache and build artifacts"
 	@echo "  make rebuild      : Remove venv and reinstall dependencies"
@@ -64,12 +63,6 @@ frontend-nuxt:
 build-nuxt:
 	@echo "Building Nuxt 3 for production..."
 	cd src/frontend_nuxt && npm run build
-
-# Generate API documentation from FastAPI
-.PHONY: api-docs
-api-docs:
-	@echo "Generating OpenAPI specification..."
-	$(POETRY_RUN) python scripts/generate_api_docs.py
 
 # Start documentation server
 .PHONY: docs

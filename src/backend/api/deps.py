@@ -8,12 +8,12 @@ sys.path.insert(0, str(project_root))
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import Session, select
 from jose import JWTError, jwt
+from sqlmodel import Session
 
+import config
 from src.backend.db.database import engine
 from src.backend.db.tables import User
-import config
 
 # OAuth2 scheme for token authentication
 # tokenUrl points to the OAuth2 token endpoint
@@ -26,10 +26,7 @@ def get_session():
         yield session
 
 
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_session)
-) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_session)) -> User:
     """
     Dependency to get the current authenticated user from JWT token.
     Raises HTTPException if token is invalid or user not found.
@@ -39,23 +36,19 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         # Decode JWT token
-        payload = jwt.decode(
-            token, 
-            config.JWT_SECRET_KEY, 
-            algorithms=[config.JWT_ALGORITHM]
-        )
+        payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
         user_id: Optional[int] = payload.get("sub")
         if user_id is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     # Get user from database
     user = db.get(User, int(user_id))
     if user is None:
         raise credentials_exception
-    
+
     return user

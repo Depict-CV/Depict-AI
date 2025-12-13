@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import config
-from src.backend.api import annotations, data, images, ml, projects, users, test_auth, notifications, minio_sync
+from src.backend.api import annotations, data, images, minio_sync, ml, notifications, projects, test_auth, users
 from src.backend.db.database import init_db
 
 SENTRY_DSN = config.SENTRY_DSN
