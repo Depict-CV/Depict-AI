@@ -11,8 +11,8 @@ export default defineNuxtPlugin({
       console.error('Missing VITE_CLERK_PUBLISHABLE_KEY in environment variables')
       return {
         provide: {
-          clerk: null
-        }
+          clerk: null,
+        },
       }
     }
 
@@ -21,8 +21,8 @@ export default defineNuxtPlugin({
 
     return {
       provide: {
-        clerk
-      }
+        clerk,
+      },
     }
-  }
+  },
 })

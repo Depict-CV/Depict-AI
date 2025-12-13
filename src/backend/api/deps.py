@@ -6,14 +6,14 @@ from typing import Optional
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from sqlmodel import Session
+from fastapi import Depends, HTTPException, status  # noqa: E402
+from fastapi.security import OAuth2PasswordBearer  # noqa: E402
+from jose import JWTError, jwt  # noqa: E402
+from sqlmodel import Session  # noqa: E402
 
-import config
-from src.backend.db.database import engine
-from src.backend.db.tables import User
+import config  # noqa: E402
+from src.backend.db.database import engine  # noqa: E402
+from src.backend.db.tables import User  # noqa: E402
 
 # OAuth2 scheme for token authentication
 # tokenUrl points to the OAuth2 token endpoint

@@ -1,12 +1,21 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { Image as ImageIcon, CheckCircle, Clock, AlertCircle, TrendingUp, Database, Tag, Calendar } from 'lucide-vue-next'
+import {
+  Image as ImageIcon,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  TrendingUp,
+  Database,
+  Tag,
+  Calendar,
+} from 'lucide-vue-next'
 
 const props = defineProps({
   projectId: {
     type: Number,
-    default: null
-  }
+    default: null,
+  },
 })
 
 const api = useApi()
@@ -20,33 +29,32 @@ const stats = ref({
   annotationsByType: {},
   annotationsByLabel: {},
   recentActivity: [],
-  completionRate: 0
+  completionRate: 0,
 })
 
 const fetchStats = async () => {
   if (!props.projectId) return
-  
+
   loading.value = true
   try {
     // Use the new statistics endpoint
     const statistics = await api.get(`/projects/${props.projectId}/statistics`)
-    
+
     // Update stats with response
     stats.value.totalImages = statistics.total_images
     stats.value.totalAnnotations = statistics.total_annotations
     stats.value.annotatedImages = statistics.annotated_images
     stats.value.pendingImages = statistics.pending_images
     stats.value.completionRate = statistics.completion_rate
-    
+
     // Annotations by status
     stats.value.annotationsByType = statistics.by_status || {}
-    
+
     // Annotations by label
     stats.value.annotationsByLabel = statistics.by_label || {}
-    
+
     // Recent activity
     stats.value.recentActivity = statistics.recent_activity || []
-    
   } catch (error) {
     console.error('Failed to fetch statistics:', error)
   } finally {
@@ -55,11 +63,14 @@ const fetchStats = async () => {
 }
 
 // Watch for projectId changes
-watch(() => props.projectId, (newId) => {
-  if (newId) {
-    fetchStats()
+watch(
+  () => props.projectId,
+  (newId) => {
+    if (newId) {
+      fetchStats()
+    }
   }
-})
+)
 
 onMounted(() => {
   if (props.projectId) {
@@ -75,12 +86,12 @@ const formatDate = (dateString) => {
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
-  
+
   if (diffMins < 1) return 'Just now'
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  
+
   return date.toLocaleDateString()
 }
 </script>
@@ -89,8 +100,8 @@ const formatDate = (dateString) => {
   <div class="stats-panel">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Project Statistics</h2>
-      <button 
-        @click="fetchStats" 
+      <button
+        @click="fetchStats"
         :disabled="!projectId || loading"
         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
       >
@@ -160,10 +171,7 @@ const formatDate = (dateString) => {
           <span class="text-2xl font-bold text-blue-600">{{ stats.completionRate }}%</span>
         </div>
         <div class="progress-bar-container">
-          <div 
-            class="progress-bar" 
-            :style="{ width: stats.completionRate + '%' }"
-          ></div>
+          <div class="progress-bar" :style="{ width: stats.completionRate + '%' }"></div>
         </div>
         <div class="flex justify-between text-sm text-gray-600 mt-2">
           <span>{{ stats.annotatedImages }} / {{ stats.totalImages }} images annotated</span>
@@ -181,19 +189,17 @@ const formatDate = (dateString) => {
             <p class="text-gray-400 text-sm">No annotations yet</p>
           </div>
           <div v-else class="chart-content">
-            <div 
-              v-for="(count, type) in stats.annotationsByType" 
-              :key="type"
-              class="chart-item"
-            >
+            <div v-for="(count, type) in stats.annotationsByType" :key="type" class="chart-item">
               <div class="flex items-center justify-between mb-2">
                 <span class="chart-label">{{ type }}</span>
                 <span class="chart-value">{{ count }}</span>
               </div>
               <div class="chart-bar-container">
-                <div 
-                  class="chart-bar bg-blue-500" 
-                  :style="{ width: (count / stats.totalAnnotations * 100) + '%' }"
+                <div
+                  class="chart-bar bg-blue-500"
+                  :style="{
+                    width: (count / stats.totalAnnotations) * 100 + '%',
+                  }"
                 ></div>
               </div>
             </div>
@@ -208,19 +214,17 @@ const formatDate = (dateString) => {
             <p class="text-gray-400 text-sm">No labels assigned</p>
           </div>
           <div v-else class="chart-content">
-            <div 
-              v-for="(count, label) in stats.annotationsByLabel" 
-              :key="label"
-              class="chart-item"
-            >
+            <div v-for="(count, label) in stats.annotationsByLabel" :key="label" class="chart-item">
               <div class="flex items-center justify-between mb-2">
                 <span class="chart-label">{{ label }}</span>
                 <span class="chart-value">{{ count }}</span>
               </div>
               <div class="chart-bar-container">
-                <div 
-                  class="chart-bar bg-green-500" 
-                  :style="{ width: (count / stats.totalAnnotations * 100) + '%' }"
+                <div
+                  class="chart-bar bg-green-500"
+                  :style="{
+                    width: (count / stats.totalAnnotations) * 100 + '%',
+                  }"
                 ></div>
               </div>
             </div>
@@ -239,11 +243,7 @@ const formatDate = (dateString) => {
           <p class="text-gray-400 text-sm">No recent activity</p>
         </div>
         <div v-else class="activity-list">
-          <div 
-            v-for="activity in stats.recentActivity" 
-            :key="activity.id"
-            class="activity-item"
-          >
+          <div v-for="activity in stats.recentActivity" :key="activity.id" class="activity-item">
             <div class="activity-indicator"></div>
             <div class="activity-content">
               <div class="activity-header">
@@ -251,11 +251,14 @@ const formatDate = (dateString) => {
                 <span v-if="activity.label" class="activity-label">{{ activity.label }}</span>
               </div>
               <div class="activity-meta">
-                <span class="activity-status" :class="{
-                  'status-pending': activity.status === 'PENDING',
-                  'status-approved': activity.status === 'APPROVED',
-                  'status-ml': activity.status === 'ML_ANNOTATION'
-                }">
+                <span
+                  class="activity-status"
+                  :class="{
+                    'status-pending': activity.status === 'PENDING',
+                    'status-approved': activity.status === 'APPROVED',
+                    'status-ml': activity.status === 'ML_ANNOTATION',
+                  }"
+                >
                   {{ activity.status || 'PENDING' }}
                 </span>
                 <span class="activity-time">{{ formatDate(activity.created_at) }}</span>
@@ -301,8 +304,12 @@ const formatDate = (dateString) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Stat Cards */

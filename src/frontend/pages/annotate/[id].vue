@@ -1,11 +1,23 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { Square, Circle, Save, Check, X, ArrowLeft, Trash2, History, Clock, Plus, Undo, Pencil, Palette, Pentagon, Paintbrush, Eraser, Pipette } from 'lucide-vue-next'
+import { ref, onMounted, onUnmounted } from 'vue'
+import {
+  Square,
+  Save,
+  Check,
+  X,
+  ArrowLeft,
+  Trash2,
+  History,
+  Clock,
+  Plus,
+  Pentagon,
+  Paintbrush,
+  Eraser,
+} from 'lucide-vue-next'
 import Konva from 'konva'
 
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 
 // Image data
 const image = ref(null)
@@ -31,7 +43,6 @@ const brushSize = ref(10)
 const selectedColor = ref('#3498db')
 const maskOpacity = ref(0.5)
 const eraserSize = ref(20)
-const showColorPicker = ref(false)
 
 // Annotation task settings
 const annotationTask = ref('object-detection') // 'object-detection', 'segmentation', 'keypoints', 'pose', 'lanes'
@@ -42,18 +53,40 @@ const newLabelInput = ref('')
 
 // Keypoint/Skeleton configuration
 const keypointConnections = ref([
-  [0, 1], [1, 2], [2, 3], [3, 4], // head to torso
-  [1, 5], [5, 6], [6, 7], // left arm
-  [1, 8], [8, 9], [9, 10], // right arm
-  [1, 11], [11, 12], [12, 13], // left leg
-  [1, 14], [14, 15], [15, 16], // right leg
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4], // head to torso
+  [1, 5],
+  [5, 6],
+  [6, 7], // left arm
+  [1, 8],
+  [8, 9],
+  [9, 10], // right arm
+  [1, 11],
+  [11, 12],
+  [12, 13], // left leg
+  [1, 14],
+  [14, 15],
+  [15, 16], // right leg
 ])
 const keypointLabels = ref([
-  'nose', 'neck', 'right_shoulder', 'right_elbow', 'right_wrist',
-  'left_shoulder', 'left_elbow', 'left_wrist',
-  'right_hip', 'right_knee', 'right_ankle',
-  'left_hip', 'left_knee', 'left_ankle',
-  'right_eye', 'left_eye'
+  'nose',
+  'neck',
+  'right_shoulder',
+  'right_elbow',
+  'right_wrist',
+  'left_shoulder',
+  'left_elbow',
+  'left_wrist',
+  'right_hip',
+  'right_knee',
+  'right_ankle',
+  'left_hip',
+  'left_knee',
+  'left_ankle',
+  'right_eye',
+  'left_eye',
 ])
 const currentKeypoints = ref([])
 
@@ -63,9 +96,18 @@ const cuboidStep = ref(0) // 0: front face, 1: back face
 
 // Predefined colors
 const colors = [
-  '#3498db', '#e74c3c', '#27ae60', '#f39c12', 
-  '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
-  '#f1c40f', '#16a085', '#c0392b', '#8e44ad'
+  '#3498db',
+  '#e74c3c',
+  '#27ae60',
+  '#f39c12',
+  '#9b59b6',
+  '#1abc9c',
+  '#e67e22',
+  '#34495e',
+  '#f1c40f',
+  '#16a085',
+  '#c0392b',
+  '#8e44ad',
 ]
 
 // History tracking
@@ -77,29 +119,17 @@ const canvasWidth = ref(800)
 const canvasHeight = ref(600)
 
 // Fetch image data
-const fetchImage = async () => {
+const fetchImage = () => {
   try {
-    // Get image data from sessionStorage (set by ImageGallery when clicking annotate)
-    const savedImage = sessionStorage.getItem('currentImage')
-    if (savedImage) {
-      image.value = JSON.parse(savedImage)
-    } else {
-      // Fallback: fetch from API
-      const response = await api.get(`/data/${route.params.id}`)
-      
-      // Check if location is a URL or file path
-      let imageUrl = response.location
-      if (!response.location.startsWith('http://') && !response.location.startsWith('https://')) {
-        // Local file path - serve through backend
-        const encodedPath = encodeURIComponent(response.location)
-        imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
-      }
-      
-      image.value = {
-        id: response.id,
-        location: imageUrl,
-        type: response.type
-      }
+    // TODO: Replace with actual API call
+    // const response = await api.get(`/images/${route.params.id}`)
+    // image.value = response
+
+    // Mock data for now
+    image.value = {
+      id: route.params.id,
+      location: `https://picsum.photos/800/600?random=${route.params.id}`,
+      type: 'landscape',
     }
   } catch (error) {
     console.error('Failed to fetch image:', error)
@@ -115,7 +145,7 @@ const addHistoryEntry = (action, details) => {
     action,
     details,
     timestamp: new Date().toISOString(),
-    annotationCount: annotations.value.length
+    annotationCount: annotations.value.length,
   }
   history.value.unshift(entry)
 }
@@ -124,36 +154,36 @@ const setupKonva = (img) => {
   // Get container dimensions
   const container = stageContainer.value
   if (!container) return
-  
+
   // Wait for DOM to fully render
   const containerWidth = container.parentElement?.clientWidth || window.innerWidth - 350
   const containerHeight = container.parentElement?.clientHeight || window.innerHeight - 100
-  
+
   // Calculate scaling to fit image
   const scale = Math.min(
     containerWidth / img.width,
     containerHeight / img.height,
     1 // Don't scale up
   )
-  
+
   canvasWidth.value = img.width * scale
   canvasHeight.value = img.height * scale
-  
+
   // Create Konva stage
   stage.value = new Konva.Stage({
     container: stageContainer.value,
     width: canvasWidth.value,
     height: canvasHeight.value,
   })
-  
+
   // Create image layer
   layer.value = new Konva.Layer()
   stage.value.add(layer.value)
-  
+
   // Create drawing layer (for annotations)
   drawingLayer.value = new Konva.Layer()
   stage.value.add(drawingLayer.value)
-  
+
   // Add image to layer
   imageNode.value = new Konva.Image({
     image: img,
@@ -162,7 +192,7 @@ const setupKonva = (img) => {
   })
   layer.value.add(imageNode.value)
   layer.value.batchDraw()
-  
+
   // Setup mouse events
   setupMouseEvents()
 }
@@ -170,49 +200,49 @@ const setupKonva = (img) => {
 // Setup mouse events for Konva
 const setupMouseEvents = () => {
   if (!stage.value) return
-  
+
   stage.value.on('mousedown touchstart', handleMouseDown)
   stage.value.on('mousemove touchmove', handleMouseMove)
   stage.value.on('mouseup touchend', handleMouseUp)
   stage.value.on('contextmenu', handleContextMenu)
 }
 
-const handleMouseDown = (e) => {
+const handleMouseDown = (_e) => {
   const pos = stage.value.getPointerPosition()
-  
+
   // Polygon tool - add points on click
   if (activeTool.value === 'polygon') {
     polygonPoints.value.push(pos)
     drawPolygonPreview()
     return
   }
-  
+
   // Keypoint tool - place keypoints
   if (activeTool.value === 'keypoint') {
     placeKeypoint(pos)
     return
   }
-  
+
   // Point tool - single point annotation
   if (activeTool.value === 'point') {
     createPointAnnotation(pos)
     return
   }
-  
+
   // Cuboid tool - 3D bounding box
   if (activeTool.value === 'cuboid') {
     handleCuboidClick(pos)
     return
   }
-  
+
   // Eraser tool
   if (activeTool.value === 'eraser') {
     eraseAtPoint(pos.x, pos.y)
     return
   }
-  
+
   isDrawing.value = true
-  
+
   // Segmentation tool (brush-based mask painting)
   if (activeTool.value === 'segmentation') {
     freehandPoints.value = [pos.x, pos.y]
@@ -227,7 +257,7 @@ const handleMouseDown = (e) => {
     drawingLayer.value.add(currentShape.value)
     return
   }
-  
+
   // Line tool - for lane detection, etc.
   if (activeTool.value === 'line') {
     currentShape.value = new Konva.Line({
@@ -240,7 +270,7 @@ const handleMouseDown = (e) => {
     drawingLayer.value.add(currentShape.value)
     return
   }
-  
+
   // Bounding Box tool (bbox)
   if (activeTool.value === 'bbox') {
     currentShape.value = new Konva.Rect({
@@ -258,11 +288,11 @@ const handleMouseDown = (e) => {
   }
 }
 
-const handleMouseMove = (e) => {
+const handleMouseMove = (_e) => {
   if (!isDrawing.value || !currentShape.value) return
-  
+
   const pos = stage.value.getPointerPosition()
-  
+
   // Segmentation tool (brush painting)
   if (activeTool.value === 'segmentation') {
     freehandPoints.value.push(pos.x, pos.y)
@@ -270,7 +300,7 @@ const handleMouseMove = (e) => {
     drawingLayer.value.batchDraw()
     return
   }
-  
+
   // Line tool
   if (activeTool.value === 'line') {
     const points = currentShape.value.points()
@@ -278,7 +308,7 @@ const handleMouseMove = (e) => {
     drawingLayer.value.batchDraw()
     return
   }
-  
+
   // Bounding Box tool
   if (activeTool.value === 'bbox') {
     const startPos = { x: currentShape.value.x(), y: currentShape.value.y() }
@@ -288,11 +318,11 @@ const handleMouseMove = (e) => {
   }
 }
 
-const handleMouseUp = (e) => {
+const handleMouseUp = (_e) => {
   if (!isDrawing.value || !currentShape.value) return
-  
+
   isDrawing.value = false
-  
+
   // Finalize the shape
   const annotation = {
     id: Date.now(),
@@ -302,21 +332,21 @@ const handleMouseUp = (e) => {
     created: new Date().toISOString(),
     shape: currentShape.value,
   }
-  
+
   // Remove dash effect
   currentShape.value.dash([])
-  
+
   if (activeTool.value === 'bbox') {
     const width = Math.abs(currentShape.value.width())
     const height = Math.abs(currentShape.value.height())
-    
+
     if (width < 5 || height < 5) {
       currentShape.value.destroy()
       currentShape.value = null
       drawingLayer.value.batchDraw()
       return
     }
-    
+
     // Normalize negative dimensions
     if (currentShape.value.width() < 0) {
       currentShape.value.x(currentShape.value.x() + currentShape.value.width())
@@ -326,27 +356,25 @@ const handleMouseUp = (e) => {
       currentShape.value.y(currentShape.value.y() + currentShape.value.height())
       currentShape.value.height(Math.abs(currentShape.value.height()))
     }
-    
+
     annotation.x = currentShape.value.x()
     annotation.y = currentShape.value.y()
     annotation.width = currentShape.value.width()
     annotation.height = currentShape.value.height()
-    
+
     // Add label text
     addBBoxLabel(currentShape.value, annotation)
   } else if (activeTool.value === 'line') {
     const points = currentShape.value.points()
-    const distance = Math.sqrt(
-      Math.pow(points[2] - points[0], 2) + Math.pow(points[3] - points[1], 2)
-    )
-    
+    const distance = Math.sqrt(Math.pow(points[2] - points[0], 2) + Math.pow(points[3] - points[1], 2))
+
     if (distance < 5) {
       currentShape.value.destroy()
       currentShape.value = null
       drawingLayer.value.batchDraw()
       return
     }
-    
+
     currentShape.value.opacity(1)
     annotation.points = points
     annotation.startX = points[0]
@@ -361,46 +389,46 @@ const handleMouseUp = (e) => {
       drawingLayer.value.batchDraw()
       return
     }
-    
+
     annotation.points = [...freehandPoints.value]
     annotation.brushSize = brushSize.value
     annotation.opacity = maskOpacity.value
   }
-  
+
   // Make shape interactive
   makeShapeInteractive(currentShape.value, annotation)
-  
+
   annotations.value.push(annotation)
   addHistoryEntry('added', `${annotation.type} annotation: ${annotation.label}`)
-  
+
   currentShape.value = null
   freehandPoints.value = []
   drawingLayer.value.batchDraw()
 }
 
 // Make shapes interactive (draggable, selectable, deletable)
-const makeShapeInteractive = (shape, annotation) => {
+const makeShapeInteractive = (shape, _annotation) => {
   if (!shape) return
-  
+
   shape.draggable(true)
-  
+
   // Hover effects
   shape.on('mouseenter', () => {
     stage.value.container().style.cursor = 'move'
     shape.strokeWidth(3)
     drawingLayer.value.batchDraw()
   })
-  
+
   shape.on('mouseleave', () => {
     stage.value.container().style.cursor = 'crosshair'
     shape.strokeWidth(2)
     drawingLayer.value.batchDraw()
   })
-  
+
   // Click to select
   shape.on('click', () => {
     // Highlight selected shape
-    drawingLayer.value.children.forEach(child => {
+    drawingLayer.value.children.forEach((child) => {
       if (child !== shape) {
         child.strokeWidth(2)
       }
@@ -411,30 +439,30 @@ const makeShapeInteractive = (shape, annotation) => {
 }
 
 const deleteAnnotation = (id) => {
-  const annotation = annotations.value.find(ann => ann.id === id)
+  const annotation = annotations.value.find((ann) => ann.id === id)
   if (!annotation) return
-  
-  annotations.value = annotations.value.filter(ann => ann.id !== id)
-  
+
+  annotations.value = annotations.value.filter((ann) => ann.id !== id)
+
   // Remove shape from layer
   if (annotation.shape) {
     annotation.shape.destroy()
     drawingLayer.value.batchDraw()
   }
-  
+
   // Add history entry
   addHistoryEntry('deleted', `${annotation.type} annotation removed`)
 }
 
 const clearAllAnnotations = () => {
   const count = annotations.value.length
-  
+
   // Remove all shapes from layer
   drawingLayer.value.destroyChildren()
   drawingLayer.value.batchDraw()
-  
+
   annotations.value = []
-  
+
   // Add history entry
   if (count > 0) {
     addHistoryEntry('cleared', `All ${count} annotations cleared`)
@@ -444,7 +472,7 @@ const clearAllAnnotations = () => {
 // Add label to bounding box
 const addBBoxLabel = (shape, annotation) => {
   if (!shape || !annotation.label) return
-  
+
   const labelText = new Konva.Text({
     x: shape.x(),
     y: shape.y() - 22,
@@ -454,7 +482,7 @@ const addBBoxLabel = (shape, annotation) => {
     fill: 'white',
     padding: 5,
   })
-  
+
   const labelBg = new Konva.Rect({
     x: shape.x(),
     y: shape.y() - 22,
@@ -463,14 +491,14 @@ const addBBoxLabel = (shape, annotation) => {
     fill: selectedColor.value,
     cornerRadius: 3,
   })
-  
+
   const labelGroup = new Konva.Group()
   labelGroup.add(labelBg)
   labelGroup.add(labelText)
-  
+
   drawingLayer.value.add(labelGroup)
   annotation.labelShape = labelGroup
-  
+
   // Make label follow bbox when dragged
   shape.on('dragmove', () => {
     labelGroup.x(shape.x())
@@ -489,9 +517,9 @@ const placeKeypoint = (pos) => {
     strokeWidth: 2,
     draggable: true,
   })
-  
+
   drawingLayer.value.add(keypoint)
-  
+
   const annotation = {
     id: Date.now(),
     type: 'keypoint',
@@ -502,7 +530,7 @@ const placeKeypoint = (pos) => {
     created: new Date().toISOString(),
     shape: keypoint,
   }
-  
+
   // Add label
   const label = new Konva.Text({
     x: pos.x + 10,
@@ -514,19 +542,19 @@ const placeKeypoint = (pos) => {
   })
   drawingLayer.value.add(label)
   annotation.labelShape = label
-  
+
   keypoint.on('dragmove', () => {
     label.x(keypoint.x() + 10)
     label.y(keypoint.y() - 10)
     annotation.x = keypoint.x()
     annotation.y = keypoint.y()
   })
-  
+
   makeShapeInteractive(keypoint, annotation)
   annotations.value.push(annotation)
   currentKeypoints.value.push(annotation)
   addHistoryEntry('added', `Keypoint: ${annotation.label}`)
-  
+
   drawingLayer.value.batchDraw()
 }
 
@@ -541,9 +569,9 @@ const createPointAnnotation = (pos) => {
     strokeWidth: 2,
     draggable: true,
   })
-  
+
   drawingLayer.value.add(point)
-  
+
   const annotation = {
     id: Date.now(),
     type: 'point',
@@ -554,23 +582,23 @@ const createPointAnnotation = (pos) => {
     created: new Date().toISOString(),
     shape: point,
   }
-  
+
   point.on('dragmove', () => {
     annotation.x = point.x()
     annotation.y = point.y()
   })
-  
+
   makeShapeInteractive(point, annotation)
   annotations.value.push(annotation)
   addHistoryEntry('added', `Point: ${annotation.label}`)
-  
+
   drawingLayer.value.batchDraw()
 }
 
 // Cuboid annotation (3D bounding box)
 const handleCuboidClick = (pos) => {
   cuboidPoints.value.push(pos)
-  
+
   if (cuboidPoints.value.length === 4 && cuboidStep.value === 0) {
     // Front face complete, draw it
     drawCuboidPreview()
@@ -586,16 +614,20 @@ const handleCuboidClick = (pos) => {
 const drawCuboidPreview = () => {
   // Remove old preview
   const oldPreview = drawingLayer.value.find('.cuboid-preview')
-  oldPreview.forEach(p => p.destroy())
-  
+  oldPreview.forEach((p) => p.destroy())
+
   if (cuboidPoints.value.length >= 4) {
     // Draw front face
     const frontFace = new Konva.Line({
       points: [
-        cuboidPoints.value[0].x, cuboidPoints.value[0].y,
-        cuboidPoints.value[1].x, cuboidPoints.value[1].y,
-        cuboidPoints.value[2].x, cuboidPoints.value[2].y,
-        cuboidPoints.value[3].x, cuboidPoints.value[3].y,
+        cuboidPoints.value[0].x,
+        cuboidPoints.value[0].y,
+        cuboidPoints.value[1].x,
+        cuboidPoints.value[1].y,
+        cuboidPoints.value[2].x,
+        cuboidPoints.value[2].y,
+        cuboidPoints.value[3].x,
+        cuboidPoints.value[3].y,
       ],
       stroke: selectedColor.value,
       strokeWidth: 2,
@@ -605,13 +637,13 @@ const drawCuboidPreview = () => {
     })
     drawingLayer.value.add(frontFace)
   }
-  
+
   if (cuboidPoints.value.length > 4) {
     // Draw back face and connections
     const backPoints = cuboidPoints.value.slice(4)
     if (backPoints.length > 1) {
       const backLine = new Konva.Line({
-        points: backPoints.flatMap(p => [p.x, p.y]),
+        points: backPoints.flatMap((p) => [p.x, p.y]),
         stroke: selectedColor.value,
         strokeWidth: 2,
         dash: [5, 5],
@@ -619,7 +651,7 @@ const drawCuboidPreview = () => {
       })
       drawingLayer.value.add(backLine)
     }
-    
+
     // Draw connecting lines
     for (let i = 0; i < Math.min(4, backPoints.length); i++) {
       const line = new Konva.Line({
@@ -632,7 +664,7 @@ const drawCuboidPreview = () => {
       drawingLayer.value.add(line)
     }
   }
-  
+
   // Draw points
   cuboidPoints.value.forEach((point, i) => {
     const circle = new Konva.Circle({
@@ -644,53 +676,63 @@ const drawCuboidPreview = () => {
     })
     drawingLayer.value.add(circle)
   })
-  
+
   drawingLayer.value.batchDraw()
 }
 
 const completeCuboid = () => {
   if (cuboidPoints.value.length !== 8) return
-  
+
   // Remove preview
   const oldPreview = drawingLayer.value.find('.cuboid-preview')
-  oldPreview.forEach(p => p.destroy())
-  
+  oldPreview.forEach((p) => p.destroy())
+
   // Create cuboid group
   const group = new Konva.Group({ draggable: true })
-  
+
   // Draw front face
   const frontFace = new Konva.Line({
     points: [
-      cuboidPoints.value[0].x, cuboidPoints.value[0].y,
-      cuboidPoints.value[1].x, cuboidPoints.value[1].y,
-      cuboidPoints.value[2].x, cuboidPoints.value[2].y,
-      cuboidPoints.value[3].x, cuboidPoints.value[3].y,
+      cuboidPoints.value[0].x,
+      cuboidPoints.value[0].y,
+      cuboidPoints.value[1].x,
+      cuboidPoints.value[1].y,
+      cuboidPoints.value[2].x,
+      cuboidPoints.value[2].y,
+      cuboidPoints.value[3].x,
+      cuboidPoints.value[3].y,
     ],
     stroke: selectedColor.value,
     strokeWidth: 2,
     closed: true,
   })
-  
+
   // Draw back face
   const backFace = new Konva.Line({
     points: [
-      cuboidPoints.value[4].x, cuboidPoints.value[4].y,
-      cuboidPoints.value[5].x, cuboidPoints.value[5].y,
-      cuboidPoints.value[6].x, cuboidPoints.value[6].y,
-      cuboidPoints.value[7].x, cuboidPoints.value[7].y,
+      cuboidPoints.value[4].x,
+      cuboidPoints.value[4].y,
+      cuboidPoints.value[5].x,
+      cuboidPoints.value[5].y,
+      cuboidPoints.value[6].x,
+      cuboidPoints.value[6].y,
+      cuboidPoints.value[7].x,
+      cuboidPoints.value[7].y,
     ],
     stroke: selectedColor.value,
     strokeWidth: 2,
     closed: true,
     opacity: 0.6,
   })
-  
+
   // Draw connecting lines
   for (let i = 0; i < 4; i++) {
     const line = new Konva.Line({
       points: [
-        cuboidPoints.value[i].x, cuboidPoints.value[i].y,
-        cuboidPoints.value[i + 4].x, cuboidPoints.value[i + 4].y,
+        cuboidPoints.value[i].x,
+        cuboidPoints.value[i].y,
+        cuboidPoints.value[i + 4].x,
+        cuboidPoints.value[i + 4].y,
       ],
       stroke: selectedColor.value,
       strokeWidth: 2,
@@ -698,11 +740,11 @@ const completeCuboid = () => {
     })
     group.add(line)
   }
-  
+
   group.add(backFace)
   group.add(frontFace)
   drawingLayer.value.add(group)
-  
+
   const annotation = {
     id: Date.now(),
     type: 'cuboid',
@@ -712,11 +754,11 @@ const completeCuboid = () => {
     created: new Date().toISOString(),
     shape: group,
   }
-  
+
   makeShapeInteractive(group, annotation)
   annotations.value.push(annotation)
   addHistoryEntry('added', `3D BBox: ${annotation.label}`)
-  
+
   cuboidPoints.value = []
   cuboidStep.value = 0
   drawingLayer.value.batchDraw()
@@ -724,7 +766,7 @@ const completeCuboid = () => {
 
 const cancelCuboid = () => {
   const oldPreview = drawingLayer.value.find('.cuboid-preview')
-  oldPreview.forEach(p => p.destroy())
+  oldPreview.forEach((p) => p.destroy())
   cuboidPoints.value = []
   cuboidStep.value = 0
   drawingLayer.value.batchDraw()
@@ -734,15 +776,15 @@ const cancelCuboid = () => {
 const drawSkeleton = () => {
   // Remove old skeleton lines
   const oldLines = drawingLayer.value.find('.skeleton-line')
-  oldLines.forEach(l => l.destroy())
-  
+  oldLines.forEach((l) => l.destroy())
+
   if (currentKeypoints.value.length < 2) return
-  
+
   keypointConnections.value.forEach(([start, end]) => {
     if (start < currentKeypoints.value.length && end < currentKeypoints.value.length) {
       const startKp = currentKeypoints.value[start]
       const endKp = currentKeypoints.value[end]
-      
+
       const line = new Konva.Line({
         points: [startKp.x, startKp.y, endKp.x, endKp.y],
         stroke: selectedColor.value,
@@ -754,29 +796,29 @@ const drawSkeleton = () => {
       line.moveToBottom()
     }
   })
-  
+
   drawingLayer.value.batchDraw()
 }
 
 const drawPolygonPreview = () => {
   if (!drawingLayer.value || polygonPoints.value.length === 0) return
-  
+
   // Remove old preview if exists
   const oldPreview = drawingLayer.value.findOne('.polygon-preview')
   if (oldPreview) oldPreview.destroy()
-  
+
   const oldPoints = drawingLayer.value.find('.polygon-point')
-  oldPoints.forEach(p => p.destroy())
-  
+  oldPoints.forEach((p) => p.destroy())
+
   // Draw lines
   if (polygonPoints.value.length > 1) {
     const points = []
-    polygonPoints.value.forEach(p => {
+    polygonPoints.value.forEach((p) => {
       points.push(p.x, p.y)
     })
-    
+
     const line = new Konva.Line({
-      points: points,
+      points,
       stroke: selectedColor.value,
       strokeWidth: 2,
       dash: [5, 5],
@@ -784,9 +826,9 @@ const drawPolygonPreview = () => {
     })
     drawingLayer.value.add(line)
   }
-  
+
   // Draw vertex points
-  polygonPoints.value.forEach(point => {
+  polygonPoints.value.forEach((point) => {
     const circle = new Konva.Circle({
       x: point.x,
       y: point.y,
@@ -796,31 +838,31 @@ const drawPolygonPreview = () => {
     })
     drawingLayer.value.add(circle)
   })
-  
+
   drawingLayer.value.batchDraw()
 }
 
 const completePolygon = () => {
   if (polygonPoints.value.length < 3) return
-  
+
   // Convert points to flat array
   const points = []
-  polygonPoints.value.forEach(p => {
+  polygonPoints.value.forEach((p) => {
     points.push(p.x, p.y)
   })
-  
+
   // Create polygon shape
   const polygon = new Konva.Line({
-    points: points,
+    points,
     stroke: selectedColor.value,
     strokeWidth: 2,
     fill: selectedColor.value,
     opacity: 0.2,
     closed: true,
   })
-  
+
   drawingLayer.value.add(polygon)
-  
+
   const annotation = {
     id: Date.now(),
     type: 'polygon',
@@ -829,17 +871,17 @@ const completePolygon = () => {
     created: new Date().toISOString(),
     shape: polygon,
   }
-  
+
   makeShapeInteractive(polygon, annotation)
   annotations.value.push(annotation)
   addHistoryEntry('added', `Polygon with ${polygonPoints.value.length} vertices added`)
-  
+
   // Clear preview and points
   const oldPreview = drawingLayer.value.findOne('.polygon-preview')
   if (oldPreview) oldPreview.destroy()
   const oldPoints = drawingLayer.value.find('.polygon-point')
-  oldPoints.forEach(p => p.destroy())
-  
+  oldPoints.forEach((p) => p.destroy())
+
   polygonPoints.value = []
   drawingLayer.value.batchDraw()
 }
@@ -849,18 +891,18 @@ const cancelPolygon = () => {
   const oldPreview = drawingLayer.value.findOne('.polygon-preview')
   if (oldPreview) oldPreview.destroy()
   const oldPoints = drawingLayer.value.find('.polygon-point')
-  oldPoints.forEach(p => p.destroy())
-  
+  oldPoints.forEach((p) => p.destroy())
+
   polygonPoints.value = []
   drawingLayer.value.batchDraw()
 }
 
 const eraseAtPoint = (x, y) => {
   let erasedCount = 0
-  
-  annotations.value = annotations.value.filter(ann => {
+
+  annotations.value = annotations.value.filter((ann) => {
     let shouldKeep = true
-    
+
     if (ann.type === 'rectangle') {
       if (x >= ann.x && x <= ann.x + ann.width && y >= ann.y && y <= ann.y + ann.height) {
         shouldKeep = false
@@ -882,17 +924,17 @@ const eraseAtPoint = (x, y) => {
         }
       }
     }
-    
+
     if (!shouldKeep) {
       erasedCount++
       if (ann.shape) {
         ann.shape.destroy()
       }
     }
-    
+
     return shouldKeep
   })
-  
+
   if (erasedCount > 0) {
     drawingLayer.value.batchDraw()
     addHistoryEntry('deleted', `Erased ${erasedCount} annotation(s)`)
@@ -930,7 +972,7 @@ const handleContextMenu = (e) => {
   }
 }
 
-const saveAnnotations = async () => {
+const saveAnnotations = () => {
   try {
     // TODO: Implement API call to save annotations
     // await api.post(`/images/${route.params.id}/annotations`, { annotations: annotations.value })
@@ -942,7 +984,7 @@ const saveAnnotations = async () => {
   }
 }
 
-const approveAnnotations = async () => {
+const approveAnnotations = () => {
   try {
     // TODO: Implement API call to approve annotations
     // await api.post(`/images/${route.params.id}/approve`)
@@ -959,26 +1001,40 @@ const toggleHistory = () => {
 }
 
 const getActionIcon = (action) => {
-  switch(action) {
-    case 'opened': return Clock
-    case 'added': return Plus
-    case 'deleted': return Trash2
-    case 'cleared': return X
-    case 'saved': return Save
-    case 'approved': return Check
-    default: return History
+  switch (action) {
+    case 'opened':
+      return Clock
+    case 'added':
+      return Plus
+    case 'deleted':
+      return Trash2
+    case 'cleared':
+      return X
+    case 'saved':
+      return Save
+    case 'approved':
+      return Check
+    default:
+      return History
   }
 }
 
 const getActionColor = (action) => {
-  switch(action) {
-    case 'opened': return '#3498db'
-    case 'added': return '#27ae60'
-    case 'deleted': return '#e74c3c'
-    case 'cleared': return '#e67e22'
-    case 'saved': return '#3498db'
-    case 'approved': return '#27ae60'
-    default: return '#95a5a6'
+  switch (action) {
+    case 'opened':
+      return '#3498db'
+    case 'added':
+      return '#27ae60'
+    case 'deleted':
+      return '#e74c3c'
+    case 'cleared':
+      return '#e67e22'
+    case 'saved':
+      return '#3498db'
+    case 'approved':
+      return '#27ae60'
+    default:
+      return '#95a5a6'
   }
 }
 
@@ -989,16 +1045,16 @@ const formatTime = (timestamp) => {
   const diffSecs = Math.floor(diffMs / 1000)
   const diffMins = Math.floor(diffSecs / 60)
   const diffHours = Math.floor(diffMins / 60)
-  
+
   if (diffSecs < 60) return `${diffSecs}s ago`
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
-  
-  return date.toLocaleString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -1028,8 +1084,7 @@ const formatCoords = (annotation) => {
     return `(${Math.round(annotation.x)}, ${Math.round(annotation.y)})`
   } else if (annotation.type === 'line') {
     const length = Math.sqrt(
-      Math.pow(annotation.endX - annotation.startX, 2) + 
-      Math.pow(annotation.endY - annotation.startY, 2)
+      Math.pow(annotation.endX - annotation.startX, 2) + Math.pow(annotation.endY - annotation.startY, 2)
     )
     return `Length: ${Math.round(length)}px`
   } else if (annotation.type === 'cuboid') {
@@ -1041,7 +1096,7 @@ const formatCoords = (annotation) => {
 // Initialize
 onMounted(async () => {
   await fetchImage()
-  
+
   if (stageContainer.value && image.value) {
     // Load the image
     const img = new Image()
@@ -1056,7 +1111,7 @@ onMounted(async () => {
     }
     img.src = image.value.location
   }
-  
+
   // Add keyboard event listener
   window.addEventListener('keydown', handleKeyDown)
 })
@@ -1064,7 +1119,7 @@ onMounted(async () => {
 onUnmounted(() => {
   // Cleanup keyboard event listener
   window.removeEventListener('keydown', handleKeyDown)
-  
+
   // Cleanup Konva
   if (stage.value) {
     stage.value.destroy()
@@ -1073,406 +1128,483 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="annotation-page">
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Loading image...</p>
-    </div>
-    
-    <!-- Main Content -->
-    <template v-else-if="image">
-      <!-- Left Sidebar -->
-      <div class="annotation-sidebar">
-        <div class="sidebar-header">
-          <h2>Annotations</h2>
-          <span class="annotation-count">{{ annotations.length }}</span>
-        </div>
-        
-        <!-- Annotation Task Selector -->
-        <div class="task-section">
-          <h3>Annotation Task</h3>
-          <select v-model="annotationTask" class="task-select">
-            <option value="object-detection">Object Detection</option>
-            <option value="segmentation">Instance Segmentation</option>
-            <option value="keypoints">Keypoint Detection</option>
-            <option value="pose">Pose Estimation</option>
-            <option value="lanes">Lane Detection</option>
-            <option value="3d-bbox">3D Bounding Box</option>
-          </select>
-        </div>
-        
-        <!-- Drawing Tools -->
-        <div class="tools-section">
-          <h3>Drawing Tools</h3>
-          <div class="tool-buttons">
-            <button 
-              :class="['tool-btn', { active: activeTool === 'bbox' }]"
-              @click="activeTool = 'bbox'; cancelPolygon(); cancelCuboid()"
-              title="Bounding Box"
-            >
-              <Square :size="18" />
-              <span>BBox</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'polygon' }]"
-              @click="activeTool = 'polygon'; cancelCuboid()"
-              title="Polygon Segmentation"
-            >
-              <Pentagon :size="18" />
-              <span>Polygon</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'segmentation' }]"
-              @click="activeTool = 'segmentation'; cancelPolygon(); cancelCuboid()"
-              title="Brush Segmentation"
-            >
-              <Paintbrush :size="18" />
-              <span>Segment</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'keypoint' }]"
-              @click="activeTool = 'keypoint'; cancelPolygon(); cancelCuboid()"
-              title="Keypoint"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 3v6M12 15v6M3 12h6M15 12h6" />
-              </svg>
-              <span>Keypoint</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'point' }]"
-              @click="activeTool = 'point'; cancelPolygon(); cancelCuboid()"
-              title="Point Annotation"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="4" />
-              </svg>
-              <span>Point</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'line' }]"
-              @click="activeTool = 'line'; cancelPolygon(); cancelCuboid()"
-              title="Line"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="19" x2="19" y2="5" />
-              </svg>
-              <span>Line</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'cuboid' }]"
-              @click="activeTool = 'cuboid'; cancelPolygon()"
-              title="3D Bounding Box"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
-              <span>3D Box</span>
-            </button>
-            <button 
-              :class="['tool-btn', { active: activeTool === 'eraser' }]"
-              @click="activeTool = 'eraser'; cancelPolygon(); cancelCuboid()"
-              title="Eraser"
-            >
-              <Eraser :size="18" />
-              <span>Erase</span>
-            </button>
+  <div>
+    <div class="annotation-page">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading image...</p>
+      </div>
+
+      <!-- Main Content -->
+      <div v-else-if="image">
+        <!-- Left Sidebar -->
+        <div class="annotation-sidebar">
+          <div class="sidebar-header">
+            <h2>Annotations</h2>
+            <span class="annotation-count">{{ annotations.length }}</span>
           </div>
-          
-          <!-- Polygon Controls -->
-          <div v-if="activeTool === 'polygon' && polygonPoints.length > 0" class="polygon-controls">
-            <div class="control-hint">
-              {{ polygonPoints.length }} points • Right-click or press Enter to complete
-            </div>
-            <div class="control-buttons">
-              <button class="complete-btn" @click="completePolygon">Complete</button>
-              <button class="cancel-btn" @click="cancelPolygon">Cancel</button>
-            </div>
-          </div>
-          
-          <!-- Cuboid Controls -->
-          <div v-if="activeTool === 'cuboid' && cuboidPoints.length > 0" class="polygon-controls">
-            <div class="control-hint">
-              {{ cuboidStep === 0 ? 'Front face' : 'Back face' }}: {{ cuboidPoints.length - (cuboidStep * 4) }}/4 points
-            </div>
-            <div class="control-buttons">
-              <button class="cancel-btn" @click="cancelCuboid">Cancel</button>
-            </div>
-          </div>
-          
-          <!-- Keypoint Progress -->
-          <div v-if="activeTool === 'keypoint' && currentKeypoints.length > 0" class="control-group">
-            <div class="keypoint-progress">
-              <span>{{ currentKeypoints.length }} keypoints placed</span>
-              <button class="clear-keypoints-btn" @click="currentKeypoints = []; drawSkeleton()">
-                Clear All
-              </button>
-            </div>
-            <button v-if="currentKeypoints.length >= 2" class="skeleton-btn" @click="drawSkeleton">
-              Draw Skeleton
-            </button>
-          </div>
-          
-          <!-- Label Selector -->
-          <div class="control-group">
-            <label>Current Label</label>
-            <select v-model="currentLabel" class="label-select">
-              <option v-for="label in labels" :key="label" :value="label">
-                {{ label }}
-              </option>
+
+          <!-- Annotation Task Selector -->
+          <div class="task-section">
+            <h3>Annotation Task</h3>
+            <select v-model="annotationTask" class="task-select">
+              <option value="object-detection">Object Detection</option>
+              <option value="segmentation">Instance Segmentation</option>
+              <option value="keypoints">Keypoint Detection</option>
+              <option value="pose">Pose Estimation</option>
+              <option value="lanes">Lane Detection</option>
+              <option value="3d-bbox">3D Bounding Box</option>
             </select>
-            <button class="add-label-btn" @click="showLabelDialog = true">
-              <Plus :size="16" />
-              Add Label
-            </button>
           </div>
-          
-          <!-- Brush Size Slider -->
-          <div v-if="activeTool === 'segmentation'" class="control-group">
-            <label>Brush Size: {{ brushSize }}px</label>
-            <input 
-              v-model.number="brushSize" 
-              type="range" 
-              min="1" 
-              max="50" 
-              class="slider"
-            />
-          </div>
-          
-          <!-- Eraser Size Slider -->
-          <div v-if="activeTool === 'eraser'" class="control-group">
-            <label>Eraser Size: {{ eraserSize }}px</label>
-            <input 
-              v-model.number="eraserSize" 
-              type="range" 
-              min="5" 
-              max="100" 
-              class="slider"
-            />
-          </div>
-          
-          <!-- Mask Opacity Slider -->
-          <div v-if="activeTool === 'segmentation'" class="control-group">
-            <label>Opacity: {{ Math.round(maskOpacity * 100) }}%</label>
-            <input 
-              v-model.number="maskOpacity" 
-              type="range" 
-              min="0.1" 
-              max="1" 
-              step="0.1" 
-              class="slider"
-            />
-          </div>
-          
-          <!-- Color Selector -->
-          <div class="control-group">
-            <label>Color</label>
-            <div class="color-selector">
-              <div class="color-grid">
-                <button 
-                  v-for="color in colors" 
-                  :key="color"
-                  :class="['color-btn', { active: selectedColor === color }]"
-                  :style="{ backgroundColor: color }"
-                  @click="selectedColor = color"
-                  :title="color"
-                ></button>
-              </div>
-              <div class="custom-color">
-                <input 
-                  v-model="selectedColor" 
-                  type="color" 
-                  class="color-input"
-                />
-                <span class="color-value">{{ selectedColor }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Annotations List -->
-        <div class="annotations-list">
-          <h3>Shapes ({{ annotations.length }})</h3>
-          <div v-if="annotations.length === 0" class="empty-state">
-            <p>No annotations yet</p>
-            <p class="hint">Draw on the image to create annotations</p>
-          </div>
-          <div v-else class="annotation-items">
-            <div 
-              v-for="annotation in annotations" 
-              :key="annotation.id" 
-              class="annotation-item"
-            >
-              <div class="annotation-info">
-                <div class="annotation-type">
-                  <Square v-if="annotation.type === 'bbox'" :size="16" />
-                  <Pentagon v-if="annotation.type === 'polygon'" :size="16" />
-                  <Paintbrush v-if="annotation.type === 'segmentation'" :size="16" />
-                  <svg v-if="annotation.type === 'keypoint'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  <svg v-if="annotation.type === 'point'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="4" />
-                  </svg>
-                  <svg v-if="annotation.type === 'line'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="19" x2="19" y2="5" />
-                  </svg>
-                  <svg v-if="annotation.type === 'cuboid'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                  </svg>
-                  <span 
-                    class="color-dot" 
-                    :style="{ backgroundColor: annotation.color }"
-                  ></span>
-                  <span class="annotation-label">{{ annotation.label }}</span>
-                </div>
-                <div class="annotation-coords">
-                  {{ formatCoords(annotation) }}
-                </div>
-              </div>
-              <button 
-                class="delete-btn" 
-                @click="deleteAnnotation(annotation.id)"
-                title="Delete annotation"
+
+          <!-- Drawing Tools -->
+          <div class="tools-section">
+            <h3>Drawing Tools</h3>
+            <div class="tool-buttons">
+              <button
+                :class="['tool-btn', { active: activeTool === 'bbox' }]"
+                title="Bounding Box"
+                @click="
+                  () => {
+                    activeTool = 'bbox'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
               >
-                <Trash2 :size="16" />
+                <Square :size="18" />
+                <span>BBox</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'polygon' }]"
+                title="Polygon Segmentation"
+                @click="
+                  () => {
+                    activeTool = 'polygon'
+                    cancelCuboid()
+                  }
+                "
+              >
+                <Pentagon :size="18" />
+                <span>Polygon</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'segmentation' }]"
+                title="Brush Segmentation"
+                @click="
+                  () => {
+                    activeTool = 'segmentation'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
+              >
+                <Paintbrush :size="18" />
+                <span>Segment</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'keypoint' }]"
+                title="Keypoint"
+                @click="
+                  () => {
+                    activeTool = 'keypoint'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 3v6M12 15v6M3 12h6M15 12h6" />
+                </svg>
+                <span>Keypoint</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'point' }]"
+                title="Point Annotation"
+                @click="
+                  () => {
+                    activeTool = 'point'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="4" />
+                </svg>
+                <span>Point</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'line' }]"
+                title="Line"
+                @click="
+                  () => {
+                    activeTool = 'line'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="5" y1="19" x2="19" y2="5" />
+                </svg>
+                <span>Line</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'cuboid' }]"
+                title="3D Bounding Box"
+                @click="
+                  () => {
+                    activeTool = 'cuboid'
+                    cancelPolygon()
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                  />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+                <span>3D Box</span>
+              </button>
+              <button
+                :class="['tool-btn', { active: activeTool === 'eraser' }]"
+                title="Eraser"
+                @click="
+                  () => {
+                    activeTool = 'eraser'
+                    cancelPolygon()
+                    cancelCuboid()
+                  }
+                "
+              >
+                <Eraser :size="18" />
+                <span>Erase</span>
               </button>
             </div>
-          </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button class="action-btn save-btn" @click="saveAnnotations">
-            <Save :size="20" />
-            <span>Save</span>
-          </button>
-          <button class="action-btn approve-btn" @click="approveAnnotations">
-            <Check :size="20" />
-            <span>Approve</span>
-          </button>
-          <button class="action-btn clear-btn" @click="clearAllAnnotations">
-            <Trash2 :size="20" />
-            <span>Clear All</span>
-          </button>
-          <button class="action-btn history-btn" @click="toggleHistory">
-            <History :size="20" />
-            <span>History ({{ history.length }})</span>
-          </button>
-        </div>
-      </div>
-      
-      <!-- History Panel -->
-      <div v-if="showHistory" class="history-panel">
-        <div class="history-header">
-          <div class="history-title">
-            <History :size="20" />
-            <h2>Modification History</h2>
-          </div>
-          <button class="close-history-btn" @click="showHistory = false">
-            <X :size="20" />
-          </button>
-        </div>
-        
-        <div class="history-content">
-          <div v-if="history.length === 0" class="history-empty">
-            <History :size="48" />
-            <p>No history yet</p>
-          </div>
-          
-          <div v-else class="history-timeline">
-            <div 
-              v-for="entry in history" 
-              :key="entry.id" 
-              class="history-entry"
-            >
-              <div class="history-icon" :style="{ background: getActionColor(entry.action) + '20', color: getActionColor(entry.action) }">
-                <component :is="getActionIcon(entry.action)" :size="16" />
+
+            <!-- Polygon Controls -->
+            <div v-if="activeTool === 'polygon' && polygonPoints.length > 0" class="polygon-controls">
+              <div class="control-hint">{{ polygonPoints.length }} points • Right-click or press Enter to complete</div>
+              <div class="control-buttons">
+                <button class="complete-btn" @click="completePolygon">Complete</button>
+                <button class="cancel-btn" @click="cancelPolygon">Cancel</button>
               </div>
-              <div class="history-details">
-                <div class="history-action">{{ entry.action }}</div>
-                <div class="history-description">{{ entry.details }}</div>
-                <div class="history-meta">
-                  <span class="history-time">{{ formatTime(entry.timestamp) }}</span>
-                  <span class="history-count">{{ entry.annotationCount }} annotations</span>
+            </div>
+
+            <!-- Cuboid Controls -->
+            <div v-if="activeTool === 'cuboid' && cuboidPoints.length > 0" class="polygon-controls">
+              <div class="control-hint">
+                {{ cuboidStep === 0 ? 'Front face' : 'Back face' }}: {{ cuboidPoints.length - cuboidStep * 4 }}/4 points
+              </div>
+              <div class="control-buttons">
+                <button class="cancel-btn" @click="cancelCuboid">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Keypoint Progress -->
+            <div v-if="activeTool === 'keypoint' && currentKeypoints.length > 0" class="control-group">
+              <div class="keypoint-progress">
+                <span>{{ currentKeypoints.length }} keypoints placed</span>
+                <button
+                  class="clear-keypoints-btn"
+                  @click="
+                    () => {
+                      currentKeypoints = []
+                      drawSkeleton()
+                    }
+                  "
+                >
+                  Clear All
+                </button>
+              </div>
+              <button v-if="currentKeypoints.length >= 2" class="skeleton-btn" @click="drawSkeleton">
+                Draw Skeleton
+              </button>
+            </div>
+
+            <!-- Label Selector -->
+            <div class="control-group">
+              <label>Current Label</label>
+              <select v-model="currentLabel" class="label-select">
+                <option v-for="label in labels" :key="label" :value="label">
+                  {{ label }}
+                </option>
+              </select>
+              <button class="add-label-btn" @click="showLabelDialog = true">
+                <Plus :size="16" />
+                Add Label
+              </button>
+            </div>
+
+            <!-- Brush Size Slider -->
+            <div v-if="activeTool === 'segmentation'" class="control-group">
+              <label>Brush Size: {{ brushSize }}px</label>
+              <input v-model.number="brushSize" type="range" min="1" max="50" class="slider" />
+            </div>
+
+            <!-- Eraser Size Slider -->
+            <div v-if="activeTool === 'eraser'" class="control-group">
+              <label>Eraser Size: {{ eraserSize }}px</label>
+              <input v-model.number="eraserSize" type="range" min="5" max="100" class="slider" />
+            </div>
+
+            <!-- Mask Opacity Slider -->
+            <div v-if="activeTool === 'segmentation'" class="control-group">
+              <label>Opacity: {{ Math.round(maskOpacity * 100) }}%</label>
+              <input v-model.number="maskOpacity" type="range" min="0.1" max="1" step="0.1" class="slider" />
+            </div>
+
+            <!-- Color Selector -->
+            <div class="control-group">
+              <label>Color</label>
+              <div class="color-selector">
+                <div class="color-grid">
+                  <button
+                    v-for="color in colors"
+                    :key="color"
+                    :class="['color-btn', { active: selectedColor === color }]"
+                    :style="{ backgroundColor: color }"
+                    :title="color"
+                    @click="selectedColor = color"
+                  ></button>
+                </div>
+                <div class="custom-color">
+                  <input v-model="selectedColor" type="color" class="color-input" />
+                  <span class="color-value">{{ selectedColor }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annotations List -->
+          <div class="annotations-list">
+            <h3>Shapes ({{ annotations.length }})</h3>
+            <div v-if="annotations.length === 0" class="empty-state">
+              <p>No annotations yet</p>
+              <p class="hint">Draw on the image to create annotations</p>
+            </div>
+            <div v-else class="annotation-items">
+              <div v-for="annotation in annotations" :key="annotation.id" class="annotation-item">
+                <div class="annotation-info">
+                  <div class="annotation-type">
+                    <Square v-if="annotation.type === 'bbox'" :size="16" />
+                    <Pentagon v-if="annotation.type === 'polygon'" :size="16" />
+                    <Paintbrush v-if="annotation.type === 'segmentation'" :size="16" />
+                    <svg
+                      v-if="annotation.type === 'keypoint'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg
+                      v-if="annotation.type === 'point'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <circle cx="12" cy="12" r="4" />
+                    </svg>
+                    <svg
+                      v-if="annotation.type === 'line'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="5" y1="19" x2="19" y2="5" />
+                    </svg>
+                    <svg
+                      v-if="annotation.type === 'cuboid'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                      />
+                    </svg>
+                    <span class="color-dot" :style="{ backgroundColor: annotation.color }"></span>
+                    <span class="annotation-label">{{ annotation.label }}</span>
+                  </div>
+                  <div class="annotation-coords">
+                    {{ formatCoords(annotation) }}
+                  </div>
+                </div>
+                <button class="delete-btn" title="Delete annotation" @click="deleteAnnotation(annotation.id)">
+                  <Trash2 :size="16" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="action-btn save-btn" @click="saveAnnotations">
+              <Save :size="20" />
+              <span>Save</span>
+            </button>
+            <button class="action-btn approve-btn" @click="approveAnnotations">
+              <Check :size="20" />
+              <span>Approve</span>
+            </button>
+            <button class="action-btn clear-btn" @click="clearAllAnnotations">
+              <Trash2 :size="20" />
+              <span>Clear All</span>
+            </button>
+            <button class="action-btn history-btn" @click="toggleHistory">
+              <History :size="20" />
+              <span>History ({{ history.length }})</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- History Panel -->
+        <div v-if="showHistory" class="history-panel">
+          <div class="history-header">
+            <div class="history-title">
+              <History :size="20" />
+              <h2>Modification History</h2>
+            </div>
+            <button class="close-history-btn" @click="showHistory = false">
+              <X :size="20" />
+            </button>
+          </div>
+
+          <div class="history-content">
+            <div v-if="history.length === 0" class="history-empty">
+              <History :size="48" />
+              <p>No history yet</p>
+            </div>
+
+            <div v-else class="history-timeline">
+              <div v-for="entry in history" :key="entry.id" class="history-entry">
+                <div
+                  class="history-icon"
+                  :style="{
+                    background: getActionColor(entry.action) + '20',
+                    color: getActionColor(entry.action),
+                  }"
+                >
+                  <component :is="getActionIcon(entry.action)" :size="16" />
+                </div>
+                <div class="history-details">
+                  <div class="history-action">{{ entry.action }}</div>
+                  <div class="history-description">{{ entry.details }}</div>
+                  <div class="history-meta">
+                    <span class="history-time">{{ formatTime(entry.timestamp) }}</span>
+                    <span class="history-count">{{ entry.annotationCount }} annotations</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Main Canvas Area -->
-      <div class="annotation-main">
-        <div class="main-header">
-          <button class="back-btn" @click="handleClose">
-            <ArrowLeft :size="20" />
-            <span>Back to Gallery</span>
-          </button>
-          <div class="image-info">
-            <h2>Image #{{ image.id }}</h2>
-            <span class="image-meta">{{ image.type }} | Active tool: {{ activeTool }}</span>
+
+        <!-- Main Canvas Area -->
+        <div class="annotation-main">
+          <div class="main-header">
+            <button class="back-btn" @click="handleClose">
+              <ArrowLeft :size="20" />
+              <span>Back to Gallery</span>
+            </button>
+            <div class="image-info">
+              <h2>Image #{{ image.id }}</h2>
+              <span class="image-meta">{{ image.type }} | Active tool: {{ activeTool }}</span>
+            </div>
           </div>
-        </div>
-        
-        <div class="canvas-container">
-          <div ref="stageContainer" class="konva-container"></div>
-          
-          <!-- Canvas Hints -->
-          <div v-if="activeTool === 'polygon' && polygonPoints.length > 0" class="canvas-hint">
-            Click to add points • Right-click or Enter to complete • Esc to cancel
-          </div>
-          <div v-else-if="activeTool === 'cuboid' && cuboidPoints.length > 0" class="canvas-hint">
-            {{ cuboidStep === 0 ? 'Click to draw front face (4 corners)' : 'Click to draw back face (4 corners)' }}
-          </div>
-          <div v-else-if="activeTool === 'keypoint'" class="canvas-hint">
-            Click to place keypoints • {{ keypointLabels[currentKeypoints.length % keypointLabels.length] }}
-          </div>
-          <div v-else-if="activeTool === 'segmentation'" class="canvas-hint">
-            Click and drag to paint segmentation mask
-          </div>
-          <div v-else-if="activeTool === 'eraser'" class="canvas-hint">
-            Click and drag to erase annotations
-          </div>
-          <div v-else-if="activeTool === 'line'" class="canvas-hint">
-            Click and drag to draw line
-          </div>
-          <div v-else-if="activeTool === 'point'" class="canvas-hint">
-            Click to place point annotation
-          </div>
-          <div v-else-if="activeTool === 'bbox'" class="canvas-hint">
-            Click and drag to draw bounding box
+
+          <div class="canvas-container">
+            <div ref="stageContainer" class="konva-container"></div>
+
+            <!-- Canvas Hints -->
+            <div v-if="activeTool === 'polygon' && polygonPoints.length > 0" class="canvas-hint">
+              Click to add points • Right-click or Enter to complete • Esc to cancel
+            </div>
+            <div v-else-if="activeTool === 'cuboid' && cuboidPoints.length > 0" class="canvas-hint">
+              {{ cuboidStep === 0 ? 'Click to draw front face (4 corners)' : 'Click to draw back face (4 corners)' }}
+            </div>
+            <div v-else-if="activeTool === 'keypoint'" class="canvas-hint">
+              Click to place keypoints •
+              {{ keypointLabels[currentKeypoints.length % keypointLabels.length] }}
+            </div>
+            <div v-else-if="activeTool === 'segmentation'" class="canvas-hint">
+              Click and drag to paint segmentation mask
+            </div>
+            <div v-else-if="activeTool === 'eraser'" class="canvas-hint">Click and drag to erase annotations</div>
+            <div v-else-if="activeTool === 'line'" class="canvas-hint">Click and drag to draw line</div>
+            <div v-else-if="activeTool === 'point'" class="canvas-hint">Click to place point annotation</div>
+            <div v-else-if="activeTool === 'bbox'" class="canvas-hint">Click and drag to draw bounding box</div>
           </div>
         </div>
       </div>
-    </template>
-  </div>
-  
-  <!-- Label Dialog -->
-  <div v-if="showLabelDialog" class="label-dialog-overlay" @click="showLabelDialog = false">
-    <div class="label-dialog" @click.stop>
-      <div class="dialog-header">
-        <h3>Add New Label</h3>
-        <button @click="showLabelDialog = false">
-          <X :size="20" />
-        </button>
-      </div>
-      <div class="dialog-content">
-        <input 
-          v-model="newLabelInput" 
-          type="text" 
-          placeholder="Enter label name..."
-          @keyup.enter="addNewLabel"
-          class="label-input"
-        />
-      </div>
-      <div class="dialog-actions">
-        <button @click="showLabelDialog = false" class="cancel-btn">Cancel</button>
-        <button @click="addNewLabel" class="complete-btn">Add Label</button>
+
+      <!-- Label Dialog -->
+      <div v-if="showLabelDialog" class="label-dialog-overlay" @click="showLabelDialog = false">
+        <div class="label-dialog" @click.stop>
+          <div class="dialog-header">
+            <h3>Add New Label</h3>
+            <button @click="showLabelDialog = false">
+              <X :size="20" />
+            </button>
+          </div>
+          <div class="dialog-content">
+            <input
+              v-model="newLabelInput"
+              type="text"
+              placeholder="Enter label name..."
+              class="label-input"
+              @keyup.enter="addNewLabel"
+            />
+          </div>
+          <div class="dialog-actions">
+            <button class="cancel-btn" @click="showLabelDialog = false">Cancel</button>
+            <button class="complete-btn" @click="addNewLabel">Add Label</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1504,8 +1636,12 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Sidebar */
@@ -1655,7 +1791,8 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.complete-btn, .cancel-btn {
+.complete-btn,
+.cancel-btn {
   flex: 1;
   padding: 8px;
   border: none;

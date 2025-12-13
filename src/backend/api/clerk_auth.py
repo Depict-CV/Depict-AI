@@ -12,15 +12,15 @@ from typing import Any, Dict, Optional
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import httpx
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
-from sqlmodel import Session, select
+import httpx  # noqa: E402
+from fastapi import Depends, HTTPException, status  # noqa: E402
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer  # noqa: E402
+from jose import JWTError, jwt  # noqa: E402
+from sqlmodel import Session, select  # noqa: E402
 
-import config
-from src.backend.db.database import engine
-from src.backend.db.tables import PermissionEnum, User
+import config  # noqa: E402
+from src.backend.db.database import engine  # noqa: E402
+from src.backend.db.tables import PermissionEnum, User  # noqa: E402
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

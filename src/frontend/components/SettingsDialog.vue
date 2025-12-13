@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { X, User, Bell, Moon, Cloud, Key, Save } from 'lucide-vue-next'
 
 const props = defineProps({
-  user: Object
+  user: Object,
 })
 
 const emit = defineEmits(['close', 'signOut'])
@@ -53,7 +53,7 @@ const handleFileUpload = (event) => {
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <h2 class="text-2xl font-bold text-gray-900">Settings</h2>
-        <button 
+        <button
           @click="$emit('close')"
           class="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
         >
@@ -65,44 +65,44 @@ const handleFileUpload = (event) => {
       <div class="flex flex-1 overflow-hidden">
         <!-- Sidebar Tabs -->
         <div class="w-48 border-r border-gray-200 p-4 space-y-1">
-          <button 
+          <button
             @click="activeTab = 'profile'"
             :class="[
               'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-              activeTab === 'profile' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+              activeTab === 'profile' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50',
             ]"
           >
             <User :size="18" />
             <span>Profile</span>
           </button>
-          
-          <button 
+
+          <button
             @click="activeTab = 'notifications'"
             :class="[
               'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-              activeTab === 'notifications' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+              activeTab === 'notifications' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50',
             ]"
           >
             <Bell :size="18" />
             <span>Notifications</span>
           </button>
-          
-          <button 
+
+          <button
             @click="activeTab = 'appearance'"
             :class="[
               'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-              activeTab === 'appearance' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+              activeTab === 'appearance' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50',
             ]"
           >
             <Moon :size="18" />
             <span>Appearance</span>
           </button>
-          
-          <button 
+
+          <button
             @click="activeTab = 'cloud'"
             :class="[
               'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-              activeTab === 'cloud' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+              activeTab === 'cloud' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50',
             ]"
           >
             <Cloud :size="18" />
@@ -119,18 +119,18 @@ const handleFileUpload = (event) => {
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                  <input 
-                    type="text" 
-                    :value="user?.username || 'Not set'" 
+                  <input
+                    type="text"
+                    :value="user?.username || 'Not set'"
                     disabled
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    :value="user?.primaryEmailAddress?.emailAddress" 
+                  <input
+                    type="email"
+                    :value="user?.primaryEmailAddress?.emailAddress"
                     disabled
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   />
@@ -147,20 +147,24 @@ const handleFileUpload = (event) => {
             <div>
               <h3 class="text-lg font-semibold mb-4">Notification Preferences</h3>
               <div class="space-y-4">
-                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label
+                  class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
                   <div>
                     <div class="font-medium text-gray-900">Email Notifications</div>
                     <div class="text-sm text-gray-500">Receive updates via email</div>
                   </div>
-                  <input type="checkbox" v-model="emailNotifications" class="w-5 h-5 rounded text-blue-600">
+                  <input type="checkbox" v-model="emailNotifications" class="w-5 h-5 rounded text-blue-600" />
                 </label>
-                
-                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+
+                <label
+                  class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
                   <div>
                     <div class="font-medium text-gray-900">Push Notifications</div>
                     <div class="text-sm text-gray-500">Browser notifications for important events</div>
                   </div>
-                  <input type="checkbox" v-model="pushNotifications" class="w-5 h-5 rounded text-blue-600">
+                  <input type="checkbox" v-model="pushNotifications" class="w-5 h-5 rounded text-blue-600" />
                 </label>
               </div>
             </div>
@@ -171,12 +175,14 @@ const handleFileUpload = (event) => {
             <div>
               <h3 class="text-lg font-semibold mb-4">Appearance Settings</h3>
               <div class="space-y-4">
-                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label
+                  class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
                   <div>
                     <div class="font-medium text-gray-900">Dark Mode</div>
                     <div class="text-sm text-gray-500">Enable dark theme across the application</div>
                   </div>
-                  <input type="checkbox" v-model="darkMode" class="w-5 h-5 rounded text-blue-600">
+                  <input type="checkbox" v-model="darkMode" class="w-5 h-5 rounded text-blue-600" />
                 </label>
               </div>
             </div>
@@ -186,29 +192,35 @@ const handleFileUpload = (event) => {
           <div v-if="activeTab === 'cloud'" class="space-y-6">
             <div>
               <h3 class="text-lg font-semibold mb-4">Cloud Storage Configuration</h3>
-              
+
               <!-- Provider Selection -->
               <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-3">Storage Provider</label>
                 <div class="space-y-2">
-                  <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" v-model="cloudProvider" value="s3" class="w-4 h-4 text-blue-600">
+                  <label
+                    class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <input type="radio" v-model="cloudProvider" value="s3" class="w-4 h-4 text-blue-600" />
                     <div>
                       <div class="font-medium text-gray-900">Amazon S3</div>
                       <div class="text-xs text-gray-500">AWS Simple Storage Service</div>
                     </div>
                   </label>
-                  
-                  <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" v-model="cloudProvider" value="azure" class="w-4 h-4 text-blue-600">
+
+                  <label
+                    class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <input type="radio" v-model="cloudProvider" value="azure" class="w-4 h-4 text-blue-600" />
                     <div>
                       <div class="font-medium text-gray-900">Azure Blob Storage</div>
                       <div class="text-xs text-gray-500">Microsoft Azure storage</div>
                     </div>
                   </label>
-                  
-                  <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="radio" v-model="cloudProvider" value="gcs" class="w-4 h-4 text-blue-600">
+
+                  <label
+                    class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <input type="radio" v-model="cloudProvider" value="gcs" class="w-4 h-4 text-blue-600" />
                     <div>
                       <div class="font-medium text-gray-900">Google Cloud Storage</div>
                       <div class="text-xs text-gray-500">GCP storage buckets</div>
@@ -221,37 +233,37 @@ const handleFileUpload = (event) => {
               <div v-if="cloudProvider === 's3'" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Access Key ID</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     v-model="s3AccessKey"
                     placeholder="AKIAIOSFODNN7EXAMPLE"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Secret Access Key</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     v-model="s3SecretKey"
                     placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Bucket Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     v-model="s3BucketName"
                     placeholder="my-bucket-name"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
-                  <select 
+                  <select
                     v-model="s3Region"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
@@ -267,18 +279,18 @@ const handleFileUpload = (event) => {
               <div v-if="cloudProvider === 'azure'" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Connection String</label>
-                  <textarea 
+                  <textarea
                     v-model="azureConnectionString"
                     placeholder="DefaultEndpointsProtocol=https;AccountName=..."
                     rows="3"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   ></textarea>
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Container Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     v-model="azureContainerName"
                     placeholder="my-container"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -290,24 +302,20 @@ const handleFileUpload = (event) => {
               <div v-if="cloudProvider === 'gcs'" class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Project ID</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     v-model="gcsProjectId"
                     placeholder="my-project-id"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Service Account Credentials</label>
-                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                    <input 
-                      type="file" 
-                      @change="handleFileUpload"
-                      accept=".json"
-                      class="hidden" 
-                      id="gcs-credentials"
-                    />
+                  <div
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors"
+                  >
+                    <input type="file" @change="handleFileUpload" accept=".json" class="hidden" id="gcs-credentials" />
                     <label for="gcs-credentials" class="cursor-pointer">
                       <Key :size="32" class="mx-auto text-gray-400 mb-2" />
                       <p class="text-sm text-gray-600 mb-1">
@@ -316,16 +324,16 @@ const handleFileUpload = (event) => {
                       <p class="text-xs text-gray-500">Service account key file</p>
                     </label>
                   </div>
-                  
-                  <div v-if="gcsCredentials" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+
+                  <div
+                    v-if="gcsCredentials"
+                    class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between"
+                  >
                     <div class="flex items-center gap-2">
                       <Key :size="18" class="text-blue-600" />
                       <span class="text-sm font-medium text-gray-900">{{ gcsCredentials.name }}</span>
                     </div>
-                    <button 
-                      @click="gcsCredentials = null"
-                      class="text-red-600 hover:text-red-700 text-sm font-medium"
-                    >
+                    <button @click="gcsCredentials = null" class="text-red-600 hover:text-red-700 text-sm font-medium">
                       Remove
                     </button>
                   </div>
@@ -334,7 +342,8 @@ const handleFileUpload = (event) => {
 
               <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
                 <p class="text-sm text-yellow-800">
-                  <strong>Note:</strong> Credentials are encrypted and stored securely. They are used only for accessing your cloud storage.
+                  <strong>Note:</strong> Credentials are encrypted and stored securely. They are used only for accessing
+                  your cloud storage.
                 </p>
               </div>
             </div>
@@ -344,21 +353,21 @@ const handleFileUpload = (event) => {
 
       <!-- Footer -->
       <div class="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-        <button 
+        <button
           @click="$emit('signOut')"
           class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
         >
           Sign Out
         </button>
-        
+
         <div class="flex gap-3">
-          <button 
+          <button
             @click="$emit('close')"
             class="px-6 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium"
           >
             Cancel
           </button>
-          <button 
+          <button
             @click="handleSaveSettings"
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
           >
