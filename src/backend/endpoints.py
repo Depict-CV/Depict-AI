@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import config
-from src.backend.api import annotations, data, images, ml, projects, users, test_auth, notifications
+from src.backend.api import annotations, data, images, ml, projects, users, test_auth, notifications, minio_sync
 from src.backend.db.database import init_db
 
 SENTRY_DSN = config.SENTRY_DSN
@@ -48,6 +48,7 @@ app.include_router(data.router)
 app.include_router(annotations.router)
 app.include_router(ml.router)
 app.include_router(images.router)
+app.include_router(minio_sync.router)
 app.include_router(test_auth.router)
 app.include_router(notifications.router)
 

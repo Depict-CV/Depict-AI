@@ -79,15 +79,27 @@ const canvasHeight = ref(600)
 // Fetch image data
 const fetchImage = async () => {
   try {
-    // TODO: Replace with actual API call
-    // const response = await api.get(`/images/${route.params.id}`)
-    // image.value = response
-    
-    // Mock data for now
-    image.value = {
-      id: route.params.id,
-      location: `https://picsum.photos/800/600?random=${route.params.id}`,
-      type: 'landscape'
+    // Get image data from sessionStorage (set by ImageGallery when clicking annotate)
+    const savedImage = sessionStorage.getItem('currentImage')
+    if (savedImage) {
+      image.value = JSON.parse(savedImage)
+    } else {
+      // Fallback: fetch from API
+      const response = await api.get(`/data/${route.params.id}`)
+      
+      // Check if location is a URL or file path
+      let imageUrl = response.location
+      if (!response.location.startsWith('http://') && !response.location.startsWith('https://')) {
+        // Local file path - serve through backend
+        const encodedPath = encodeURIComponent(response.location)
+        imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
+      }
+      
+      image.value = {
+        id: response.id,
+        location: imageUrl,
+        type: response.type
+      }
     }
   } catch (error) {
     console.error('Failed to fetch image:', error)

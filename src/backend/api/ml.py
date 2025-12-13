@@ -1,10 +1,10 @@
-from typing import List
+from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import Session, select
 
 from src.backend.api.deps import get_session
-from src.backend.db.tables import Annotation, AnnotationStatus, Data, Project
+from src.backend.db.tables import Annotation, AnnotationStatus, Data, Project, MinIOConfig
 from src.ml.main import infer_resnet50
 
 router = APIRouter(prefix="/infer", tags=["ML_Inference"])
@@ -56,9 +56,10 @@ def infer_batch(payload: dict = Body(...), db: Session = Depends(get_session)):
                     annotation = Annotation(
                         status=AnnotationStatus.ML_ANNOTATION,
                         label=result["class_name"],
-                        annotation_score=None,  # Could add confidence score
+                        annotation_score=0,
                         data_id=data_item.id,
-                        project_id=project_id
+                        project_id=project_id,
+                        creation_date=datetime.now()
                     )
                     db.add(annotation)
                     
@@ -117,6 +118,20 @@ def infer_project(payload: dict = Body(...), db: Session = Depends(get_session))
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
+    # Get MinIO config for this project (if exists)
+    minio_config_db = db.exec(
+        select(MinIOConfig).where(MinIOConfig.project_id == project_id)
+    ).first()
+    
+    minio_config = None
+    if minio_config_db:
+        minio_config = {
+            'endpoint': minio_config_db.endpoint,
+            'access_key': minio_config_db.access_key,
+            'secret_key': minio_config_db.secret_key,
+            'use_ssl': minio_config_db.use_ssl
+        }
+    
     # Get non-annotated data items
     statement = select(Data).where(
         (Data.project_id == project_id) &
@@ -141,7 +156,7 @@ def infer_project(payload: dict = Body(...), db: Session = Depends(get_session))
     
     for data_item in data_items:
         try:
-            result = infer_resnet50(data_item.location)
+            result = infer_resnet50(data_item.location, minio_config)
             results.append({
                 "data_id": data_item.id,
                 "location": data_item.location,
@@ -156,7 +171,8 @@ def infer_project(payload: dict = Body(...), db: Session = Depends(get_session))
                     label=result["class_name"],
                     annotation_score=None,
                     data_id=data_item.id,
-                    project_id=project_id
+                    project_id=project_id,
+                    creation_date=datetime.now()
                 )
                 db.add(annotation)
                 

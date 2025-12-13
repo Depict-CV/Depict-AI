@@ -83,7 +83,14 @@ const fetchImages = async () => {
       
       // Check if location is a URL or file path
       let imageUrl = item.location
-      if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
+      
+      if (item.location.startsWith('minio://')) {
+        // MinIO URL - serve through backend MinIO endpoint
+        // Format: minio://bucket/path -> /images/minio/{projectId}?object_path=bucket/path
+        const minioPath = item.location.replace('minio://', '')
+        imageUrl = `http://localhost:8000/images/minio/${props.projectId}?object_path=${encodeURIComponent(minioPath)}`
+        console.log('MinIO URL converted to:', imageUrl)
+      } else if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
         // Local file path - serve through backend
         const encodedPath = encodeURIComponent(item.location)
         imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`

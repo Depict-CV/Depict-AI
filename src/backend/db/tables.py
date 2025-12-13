@@ -51,9 +51,23 @@ class Project(SQLModel, table=True):
     name: str = Field(index=True, unique=True)
     description: str | None = Field(default=None, nullable=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime | None = Field(default=None, nullable=True)
 
     # Relation many-to-many
     users: List[User] = Relationship(back_populates="projects", link_model=ProjectUserLink)
+
+
+class MinIOConfig(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id", unique=True, index=True)
+    endpoint: str
+    bucket_name: str
+    access_key: str
+    secret_key: str  # TODO: Encrypt this field
+    use_ssl: bool = Field(default=False)
+    last_sync: datetime | None = Field(default=None, nullable=True)
+    
+    project: Optional["Project"] = Relationship()
 
 
 class Data(SQLModel, table=True):
