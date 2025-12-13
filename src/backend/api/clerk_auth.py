@@ -2,24 +2,25 @@
 Clerk JWT authentication for FastAPI.
 Validates Clerk-issued JWTs and maps to local User model.
 """
+
 import sys
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import httpx
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt, JWTError
-from sqlmodel import Session, select
+import httpx  # noqa: E402
+from fastapi import Depends, HTTPException, status  # noqa: E402
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer  # noqa: E402
+from jose import JWTError, jwt  # noqa: E402
+from sqlmodel import Session, select  # noqa: E402
 
-from src.backend.db.tables import User, PermissionEnum
-from src.backend.db.database import engine
-import config
+import config  # noqa: E402
+from src.backend.db.database import engine  # noqa: E402
+from src.backend.db.tables import PermissionEnum, User  # noqa: E402
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -38,16 +39,13 @@ def get_jwks() -> Dict[str, Any]:
     """
     if not config.config.CLERK_JWKS_URL:
         raise ValueError("CLERK_JWKS_URL not configured")
-    
+
     try:
         resp = httpx.get(config.config.CLERK_JWKS_URL, timeout=10.0)
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Failed to fetch JWKS: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to fetch JWKS: {str(e)}")
 
 
 def get_signing_key(token: str) -> Optional[Dict[str, Any]]:
@@ -58,14 +56,14 @@ def get_signing_key(token: str) -> Optional[Dict[str, Any]]:
         jwks = get_jwks()
         unverified_header = jwt.get_unverified_header(token)
         kid = unverified_header.get("kid")
-        
+
         if not kid:
             return None
-        
+
         for key in jwks.get("keys", []):
             if key.get("kid") == kid:
                 return key
-        
+
         return None
     except Exception:
         return None
@@ -77,15 +75,15 @@ async def get_current_clerk_user(
 ) -> User:
     """
     FastAPI dependency that validates Clerk JWT and returns the authenticated User.
-    
+
     - Validates JWT signature using Clerk's public keys (JWKS)
     - Extracts user info from token (sub, email)
     - Creates or retrieves User from database
     - Maps Clerk user to local User model with oauth_provider='clerk'
-    
+
     If DISABLE_AUTH=true in config, returns a mock test user without validation.
     """
-    
+
     # Check if credentials were provided
     if not credentials:
         raise HTTPException(
@@ -93,15 +91,15 @@ async def get_current_clerk_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     token = credentials.credentials
-    
+
     # Get signing key from JWKS
     signing_key = get_signing_key(token)
     if not signing_key:
@@ -110,7 +108,7 @@ async def get_current_clerk_user(
             detail="Invalid token: signing key not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
         # Decode and validate JWT
         payload = jwt.decode(
@@ -122,7 +120,7 @@ async def get_current_clerk_user(
                 "verify_signature": True,
                 "verify_exp": True,
                 "verify_iss": True,
-            }
+            },
         )
     except JWTError as e:
         raise HTTPException(
@@ -130,33 +128,32 @@ async def get_current_clerk_user(
             detail=f"Invalid token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Extract user info from token
     clerk_user_id = payload.get("sub")
     email = payload.get("email") or payload.get("email_address") or payload.get("primary_email_address")
     username = payload.get("username") or email.split("@")[0] if email else clerk_user_id
-    
+
     if not clerk_user_id:
         raise credentials_exception
-    
+
     # Find or create user in database
-    statement = select(User).where(
-        User.oauth_provider == "clerk",
-        User.oauth_id == clerk_user_id
-    )
+    statement = select(User).where(User.oauth_provider == "clerk", User.oauth_id == clerk_user_id)
     user = session.exec(statement).first()
-    
+
     if not user:
         # Create new user from Clerk data
         # Check if username/email already exist (edge case)
         existing_username = session.exec(select(User).where(User.username == username)).first()
         if existing_username:
             username = f"{username}_{clerk_user_id[:8]}"
-        
-        existing_email = session.exec(select(User).where(User.email == (email or f"{clerk_user_id}@clerk.local"))).first()
+
+        existing_email = session.exec(
+            select(User).where(User.email == (email or f"{clerk_user_id}@clerk.local"))
+        ).first()
         if existing_email:
             email = f"{clerk_user_id}@clerk.local"
-        
+
         user = User(
             username=username,
             email=email or f"{clerk_user_id}@clerk.local",
@@ -180,12 +177,12 @@ async def get_current_clerk_user(
             if not existing:
                 user.username = username
                 updated = True
-        
+
         if updated:
             session.add(user)
             session.commit()
             session.refresh(user)
-    
+
     return user
 
 

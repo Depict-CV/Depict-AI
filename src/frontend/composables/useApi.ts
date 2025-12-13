@@ -13,7 +13,7 @@ export const useApi = () => {
       ...options,
       headers: {
         ...options.headers,
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -24,12 +24,15 @@ export const useApi = () => {
       // Build query string from params
       if (params) {
         const queryString = new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined && value !== null) {
-              acc[key] = String(value)
-            }
-            return acc
-          }, {} as Record<string, string>)
+          Object.entries(params).reduce(
+            (acc, [key, value]) => {
+              if (value !== undefined && value !== null) {
+                acc[key] = String(value)
+              }
+              return acc
+            },
+            {} as Record<string, string>
+          )
         ).toString()
         endpoint = queryString ? `${endpoint}?${queryString}` : endpoint
       }

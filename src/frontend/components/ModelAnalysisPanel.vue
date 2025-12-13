@@ -23,27 +23,27 @@ const handleDataUpload = (event) => {
 
 const runAnalysis = async () => {
   if (!modelFile.value || !dataFile.value) return
-  
+
   isAnalyzing.value = true
   try {
     // TODO: Implement actual analysis logic with API
     console.log('Analyzing model:', modelFile.value.name, 'with data:', dataFile.value.name)
-    await new Promise(resolve => setTimeout(resolve, 3000)) // Simulate API call
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000)) // Simulate API call
+
     // Mock results
     analysisResults.value = {
       accuracy: 0.94,
       precision: 0.92,
       recall: 0.89,
-      f1Score: 0.90,
+      f1Score: 0.9,
       totalPredictions: 1000,
       correctPredictions: 940,
       falsePositives: 32,
       falseNegatives: 28,
       confusionMatrix: [
         [450, 20],
-        [8, 522]
-      ]
+        [8, 522],
+      ],
     }
   } catch (error) {
     console.error('Analysis failed:', error)
@@ -63,19 +63,21 @@ const clearAnalysis = () => {
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-6">Model Analysis</h2>
-    
+
     <div class="space-y-6">
       <!-- Upload Section -->
       <div v-if="!analysisResults" class="space-y-4">
         <!-- Model Upload -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Upload Model</label>
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-purple-400 transition-colors">
-            <input 
-              type="file" 
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-purple-400 transition-colors"
+          >
+            <input
+              type="file"
               @change="handleModelUpload"
               accept=".h5,.pt,.pth,.onnx,.pkl"
-              class="hidden" 
+              class="hidden"
               id="model-upload"
             />
             <label for="model-upload" class="cursor-pointer">
@@ -86,16 +88,16 @@ const clearAnalysis = () => {
               <p class="text-xs text-gray-500">PyTorch, TensorFlow, ONNX</p>
             </label>
           </div>
-          
-          <div v-if="modelFile" class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+
+          <div
+            v-if="modelFile"
+            class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between"
+          >
             <div class="flex items-center gap-2">
               <Microscope :size="18" class="text-purple-600" />
               <span class="text-sm font-medium text-gray-900">{{ modelFile.name }}</span>
             </div>
-            <button 
-              @click="modelFile = null"
-              class="text-red-600 hover:text-red-700 text-sm font-medium"
-            >
+            <button @click="modelFile = null" class="text-red-600 hover:text-red-700 text-sm font-medium">
               Remove
             </button>
           </div>
@@ -104,14 +106,10 @@ const clearAnalysis = () => {
         <!-- Data Upload -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Upload Test Data</label>
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
-            <input 
-              type="file" 
-              @change="handleDataUpload"
-              accept=".json,.csv,.zip"
-              class="hidden" 
-              id="data-upload"
-            />
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors"
+          >
+            <input type="file" @change="handleDataUpload" accept=".json,.csv,.zip" class="hidden" id="data-upload" />
             <label for="data-upload" class="cursor-pointer">
               <Upload :size="28" class="mx-auto text-gray-400 mb-2" />
               <p class="text-sm text-gray-600 mb-1">
@@ -120,23 +118,21 @@ const clearAnalysis = () => {
               <p class="text-xs text-gray-500">Images, annotations, or dataset</p>
             </label>
           </div>
-          
-          <div v-if="dataFile" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+
+          <div
+            v-if="dataFile"
+            class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between"
+          >
             <div class="flex items-center gap-2">
               <Upload :size="18" class="text-blue-600" />
               <span class="text-sm font-medium text-gray-900">{{ dataFile.name }}</span>
             </div>
-            <button 
-              @click="dataFile = null"
-              class="text-red-600 hover:text-red-700 text-sm font-medium"
-            >
-              Remove
-            </button>
+            <button @click="dataFile = null" class="text-red-600 hover:text-red-700 text-sm font-medium">Remove</button>
           </div>
         </div>
 
         <!-- Run Analysis Button -->
-        <button 
+        <button
           @click="runAnalysis"
           :disabled="!modelFile || !dataFile || isAnalyzing"
           class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -158,7 +154,7 @@ const clearAnalysis = () => {
             </div>
             <div class="text-2xl font-bold text-green-700">{{ (analysisResults.accuracy * 100).toFixed(1) }}%</div>
           </div>
-          
+
           <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <div class="flex items-center gap-2 mb-2">
               <TrendingUp :size="16" class="text-blue-600" />
@@ -166,7 +162,7 @@ const clearAnalysis = () => {
             </div>
             <div class="text-2xl font-bold text-blue-700">{{ (analysisResults.precision * 100).toFixed(1) }}%</div>
           </div>
-          
+
           <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
             <div class="flex items-center gap-2 mb-2">
               <TrendingDown :size="16" class="text-orange-600" />
@@ -174,7 +170,7 @@ const clearAnalysis = () => {
             </div>
             <div class="text-2xl font-bold text-orange-700">{{ (analysisResults.recall * 100).toFixed(1) }}%</div>
           </div>
-          
+
           <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
             <div class="flex items-center gap-2 mb-2">
               <Microscope :size="16" class="text-purple-600" />
@@ -209,10 +205,12 @@ const clearAnalysis = () => {
 
         <!-- Action Buttons -->
         <div class="space-y-2">
-          <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+          <button
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+          >
             Download Report
           </button>
-          <button 
+          <button
             @click="clearAnalysis"
             class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
           >

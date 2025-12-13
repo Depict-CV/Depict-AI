@@ -1,11 +1,11 @@
 export const useAuth = () => {
   const { $clerk } = useNuxtApp()
-  
+
   const isSignedIn = computed(() => {
     if (!$clerk) return false
     return !!$clerk.session
   })
-  
+
   const user = computed(() => {
     if (!$clerk) return null
     return $clerk.user

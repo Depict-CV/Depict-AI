@@ -1,18 +1,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown } from 'lucide-vue-next'
+import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown, Image as ImageIcon } from 'lucide-vue-next'
 import { useApi } from '../composables/useApi'
 
 const props = defineProps({
   projectId: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const emit = defineEmits(['applyFilters'])
 const api = useApi()
 
+const displayMode = ref('annotations') // 'annotations' or 'all-images'
+const showOnlyUnannotated = ref(false) // Filter for unannotated images
 const selectedDateRange = ref('all')
 const selectedStatus = ref([])
 const selectedTags = ref([])
@@ -31,7 +33,7 @@ const dateRanges = [
   { value: 'today', label: 'Today' },
   { value: 'week', label: 'This Week' },
   { value: 'month', label: 'This Month' },
-  { value: 'custom', label: 'Custom Range' }
+  { value: 'custom', label: 'Custom Range' },
 ]
 
 const statuses = [
@@ -39,7 +41,7 @@ const statuses = [
   { value: 'human annotation', label: 'Human Annotation', color: 'purple' },
   { value: 'ml annotation', label: 'ML Annotation', color: 'amber' },
   { value: 'certified', label: 'Certified', color: 'green' },
-  { value: 'rejected', label: 'Rejected', color: 'red' }
+  { value: 'rejected', label: 'Rejected', color: 'red' },
 ]
 
 const fetchTags = async () => {
@@ -47,7 +49,7 @@ const fetchTags = async () => {
     const annotations = await api.get(`/annotations/?project_id=${props.projectId}`)
     // Extract unique tags from annotations
     const uniqueTags = new Set()
-    annotations.forEach(annotation => {
+    annotations.forEach((annotation) => {
       if (annotation.label) {
         uniqueTags.add(annotation.label)
       }
@@ -61,7 +63,7 @@ const fetchTags = async () => {
 const fetchUsers = async () => {
   try {
     if (!props.projectId) return
-    
+
     const projectUsers = await api.get(`/projects/${props.projectId}/users`)
     users.value = projectUsers
   } catch (error) {
@@ -106,15 +108,19 @@ const clearAllFilters = () => {
   selectedStatus.value = []
   selectedTags.value = []
   selectedUsers.value = []
+  displayMode.value = 'annotations'
+  showOnlyUnannotated.value = false
 }
 
 const applyFilters = () => {
   // Emit filters to parent component
   emit('applyFilters', {
+    displayMode: displayMode.value,
+    showOnlyUnannotated: showOnlyUnannotated.value,
     dateRange: selectedDateRange.value,
     status: selectedStatus.value,
     tags: selectedTags.value,
-    users: selectedUsers.value
+    users: selectedUsers.value,
   })
 }
 </script>
@@ -123,15 +129,58 @@ const applyFilters = () => {
   <div>
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold">Filters</h2>
-      <button 
-        @click="clearAllFilters"
-        class="text-sm text-gray-500 hover:text-gray-700 font-medium"
-      >
-        Clear All
-      </button>
+      <button @click="clearAllFilters" class="text-sm text-gray-500 hover:text-gray-700 font-medium">Clear All</button>
     </div>
-    
+
     <div class="space-y-6">
+      <!-- Display Mode -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <ImageIcon :size="18" class="text-gray-600" />
+          <h3 class="font-semibold text-gray-900">Display Mode</h3>
+        </div>
+        <div class="space-y-2">
+          <label
+            class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            :class="{
+              'border-blue-500 bg-blue-50': displayMode === 'annotations',
+            }"
+          >
+            <input type="radio" v-model="displayMode" value="annotations" class="w-4 h-4 text-blue-600" />
+            <div>
+              <div class="text-gray-900 font-medium">Annotated Images</div>
+              <div class="text-xs text-gray-500">Show only images with annotations</div>
+            </div>
+          </label>
+          <label
+            class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            :class="{
+              'border-blue-500 bg-blue-50': displayMode === 'all-images',
+            }"
+          >
+            <input type="radio" v-model="displayMode" value="all-images" class="w-4 h-4 text-blue-600" />
+            <div>
+              <div class="text-gray-900 font-medium">All Images</div>
+              <div class="text-xs text-gray-500">Show all project images (with or without annotations)</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Show Only Unannotated (only for All Images mode) -->
+      <div v-if="displayMode === 'all-images'">
+        <label
+          class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          :class="{ 'border-purple-500 bg-purple-50': showOnlyUnannotated }"
+        >
+          <input type="checkbox" v-model="showOnlyUnannotated" class="w-4 h-4 rounded text-purple-600" />
+          <div>
+            <div class="text-gray-900 font-medium">Only Unannotated Images</div>
+            <div class="text-xs text-gray-500">Show only images without any annotations</div>
+          </div>
+        </label>
+      </div>
+
       <!-- Date Range Filter -->
       <div>
         <button
@@ -142,24 +191,15 @@ const applyFilters = () => {
             <Calendar :size="18" class="text-gray-600" />
             <h3 class="font-semibold text-gray-900">Date Range</h3>
           </div>
-          <ChevronDown 
-            :size="18" 
-            class="text-gray-400 transition-transform"
-            :class="{ 'rotate-180': showDateRange }"
-          />
+          <ChevronDown :size="18" class="text-gray-400 transition-transform" :class="{ 'rotate-180': showDateRange }" />
         </button>
         <div v-if="showDateRange" class="mt-2 space-y-2">
-          <label 
-            v-for="range in dateRanges" 
+          <label
+            v-for="range in dateRanges"
             :key="range.value"
             class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
           >
-            <input 
-              type="radio" 
-              v-model="selectedDateRange" 
-              :value="range.value"
-              class="w-4 h-4 text-blue-600"
-            />
+            <input type="radio" v-model="selectedDateRange" :value="range.value" class="w-4 h-4 text-blue-600" />
             <span class="text-gray-700">{{ range.label }}</span>
           </label>
         </div>
@@ -178,33 +218,34 @@ const applyFilters = () => {
               {{ selectedStatus.length }}
             </span>
           </div>
-          <ChevronDown 
-            :size="18" 
-            class="text-gray-400 transition-transform"
-            :class="{ 'rotate-180': showStatus }"
-          />
+          <ChevronDown :size="18" class="text-gray-400 transition-transform" :class="{ 'rotate-180': showStatus }" />
         </button>
         <div v-if="showStatus" class="mt-2 space-y-2">
-          <label 
-            v-for="status in statuses" 
+          <label
+            v-for="status in statuses"
             :key="status.value"
             class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
           >
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               :checked="selectedStatus.includes(status.value)"
               @change="toggleStatus(status.value)"
               class="w-4 h-4 rounded text-blue-600"
             />
-            <span 
+            <span
               :class="[
                 'w-3 h-3 rounded-full',
-                status.color === 'green' ? 'bg-green-500' :
-                status.color === 'blue' ? 'bg-blue-500' :
-                status.color === 'purple' ? 'bg-purple-500' :
-                status.color === 'amber' ? 'bg-amber-400' :
-                status.color === 'red' ? 'bg-red-500' :
-                'bg-gray-400'
+                status.color === 'green'
+                  ? 'bg-green-500'
+                  : status.color === 'blue'
+                    ? 'bg-blue-500'
+                    : status.color === 'purple'
+                      ? 'bg-purple-500'
+                      : status.color === 'amber'
+                        ? 'bg-amber-400'
+                        : status.color === 'red'
+                          ? 'bg-red-500'
+                          : 'bg-gray-400',
               ]"
             ></span>
             <span class="text-gray-700">{{ status.label }}</span>
@@ -225,25 +266,17 @@ const applyFilters = () => {
               {{ selectedTags.length }}
             </span>
           </div>
-          <ChevronDown 
-            :size="18" 
-            class="text-gray-400 transition-transform"
-            :class="{ 'rotate-180': showTags }"
-          />
+          <ChevronDown :size="18" class="text-gray-400 transition-transform" :class="{ 'rotate-180': showTags }" />
         </button>
         <div v-if="showTags" class="mt-2 flex flex-wrap gap-2">
-          <div v-if="tags.length === 0" class="text-sm text-gray-500 p-3">
-            No tags found in annotations
-          </div>
+          <div v-if="tags.length === 0" class="text-sm text-gray-500 p-3">No tags found in annotations</div>
           <button
             v-for="tag in tags"
             :key="tag"
             @click="toggleTag(tag)"
             :class="[
               'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
-              selectedTags.includes(tag)
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
             ]"
           >
             {{ tag }}
@@ -264,26 +297,29 @@ const applyFilters = () => {
               {{ selectedUsers.length }}
             </span>
           </div>
-          <ChevronDown 
-            :size="18" 
-            class="text-gray-400 transition-transform"
-            :class="{ 'rotate-180': showUsers }"
-          />
+          <ChevronDown :size="18" class="text-gray-400 transition-transform" :class="{ 'rotate-180': showUsers }" />
         </button>
         <div v-if="showUsers" class="mt-2 space-y-2">
-          <label 
-            v-for="annotator in users" 
+          <label
+            v-for="annotator in users"
             :key="annotator.id"
             class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
           >
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               :checked="selectedUsers.includes(annotator.id)"
               @change="toggleUser(annotator.id)"
               class="w-4 h-4 rounded text-blue-600"
             />
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 text-white flex items-center justify-center text-sm font-semibold">
-              {{ annotator.name.split(' ').map(n => n[0]).join('') }}
+            <div
+              class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 text-white flex items-center justify-center text-sm font-semibold"
+            >
+              {{
+                annotator.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+              }}
             </div>
             <span class="text-gray-700">{{ annotator.name }}</span>
           </label>
@@ -291,7 +327,7 @@ const applyFilters = () => {
       </div>
 
       <!-- Apply Button -->
-      <button 
+      <button
         @click="applyFilters"
         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
       >

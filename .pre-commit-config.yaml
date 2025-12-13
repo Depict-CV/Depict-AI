@@ -15,3 +15,12 @@ repos:
         args:
           - --unsafe
       - id: end-of-file-fixer
+
+  - repo: local
+    hooks:
+      - id: prettier
+        name: Prettier
+        entry: powershell.exe -Command "cd src/frontend; npm run format"
+        language: system
+        files: ^src/frontend/.*\.(js|ts|vue|json|css|md)$
+        pass_filenames: false

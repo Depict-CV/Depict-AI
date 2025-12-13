@@ -36,7 +36,7 @@ class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
     permission: PermissionEnum
-    
+
     # OAuth2 fields (Clerk, Google, Microsoft, GitHub)
     oauth_provider: str | None = Field(default=None, nullable=True)  # "clerk", "google", "microsoft", "github"
     oauth_id: str | None = Field(default=None, nullable=True)  # Provider's user ID
@@ -66,7 +66,7 @@ class MinIOConfig(SQLModel, table=True):
     secret_key: str  # TODO: Encrypt this field
     use_ssl: bool = Field(default=False)
     last_sync: datetime | None = Field(default=None, nullable=True)
-    
+
     project: Optional["Project"] = Relationship()
 
 

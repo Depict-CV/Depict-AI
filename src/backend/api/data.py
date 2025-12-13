@@ -1,10 +1,10 @@
-from typing import List
 import os
 from pathlib import Path
+from typing import List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlmodel import Session, select
 from pydantic import BaseModel
+from sqlmodel import Session, select
 
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, Data, Project, User
@@ -17,21 +17,21 @@ class ScanDirectoryRequest(BaseModel):
 
 
 # Supported image extensions
-IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.tif', '.ico'}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".tiff", ".tif", ".ico"}
 
 
 @router.post("/scan-directory")
 def scan_directory(request: ScanDirectoryRequest):
     """Scan a directory recursively for image files"""
     directory_path = request.directory_path
-    
+
     # Validate directory exists
     if not os.path.exists(directory_path):
         raise HTTPException(status_code=404, detail=f"Directory not found: {directory_path}")
-    
+
     if not os.path.isdir(directory_path):
         raise HTTPException(status_code=400, detail=f"Path is not a directory: {directory_path}")
-    
+
     # Scan for images
     image_files = []
     try:
@@ -42,16 +42,12 @@ def scan_directory(request: ScanDirectoryRequest):
                 if file_ext in IMAGE_EXTENSIONS:
                     full_path = os.path.join(root, file)
                     # Normalize path separators
-                    normalized_path = full_path.replace('\\', '/')
+                    normalized_path = full_path.replace("\\", "/")
                     image_files.append(normalized_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error scanning directory: {str(e)}")
-    
-    return {
-        "directory": directory_path,
-        "images": image_files,
-        "count": len(image_files)
-    }
+
+    return {"directory": directory_path, "images": image_files, "count": len(image_files)}
 
 
 ###############
@@ -138,7 +134,7 @@ def read_data_paginated(
     project_id: int = Query(..., description="Project ID to fetch data for"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of records to return"),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
 ):
     """Get paginated data for a project"""
     statement = select(Data).where(Data.project_id == project_id).offset(skip).limit(limit)

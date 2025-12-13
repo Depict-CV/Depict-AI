@@ -58,7 +58,7 @@ def get_annotations(
     project_id: int = Query(..., description="Project ID to fetch annotations for"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum number of records to return"),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_session),
 ):
     """Get all annotations for a project with pagination"""
     statement = select(Annotation).where(Annotation.project_id == project_id).offset(skip).limit(limit)
@@ -125,92 +125,74 @@ def read_annotation_by_score(
 #   update    #
 ###############
 @router.post("/approve/{data_id}")
-def approve_data_annotations(
-    data_id: int,
-    db: Session = Depends(get_session)
-):
+def approve_data_annotations(data_id: int, db: Session = Depends(get_session)):
     """Approve all annotations for a specific data item by setting status to CERTIFIED"""
     # Get all annotations for this data item
     statement = select(Annotation).where(Annotation.data_id == data_id)
     annotations = db.exec(statement).all()
-    
+
     if not annotations:
-        raise HTTPException(
-            status_code=404, 
-            detail=f"No annotations found for data ID {data_id}"
-        )
-    
+        raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
+
     # Update all annotations to CERTIFIED status
     for annotation in annotations:
         annotation.status = "certified"
-    
+
     db.commit()
-    
+
     return {
         "message": f"Approved {len(annotations)} annotation(s) for data ID {data_id}",
         "data_id": data_id,
         "updated_count": len(annotations),
-        "status": "certified"
+        "status": "certified",
     }
 
 
 @router.post("/reject/{data_id}")
-def reject_data_annotations(
-    data_id: int,
-    db: Session = Depends(get_session)
-):
+def reject_data_annotations(data_id: int, db: Session = Depends(get_session)):
     """Reject all annotations for a specific data item by setting status to REJECTED"""
     # Get all annotations for this data item
     statement = select(Annotation).where(Annotation.data_id == data_id)
     annotations = db.exec(statement).all()
-    
+
     if not annotations:
-        raise HTTPException(
-            status_code=404, 
-            detail=f"No annotations found for data ID {data_id}"
-        )
-    
+        raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
+
     # Update all annotations to REJECTED status
     for annotation in annotations:
         annotation.status = "rejected"
-    
+
     db.commit()
-    
+
     return {
         "message": f"Rejected {len(annotations)} annotation(s) for data ID {data_id}",
         "data_id": data_id,
         "updated_count": len(annotations),
-        "status": "rejected"
+        "status": "rejected",
     }
 
 
 @router.post("/request-review/{data_id}")
-def request_review_data_annotations(
-    data_id: int,
-    db: Session = Depends(get_session)
-):
+def request_review_data_annotations(data_id: int, db: Session = Depends(get_session)):
     """Request review for all annotations for a specific data item by setting status to TO_REVIEW"""
     # Get all annotations for this data item
     statement = select(Annotation).where(Annotation.data_id == data_id)
     annotations = db.exec(statement).all()
-    
+
     if not annotations:
-        raise HTTPException(
-            status_code=404, 
-            detail=f"No annotations found for data ID {data_id}"
-        )
-    
+        raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
+
     # Update all annotations to TO_REVIEW status
     for annotation in annotations:
         annotation.status = "to review"
-    
+
     db.commit()
-    
+
     return {
         "message": f"Requested review for {len(annotations)} annotation(s) for data ID {data_id}",
         "data_id": data_id,
         "updated_count": len(annotations),
-        "status": "to review"
+        "status": "to review",
     }
 
 

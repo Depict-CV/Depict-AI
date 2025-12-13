@@ -5,13 +5,23 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-import sentry_sdk
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import sentry_sdk  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-from config import config
-from src.backend.api import annotations, data, images, ml, projects, users, test_auth, notifications, minio_sync
-from src.backend.db.database import init_db
+from config import config  # noqa: E402
+from src.backend.api import (  # noqa: E402
+    annotations,
+    data,
+    images,
+    minio_sync,
+    ml,
+    notifications,
+    projects,
+    test_auth,
+    users,
+)
+from src.backend.db.database import init_db  # noqa: E402
 
 SENTRY_DSN = config.SENTRY_DSN
 

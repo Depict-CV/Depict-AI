@@ -43,9 +43,7 @@ make docs
 # Run tests
 make test
 
-# Activate Poetry shell
-make shell
-or
+# Activate Poetry
 poetry env activate
 ```
 
@@ -56,7 +54,7 @@ poetry env activate
 cd src/backend
 poetry run fastapi dev endpoints.py
 # or
-poetry shell
+poetry env activate
 fastapi dev endpoints.py
 ```
 
