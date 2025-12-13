@@ -12,7 +12,7 @@ POETRY_RUN = $(POETRY) run
 help:
 	@echo "Available commands:"
 	@echo "  make install      : Install Python dependencies with Poetry"
-	@echo "  make shell        : Activate Poetry virtual environment shell"
+	@echo "  make env_activate : Activate Poetry virtual environment"
 	@echo "  make test         : Run tests with pytest"
 	@echo "  make backend      : Start FastAPI backend server"
 	@echo "  make frontend     : Start Vue.js frontend dev server"
@@ -28,11 +28,11 @@ install:
 	@echo "Installing dependencies with Poetry..."
 	$(POETRY_INSTALL)
 
-# Activate Poetry shell
-.PHONY: shell
-shell:
+# Activate Poetry env activate
+.PHONY: env_activate
+env_activate:
 	@echo "Activating Poetry virtual environment..."
-	$(POETRY) shell
+	$(POETRY) env activate
 
 # Run tests
 .PHONY: test

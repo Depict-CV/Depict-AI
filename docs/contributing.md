@@ -46,7 +46,7 @@ make backend
 # Run tests
 make test
 
-# Activate Poetry shell
+# Activate Poetry
 make shell
 ```
 

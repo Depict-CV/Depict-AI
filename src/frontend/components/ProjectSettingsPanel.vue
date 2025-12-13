@@ -198,4 +198,3 @@ const handleSaveSettings = async () => {
     </div>
   </div>
 </template>
-

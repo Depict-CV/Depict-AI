@@ -222,4 +222,3 @@ const syncMinIOStorage = async () => {
     </div>
   </div>
 </template>
-
