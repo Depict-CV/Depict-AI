@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, Download, Upload, Microscope, Filter, Bell, X, Trash2, CheckCircle, Settings2 } from 'lucide-vue-next'
+import { FolderOpen, BarChart3, Bot, Settings, ChevronDown, Download, Upload, Microscope, Filter, Bell, X, Trash2, CheckCircle, Settings2, Tag } from 'lucide-vue-next'
 
 const { isSignedIn, user, signOut } = useAuth()
 
@@ -21,11 +21,22 @@ const showModifyDialog = ref(false)
 const changeRequests = ref([])
 const showNotificationCenter = ref(false)
 const currentFilters = ref({})
+const selectedImagesFromGallery = ref(new Set())
 
 const handleApplyFilters = (filters) => {
   currentFilters.value = filters
   activeMenu.value = null // Close filter panel
   console.log('Filters applied:', filters)
+}
+
+const handleSelectionChange = (selectedImages) => {
+  selectedImagesFromGallery.value = selectedImages
+}
+
+const handleAnnotationsCreated = () => {
+  // Refresh the gallery after batch annotations
+  // Force re-fetch by clearing and reloading
+  selectedImagesFromGallery.value.clear()
 }
 
 const handleSelectProject = (project) => {
@@ -247,18 +258,7 @@ onMounted(async () => {
               <Download :size="20" />
             </button>
 
-            <button 
-              @click="activeMenu = activeMenu === 'export' ? null : 'export'"
-              :class="[
-                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-                activeMenu === 'export' 
-                  ? 'bg-blue-950 text-white' 
-                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
-              ]"
-              title="Export"
-            >
-              <Upload :size="20" />
-            </button>
+
 
             <button 
               @click="activeMenu = activeMenu === 'ai' ? null : 'ai'"
@@ -271,6 +271,25 @@ onMounted(async () => {
               title="AI Tools"
             >
               <Bot :size="20" />
+            </button>
+
+                        <button 
+              @click="activeMenu = activeMenu === 'batch-annotation' ? null : 'batch-annotation'"
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative',
+                activeMenu === 'batch-annotation' 
+                  ? 'bg-blue-950 text-white' 
+                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
+              ]"
+              title="Batch Annotation"
+            >
+              <Tag :size="20" />
+              <span 
+                v-if="selectedImagesFromGallery.size > 0"
+                class="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
+              >
+                {{ selectedImagesFromGallery.size }}
+              </span>
             </button>
 
             <button 
@@ -311,6 +330,19 @@ onMounted(async () => {
             >
               <Microscope :size="20" />
             </button>
+
+            <button 
+              @click="activeMenu = activeMenu === 'export' ? null : 'export'"
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                activeMenu === 'export' 
+                  ? 'bg-blue-950 text-white' 
+                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50'
+              ]"
+              title="Export"
+            >
+              <Upload :size="20" />
+            </button>
             
           </div>
 
@@ -342,6 +374,12 @@ onMounted(async () => {
           <StatsPanel v-if="activeMenu === 'stats'" :projectId="selectedProject?.id" />
           <AIPanel v-if="activeMenu === 'ai'" :projectId="selectedProject?.id" />
           <ImportPanel v-if="activeMenu === 'import'" :projectId="selectedProject?.id" />
+          <BatchAnnotationPanel 
+            v-if="activeMenu === 'batch-annotation'" 
+            :projectId="selectedProject?.id"
+            :selectedImages="selectedImagesFromGallery"
+            @annotationsCreated="handleAnnotationsCreated"
+          />
           <ExportPanel v-if="activeMenu === 'export'" :projectId="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel 
@@ -479,13 +517,13 @@ onMounted(async () => {
       <!-- Main Content Area -->
       <main 
         :class="[
-          'flex-1 p-8 transition-all duration-300',
+          'flex-1 p-6 transition-all duration-300',
           activeMenu ? 'ml-[352px]' : 'ml-16'
         ]"
       >
         <!-- Image Gallery View -->
-        <div class="max-w-7xl mx-auto">
-          <div class="mb-8">
+        <div class="w-full">
+          <div class="mb-6">
             <div>
               <p class="text-sm text-gray-500 mt-1">
                 <span v-if="selectedProject">{{ selectedProject.name }}</span>
@@ -497,6 +535,7 @@ onMounted(async () => {
             :filters="currentFilters"
             @selectImage="handleSelectImage"
             @modifyRequest="handleModifyRequest"
+            @selectionChange="handleSelectionChange"
           />
         </div>
       </main>

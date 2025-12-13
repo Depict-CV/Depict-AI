@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown } from 'lucide-vue-next'
+import { Filter, X, Calendar, Tag, User, CheckSquare, ChevronDown, Image as ImageIcon } from 'lucide-vue-next'
 import { useApi } from '../composables/useApi'
 
 const props = defineProps({
@@ -13,6 +13,8 @@ const props = defineProps({
 const emit = defineEmits(['applyFilters'])
 const api = useApi()
 
+const displayMode = ref('annotations') // 'annotations' or 'all-images'
+const showOnlyUnannotated = ref(false) // Filter for unannotated images
 const selectedDateRange = ref('all')
 const selectedStatus = ref([])
 const selectedTags = ref([])
@@ -106,11 +108,15 @@ const clearAllFilters = () => {
   selectedStatus.value = []
   selectedTags.value = []
   selectedUsers.value = []
+  displayMode.value = 'annotations'
+  showOnlyUnannotated.value = false
 }
 
 const applyFilters = () => {
   // Emit filters to parent component
   emit('applyFilters', {
+    displayMode: displayMode.value,
+    showOnlyUnannotated: showOnlyUnannotated.value,
     dateRange: selectedDateRange.value,
     status: selectedStatus.value,
     tags: selectedTags.value,
@@ -132,6 +138,64 @@ const applyFilters = () => {
     </div>
     
     <div class="space-y-6">
+      <!-- Display Mode -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <ImageIcon :size="18" class="text-gray-600" />
+          <h3 class="font-semibold text-gray-900">Display Mode</h3>
+        </div>
+        <div class="space-y-2">
+          <label 
+            class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            :class="{ 'border-blue-500 bg-blue-50': displayMode === 'annotations' }"
+          >
+            <input 
+              type="radio" 
+              v-model="displayMode" 
+              value="annotations"
+              class="w-4 h-4 text-blue-600"
+            />
+            <div>
+              <div class="text-gray-900 font-medium">Annotated Images</div>
+              <div class="text-xs text-gray-500">Show only images with annotations</div>
+            </div>
+          </label>
+          <label 
+            class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            :class="{ 'border-blue-500 bg-blue-50': displayMode === 'all-images' }"
+          >
+            <input 
+              type="radio" 
+              v-model="displayMode" 
+              value="all-images"
+              class="w-4 h-4 text-blue-600"
+            />
+            <div>
+              <div class="text-gray-900 font-medium">All Images</div>
+              <div class="text-xs text-gray-500">Show all project images (with or without annotations)</div>
+            </div>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Show Only Unannotated (only for All Images mode) -->
+      <div v-if="displayMode === 'all-images'">
+        <label 
+          class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          :class="{ 'border-purple-500 bg-purple-50': showOnlyUnannotated }"
+        >
+          <input 
+            type="checkbox" 
+            v-model="showOnlyUnannotated"
+            class="w-4 h-4 rounded text-purple-600"
+          />
+          <div>
+            <div class="text-gray-900 font-medium">Only Unannotated Images</div>
+            <div class="text-xs text-gray-500">Show only images without any annotations</div>
+          </div>
+        </label>
+      </div>
+      
       <!-- Date Range Filter -->
       <div>
         <button

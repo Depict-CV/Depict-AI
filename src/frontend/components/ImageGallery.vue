@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Check, Edit, Trash2, Pencil } from 'lucide-vue-next'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { Check, Edit, Trash2, Pencil, CheckSquare, Square } from 'lucide-vue-next'
 
-const emit = defineEmits(['selectImage', 'modifyRequest'])
+const emit = defineEmits(['selectImage', 'modifyRequest', 'selectionChange'])
 
 const props = defineProps({
   projectId: {
@@ -22,97 +22,186 @@ const hasMore = ref(true)
 const skip = ref(0)
 const limit = 20
 
+// Selection mode state
+const selectionMode = ref(false)
+const selectedImages = ref(new Set())
+
+const isAllSelected = computed(() => {
+  return images.value.length > 0 && selectedImages.value.size === images.value.length
+})
+
+const selectedCount = computed(() => selectedImages.value.size)
+
 const fetchImages = async () => {
   if (loading.value || !hasMore.value || !props.projectId) return
   
   loading.value = true
   try {
-    // First, fetch annotations for the project
-    const annotations = await api.get('/annotations/', {
-      project_id: props.projectId,
-      skip: skip.value,
-      limit: limit
-    })
+    const displayMode = props.filters?.displayMode || 'annotations'
     
-    console.log('Annotations response:', annotations)
-    console.log('Number of annotations fetched:', annotations.length)
-    
-    if (annotations.length === 0) {
-      hasMore.value = false
-      loading.value = false
-      return
-    }
-    
-    // Apply status filter if provided
-    let filteredAnnotations = annotations
-    if (props.filters?.status && props.filters.status.length > 0) {
-      filteredAnnotations = annotations.filter(ann => 
-        props.filters.status.includes(ann.status)
-      )
-      console.log('Filtered annotations by status:', filteredAnnotations.length)
-    }
-    
-    if (filteredAnnotations.length === 0) {
-      hasMore.value = false
-      loading.value = false
-      return
-    }
-    
-    // Get unique data IDs from annotations
-    const dataIds = [...new Set(filteredAnnotations.map(ann => ann.data_id))]
-    console.log('Unique data IDs:', dataIds)
-    
-    // Fetch the corresponding data (images) for these annotations
-    const imagesResponse = await api.post('/data/batch', {
-      data_ids: dataIds
-    })
-    
-    console.log('Images response:', imagesResponse)
-    
-    // Create a map of data_id to status (use the first annotation's status)
-    const annotationsMap = {}
-    annotations.forEach(ann => {
-      if (!annotationsMap[ann.data_id]) {
-        annotationsMap[ann.data_id] = ann.status
-      }
-    })
-    
-    // Transform database response to match expected format
-    const newImages = imagesResponse.map(item => {
-      console.log('Item location:', item.location)
+    if (displayMode === 'all-images') {
+      // Fetch all images in the project
+      const imagesResponse = await api.get('/data/', {
+        project_id: props.projectId,
+        skip: skip.value,
+        limit: limit
+      })
       
-      // Check if location is a URL or file path
-      let imageUrl = item.location
+      console.log('All images response:', imagesResponse)
       
-      if (item.location.startsWith('minio://')) {
-        // MinIO URL - serve through backend MinIO endpoint
-        // Format: minio://bucket/path -> /images/minio/{projectId}?object_path=bucket/path
-        const minioPath = item.location.replace('minio://', '')
-        imageUrl = `http://localhost:8000/images/minio/${props.projectId}?object_path=${encodeURIComponent(minioPath)}`
-        console.log('MinIO URL converted to:', imageUrl)
-      } else if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
-        // Local file path - serve through backend
-        const encodedPath = encodeURIComponent(item.location)
-        imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
-        console.log('Converted to backend URL:', imageUrl)
+      if (imagesResponse.length === 0) {
+        hasMore.value = false
+        loading.value = false
+        return
       }
       
-      return {
-        id: item.id,
-        location: imageUrl,
-        type: item.type,
-        status: annotationsMap[item.id] || 'to review'
+      // If showOnlyUnannotated filter is enabled, fetch annotations and filter
+      let filteredImages = imagesResponse
+      if (props.filters?.showOnlyUnannotated) {
+        // Fetch all annotations for this project
+        const allAnnotations = await api.get('/annotations/', {
+          project_id: props.projectId,
+          skip: 0,
+          limit: 10000 // Get all annotations
+        })
+        
+        // Create set of data IDs that have annotations
+        const annotatedDataIds = new Set(allAnnotations.map(ann => ann.data_id))
+        
+        // Filter to only images without annotations
+        filteredImages = imagesResponse.filter(item => !annotatedDataIds.has(item.id))
+        console.log(`Filtered to ${filteredImages.length} unannotated images out of ${imagesResponse.length} total`)
       }
-    })
+      
+      if (filteredImages.length === 0) {
+        hasMore.value = false
+        loading.value = false
+        return
+      }
+      
+      // Transform database response to match expected format
+      const newImages = filteredImages.map(item => {
+        console.log('Item location:', item.location)
+        
+        // Check if location is a URL or file path
+        let imageUrl = item.location
+        
+        if (item.location.startsWith('minio://')) {
+          // MinIO URL - serve through backend MinIO endpoint
+          const minioPath = item.location.replace('minio://', '')
+          imageUrl = `http://localhost:8000/images/minio/${props.projectId}?object_path=${encodeURIComponent(minioPath)}`
+          console.log('MinIO URL converted to:', imageUrl)
+        } else if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
+          // Local file path - serve through backend
+          const encodedPath = encodeURIComponent(item.location)
+          imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
+          console.log('Converted to backend URL:', imageUrl)
+        }
+        
+        return {
+          id: item.id,
+          location: imageUrl,
+          type: item.type,
+          status: 'no annotation'
+        }
+      })
+      
+      console.log('Transformed images:', newImages)
+      
+      images.value.push(...newImages)
+      skip.value += imagesResponse.length
+      
+      if (imagesResponse.length < limit) {
+        hasMore.value = false
+      }
+    } else {
+      // Original behavior: fetch images with annotations
+      const annotations = await api.get('/annotations/', {
+        project_id: props.projectId,
+        skip: skip.value,
+        limit: limit
+      })
+      
+      console.log('Annotations response:', annotations)
+      console.log('Number of annotations fetched:', annotations.length)
+      
+      if (annotations.length === 0) {
+        hasMore.value = false
+        loading.value = false
+        return
+      }
+      
+      // Apply status filter if provided
+      let filteredAnnotations = annotations
+      if (props.filters?.status && props.filters.status.length > 0) {
+        filteredAnnotations = annotations.filter(ann => 
+          props.filters.status.includes(ann.status)
+        )
+        console.log('Filtered annotations by status:', filteredAnnotations.length)
+      }
+      
+      if (filteredAnnotations.length === 0) {
+        hasMore.value = false
+        loading.value = false
+        return
+      }
+      
+      // Get unique data IDs from annotations
+      const dataIds = [...new Set(filteredAnnotations.map(ann => ann.data_id))]
+      console.log('Unique data IDs:', dataIds)
+      
+      // Fetch the corresponding data (images) for these annotations
+      const imagesResponse = await api.post('/data/batch', {
+        data_ids: dataIds
+      })
+      
+      console.log('Images response:', imagesResponse)
+      
+      // Create a map of data_id to status (use the first annotation's status)
+      const annotationsMap = {}
+      annotations.forEach(ann => {
+        if (!annotationsMap[ann.data_id]) {
+          annotationsMap[ann.data_id] = ann.status
+        }
+      })
     
-    console.log('Transformed images:', newImages)
-    
-    images.value.push(...newImages)
-    skip.value += annotations.length
-    
-    // If we got fewer annotations than limit, we've reached the end
-    if (annotations.length < limit) {
-      hasMore.value = false
+      // Transform database response to match expected format
+      const newImages = imagesResponse.map(item => {
+        console.log('Item location:', item.location)
+        
+        // Check if location is a URL or file path
+        let imageUrl = item.location
+        
+        if (item.location.startsWith('minio://')) {
+          // MinIO URL - serve through backend MinIO endpoint
+          // Format: minio://bucket/path -> /images/minio/{projectId}?object_path=bucket/path
+          const minioPath = item.location.replace('minio://', '')
+          imageUrl = `http://localhost:8000/images/minio/${props.projectId}?object_path=${encodeURIComponent(minioPath)}`
+          console.log('MinIO URL converted to:', imageUrl)
+        } else if (!item.location.startsWith('http://') && !item.location.startsWith('https://')) {
+          // Local file path - serve through backend
+          const encodedPath = encodeURIComponent(item.location)
+          imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
+          console.log('Converted to backend URL:', imageUrl)
+        }
+        
+        return {
+          id: item.id,
+          location: imageUrl,
+          type: item.type,
+          status: annotationsMap[item.id] || 'to review'
+        }
+      })
+      
+      console.log('Transformed images:', newImages)
+      
+      images.value.push(...newImages)
+      skip.value += annotations.length
+      
+      // If we got fewer annotations than limit, we've reached the end
+      if (annotations.length < limit) {
+        hasMore.value = false
+      }
     }
   } catch (error) {
     console.error('Error fetching images:', error)
@@ -145,18 +234,153 @@ watch(() => [props.projectId, props.filters], ([newProjectId, newFilters]) => {
     images.value = []
     skip.value = 0
     hasMore.value = true
+    selectedImages.value.clear()
+    selectionMode.value = false
     fetchImages()
   } else {
     // Clear images when no project selected
     images.value = []
     skip.value = 0
     hasMore.value = true
+    selectedImages.value.clear()
+    selectionMode.value = false
   }
 }, { deep: true })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
+
+const toggleSelectionMode = () => {
+  selectionMode.value = !selectionMode.value
+  if (!selectionMode.value) {
+    selectedImages.value.clear()
+    emit('selectionChange', selectedImages.value)
+  }
+}
+
+const toggleImageSelection = (imageId) => {
+  if (selectedImages.value.has(imageId)) {
+    selectedImages.value.delete(imageId)
+  } else {
+    selectedImages.value.add(imageId)
+  }
+  emit('selectionChange', selectedImages.value)
+}
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedImages.value.clear()
+  } else {
+    images.value.forEach(img => selectedImages.value.add(img.id))
+  }
+  emit('selectionChange', selectedImages.value)
+}
+
+const batchApprove = async () => {
+  if (selectedImages.value.size === 0) {
+    alert('Please select at least one image')
+    return
+  }
+  
+  const count = selectedImages.value.size
+  if (!confirm(`Certify ${count} annotation${count > 1 ? 's' : ''}?`)) {
+    return
+  }
+  
+  let successful = 0
+  let failed = 0
+  
+  for (const imageId of selectedImages.value) {
+    try {
+      await api.post(`/annotations/approve/${imageId}`)
+      const imageIndex = images.value.findIndex(img => img.id === imageId)
+      if (imageIndex !== -1) {
+        images.value[imageIndex].status = 'certified'
+      }
+      successful++
+    } catch (error) {
+      console.error(`Failed to approve image ${imageId}:`, error)
+      failed++
+    }
+  }
+  
+  selectedImages.value.clear()
+  selectionMode.value = false
+  emit('selectionChange', selectedImages.value)
+  
+  alert(`✓ Batch approval completed!\n\nSuccessful: ${successful}\nFailed: ${failed}`)
+}
+
+const batchRequestReview = async () => {
+  if (selectedImages.value.size === 0) {
+    alert('Please select at least one image')
+    return
+  }
+  
+  const count = selectedImages.value.size
+  if (!confirm(`Request review for ${count} annotation${count > 1 ? 's' : ''}?`)) {
+    return
+  }
+  
+  let successful = 0
+  let failed = 0
+  
+  for (const imageId of selectedImages.value) {
+    try {
+      await api.post(`/annotations/request-review/${imageId}`)
+      const imageIndex = images.value.findIndex(img => img.id === imageId)
+      if (imageIndex !== -1) {
+        images.value[imageIndex].status = 'to review'
+      }
+      successful++
+    } catch (error) {
+      console.error(`Failed to request review for image ${imageId}:`, error)
+      failed++
+    }
+  }
+  
+  selectedImages.value.clear()
+  selectionMode.value = false
+  emit('selectionChange', selectedImages.value)
+  
+  alert(`✓ Batch review request completed!\n\nSuccessful: ${successful}\nFailed: ${failed}`)
+}
+
+const batchReject = async () => {
+  if (selectedImages.value.size === 0) {
+    alert('Please select at least one image')
+    return
+  }
+  
+  const count = selectedImages.value.size
+  if (!confirm(`Reject ${count} annotation${count > 1 ? 's' : ''}?`)) {
+    return
+  }
+  
+  let successful = 0
+  let failed = 0
+  
+  for (const imageId of selectedImages.value) {
+    try {
+      await api.post(`/annotations/reject/${imageId}`)
+      const imageIndex = images.value.findIndex(img => img.id === imageId)
+      if (imageIndex !== -1) {
+        images.value[imageIndex].status = 'rejected'
+      }
+      successful++
+    } catch (error) {
+      console.error(`Failed to reject image ${imageId}:`, error)
+      failed++
+    }
+  }
+  
+  selectedImages.value.clear()
+  selectionMode.value = false
+  emit('selectionChange', selectedImages.value)
+  
+  alert(`✓ Batch rejection completed!\n\nSuccessful: ${successful}\nFailed: ${failed}`)
+}
 
 const handleApprove = async (image, event) => {
   event.stopPropagation()
@@ -227,11 +451,69 @@ const handleDelete = async (image, event) => {
 
 <template>
   <div class="w-full">
+    <!-- Selection Mode Toolbar -->
+    <div class="mb-4 flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+      <div class="flex items-center gap-3">
+        <button 
+          @click="toggleSelectionMode"
+          class="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+          :class="selectionMode 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+        >
+          <CheckSquare :size="18" />
+          <span>{{ selectionMode ? 'Exit Selection' : 'Selection Mode' }}</span>
+        </button>
+        
+        <div v-if="selectionMode" class="flex items-center gap-2">
+          <button 
+            @click="toggleSelectAll"
+            class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            {{ isAllSelected ? 'Deselect All' : 'Select All' }}
+          </button>
+          <span class="text-sm text-gray-600 font-medium">
+            {{ selectedCount }} selected
+          </span>
+        </div>
+      </div>
+      
+      <!-- Batch Action Buttons -->
+      <div v-if="selectionMode && selectedCount > 0" class="flex items-center gap-2">
+        <button 
+          @click="batchApprove"
+          class="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1.5"
+          title="Certify selected annotations"
+        >
+          <Check :size="16" />
+          <span>Certify</span>
+        </button>
+        <button 
+          @click="batchRequestReview"
+          class="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1.5"
+          title="Request review for selected"
+        >
+          <Edit :size="16" />
+          <span>Review</span>
+        </button>
+        <button 
+          @click="batchReject"
+          class="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-1.5"
+          title="Reject selected annotations"
+        >
+          <Trash2 :size="16" />
+          <span>Reject</span>
+        </button>
+      </div>
+    </div>
+    
     <div class="flex flex-wrap gap-1.5 sm:gap-3 md:gap-2.5 lg:gap-1.5 mb-5">
       <div 
         v-for="image in images" 
         :key="image.id" 
         class="relative overflow-hidden bg-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-[180px] sm:h-[250px] md:h-[200px] lg:h-[220px] xl:h-[250px] group"
+        :class="{ 'ring-4 ring-blue-500': selectionMode && selectedImages.has(image.id) }"
+        @click="selectionMode ? toggleImageSelection(image.id) : null"
       >
         <img 
           :src="image.location" 
@@ -239,6 +521,23 @@ const handleDelete = async (image, event) => {
           loading="lazy"
           class="w-auto h-full object-cover block"
         />
+        
+        <!-- Selection Checkbox (only in selection mode) -->
+        <div 
+          v-if="selectionMode"
+          class="absolute top-2 left-2 z-20"
+          @click.stop="toggleImageSelection(image.id)"
+        >
+          <div 
+            class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all"
+            :class="selectedImages.has(image.id) 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white/90 text-gray-600 hover:bg-white'"
+          >
+            <CheckSquare v-if="selectedImages.has(image.id)" :size="20" />
+            <Square v-else :size="20" />
+          </div>
+        </div>
         
         <!-- Status Badge -->
         <div 
@@ -248,14 +547,18 @@ const handleDelete = async (image, event) => {
             'bg-purple-500/90 text-purple-950': image.status === 'human annotation',
             'bg-amber-400/90 text-amber-900': image.status === 'ml annotation',
             'bg-green-500/90 text-green-950': image.status === 'certified',
-            'bg-red-500/90 text-red-950': image.status === 'rejected'
+            'bg-red-500/90 text-red-950': image.status === 'rejected',
+            'bg-gray-400/90 text-gray-900': image.status === 'image only'
           }"
         >
           {{ image.status }}
         </div>
         
         <!-- Action Buttons Overlay -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+        <div 
+          v-if="!selectionMode"
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+        >
           <div class="flex gap-2">
             <button 
               class="w-9 h-9 sm:w-11 sm:h-11 border-0 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md backdrop-blur-sm hover:scale-110 hover:shadow-lg bg-green-600/95 hover:bg-green-600 text-white"
