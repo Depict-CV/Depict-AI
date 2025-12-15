@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { Download, FileJson, FileImage, Database } from 'lucide-vue-next'
+import { Download, FileJson, Database } from 'lucide-vue-next'
+import { useApi } from '~/composables/useApi'
 
 const props = defineProps({
   projectId: {
@@ -9,19 +10,122 @@ const props = defineProps({
   },
 })
 
+const api = useApi()
 const exportFormat = ref('json')
 const isExporting = ref(false)
 
+const downloadFile = (content, filename, mimeType) => {
+  const blob = new Blob([content], { type: mimeType })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(link)
+}
+
 const handleExport = async () => {
+  if (!props.projectId) {
+    alert('No project selected')
+    return
+  }
+
   isExporting.value = true
   try {
-    // TODO: Implement actual export logic with API
-    console.log('Exporting format:', exportFormat.value)
-    await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API call
-    alert('Export successful!')
+    // Fetch all project data and annotations from database
+    const [imagesResponse, annotationsResponse] = await Promise.all([
+      api.get(`/data/?project_id=${props.projectId}&limit=100`),
+      api.get(`/annotations/?project_id=${props.projectId}&limit=10000`),
+    ])
+
+    const images = imagesResponse || []
+    const annotations = annotationsResponse || []
+
+    console.log('Fetched images:', images.length)
+    console.log('Fetched annotations:', annotations.length)
+
+    if (exportFormat.value === 'json') {
+      // Export as COCO format JSON
+      const cocoData = {
+        info: {
+          description: `Depict-AI Project ${props.projectId}`,
+          version: '1.0',
+          year: new Date().getFullYear(),
+          date_created: new Date().toISOString(),
+        },
+        images: images.map((img, idx) => ({
+          id: img.id,
+          file_name: img.location || 'unknown',
+          height: img.height || 0,
+          width: img.width || 0,
+          image_index: idx,
+        })),
+        annotations: annotations.map((ann) => ({
+          id: ann.id,
+          image_id: ann.data_id,
+          category_id: 1,
+          category_name: ann.label || 'unlabeled',
+          iscrowd: 0,
+          area: 0,
+          bbox: [],
+          segmentation: [],
+          status: ann.status || 'unknown',
+          created_at: ann.created_at,
+        })),
+        categories: [
+          {
+            id: 1,
+            name: 'annotation',
+            supercategory: 'object',
+          },
+        ],
+      }
+
+      const jsonContent = JSON.stringify(cocoData, null, 2)
+      const filename = `project-${props.projectId}-${Date.now()}.json`
+      downloadFile(jsonContent, filename, 'application/json')
+    } else if (exportFormat.value === 'csv') {
+      // Export as CSV
+      const csvHeaders = ['Image ID', 'File Name', 'Annotation ID', 'Label', 'Status', 'Created At']
+
+      const csvRows = []
+      images.forEach((img) => {
+        const imgAnnotations = annotations.filter((ann) => ann.data_id === img.id)
+
+        if (imgAnnotations.length === 0) {
+          // Row for image with no annotations
+          csvRows.push([img.id, img.location || 'unknown', '', 'No annotation', '', ''])
+        } else {
+          // Row for each annotation
+          imgAnnotations.forEach((ann) => {
+            csvRows.push([
+              img.id,
+              img.location || 'unknown',
+              ann.id,
+              ann.label || '',
+              ann.status || '',
+              ann.created_at || '',
+            ])
+          })
+        }
+      })
+
+      // Convert to CSV string
+      const csvContent = [
+        csvHeaders.map((h) => `"${h}"`).join(','),
+        csvRows.map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n'),
+      ].join('\n')
+
+      const filename = `project-${props.projectId}-${Date.now()}.csv`
+      downloadFile(csvContent, filename, 'text/csv')
+    }
+
+    alert(`Export ${exportFormat.value.toUpperCase()} successful!`)
   } catch (error) {
     console.error('Export failed:', error)
-    alert('Export failed!')
+    alert(`Export failed: ${error.message}`)
   } finally {
     isExporting.value = false
   }
@@ -62,17 +166,6 @@ const handleExport = async () => {
             <div class="flex-1">
               <div class="font-medium text-gray-900">CSV</div>
               <div class="text-xs text-gray-500">Tabular data, metadata only</div>
-            </div>
-          </label>
-
-          <label
-            class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-          >
-            <input type="radio" v-model="exportFormat" value="images" class="w-4 h-4 text-blue-600" />
-            <FileImage :size="18" class="text-gray-600" />
-            <div class="flex-1">
-              <div class="font-medium text-gray-900">Images + Annotations</div>
-              <div class="text-xs text-gray-500">ZIP archive with images and labels</div>
             </div>
           </label>
         </div>
