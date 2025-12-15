@@ -16,6 +16,20 @@ import {
   Settings2,
   Tag,
 } from 'lucide-vue-next'
+import ProjectsPanel from '~/components/main/ProjectsPanel.vue'
+import StatsPanel from '~/components/main/StatsPanel.vue'
+import AIPanel from '~/components/main/AIPanel.vue'
+import ImportPanel from '~/components/main/ImportPanel.vue'
+import BatchAnnotationPanel from '~/components/main/BatchAnnotationPanel.vue'
+import ExportPanel from '~/components/main/ExportPanel.vue'
+import ModelAnalysisPanel from '~/components/main/ModelAnalysisPanel.vue'
+import FilterPanel from '~/components/main/FilterPanel.vue'
+import ProjectSettingsPanel from '~/components/main/ProjectSettingsPanel.vue'
+import ProfileMenu from '~/components/main/ProfileMenu.vue'
+import SettingsDialog from '~/components/main/SettingsDialog.vue'
+import SubscriptionPanel from '~/components/main/SubscriptionPanel.vue'
+import OrganisationPanel from '~/components/main/OrganisationPanel.vue'
+import ImageGallery from '~/components/main/ImageGallery.vue'
 
 const { isSignedIn, user, signOut } = useAuth()
 

@@ -79,7 +79,7 @@ clean:
 	find . -name "*.pyc" -delete 2>/dev/null || true
 	@echo "Cleaning build artifacts..."
 	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .coverage 2>/dev/null || true
-
+	# poetry run pre-commit run --all-files
 # Remove virtual environment and reinstall
 .PHONY: rebuild
 rebuild:
