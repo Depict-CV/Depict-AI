@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlmodel import Session, desc, select
 
 from src.backend.api.deps import get_session
-from src.backend.db.tables import Annotation, Data, Project, User
+from src.backend.db.tables import Annotation, AnnotationHistoryStatus, Data, Project, User
 
 router = APIRouter(prefix="/annotations", tags=["annotations"])
 
@@ -124,33 +124,22 @@ def read_annotation_by_score(
 ###############
 #   update    #
 ###############
-@router.post("/approve/{data_id}")
-def approve_data_annotations(data_id: int, db: Session = Depends(get_session)):
-    """Approve all annotations for a specific data item by setting status to CERTIFIED"""
-    # Get all annotations for this data item
-    statement = select(Annotation).where(Annotation.data_id == data_id)
-    annotations = db.exec(statement).all()
+@router.post("/update-status/{data_id}")
+def update_data_annotations_status(data_id: int, data: dict = Body(...), db: Session = Depends(get_session)):
+    """Update status for all annotations of a specific data item.
 
-    if not annotations:
-        raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
-
-    # Update all annotations to CERTIFIED status
-    for annotation in annotations:
-        annotation.status = "certified"
-
-    db.commit()
-
-    return {
-        "message": f"Approved {len(annotations)} annotation(s) for data ID {data_id}",
-        "data_id": data_id,
-        "updated_count": len(annotations),
-        "status": "certified",
+    Body: {
+      "status": "certified" | "rejected" | "to review"
     }
+    """
+    new_status = data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="status is required")
 
+    valid_statuses = ["certified", "rejected", "to review"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
 
-@router.post("/reject/{data_id}")
-def reject_data_annotations(data_id: int, db: Session = Depends(get_session)):
-    """Reject all annotations for a specific data item by setting status to REJECTED"""
     # Get all annotations for this data item
     statement = select(Annotation).where(Annotation.data_id == data_id)
     annotations = db.exec(statement).all()
@@ -158,63 +147,66 @@ def reject_data_annotations(data_id: int, db: Session = Depends(get_session)):
     if not annotations:
         raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
 
-    # Update all annotations to REJECTED status
+    # Update all annotations with new status
     for annotation in annotations:
-        annotation.status = "rejected"
+        annotation.status = new_status
 
     db.commit()
 
     return {
-        "message": f"Rejected {len(annotations)} annotation(s) for data ID {data_id}",
+        "message": f"Updated {len(annotations)} annotation(s) for data ID {data_id}",
         "data_id": data_id,
         "updated_count": len(annotations),
-        "status": "rejected",
-    }
-
-
-@router.post("/request-review/{data_id}")
-def request_review_data_annotations(data_id: int, db: Session = Depends(get_session)):
-    """Request review for all annotations for a specific data item by setting status to TO_REVIEW"""
-    # Get all annotations for this data item
-    statement = select(Annotation).where(Annotation.data_id == data_id)
-    annotations = db.exec(statement).all()
-
-    if not annotations:
-        raise HTTPException(status_code=404, detail=f"No annotations found for data ID {data_id}")
-
-    # Update all annotations to TO_REVIEW status
-    for annotation in annotations:
-        annotation.status = "to review"
-
-    db.commit()
-
-    return {
-        "message": f"Requested review for {len(annotations)} annotation(s) for data ID {data_id}",
-        "data_id": data_id,
-        "updated_count": len(annotations),
-        "status": "to review",
+        "status": new_status,
     }
 
 
 @router.patch("/")
 def update_annotation(data: dict = Body(...), db: Session = Depends(get_session)):
     annotation_id = data["id"]
-    if "annotation_score" in data:
-        annotation_score = data["annotation_score"]
-        annotation = db.get(Annotation, annotation_id)
-        if not annotation:
-            raise HTTPException(status_code=404, detail="Annotation not found")
-        if annotation_score:
-            annotation.annotation_score = annotation_score
-    if "status" in data:
-        new_status = data["status"]
-        annotation = db.get(Annotation, annotation_id)
-        if not annotation:
-            raise HTTPException(status_code=404, detail="Annotation not found")
-        annotation.status = new_status
-    db.commit()
-    db.refresh(annotation)
-    return annotation
+    annotation = db.get(Annotation, annotation_id)
+    if not annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+
+    # If this is a modification (updating label, description, coordinates, etc.)
+    # Mark the current annotation as HISTORY and create a new one as CURRENT
+    is_modification = any(key in data for key in ["label", "description", "x1", "y1", "x2", "y2", "annotation_score"])
+
+    if is_modification and annotation.history_status == AnnotationHistoryStatus.CURRENT:
+        # Mark current annotation as HISTORY
+        annotation.history_status = AnnotationHistoryStatus.HISTORY
+        db.commit()
+
+        # Create a new annotation as CURRENT with updated values
+        new_annotation_data = {
+            "data_id": annotation.data_id,
+            "author_id": annotation.author_id,
+            "project_id": annotation.project_id,
+            "status": annotation.status,
+            "history_status": AnnotationHistoryStatus.CURRENT,
+            "label": data.get("label", annotation.label),
+            "description": data.get("description", annotation.description),
+            "x1": data.get("x1", annotation.x1),
+            "y1": data.get("y1", annotation.y1),
+            "x2": data.get("x2", annotation.x2),
+            "y2": data.get("y2", annotation.y2),
+            "annotation_score": data.get("annotation_score", annotation.annotation_score),
+            "creation_date": datetime.now(),
+        }
+        new_annotation = Annotation(**new_annotation_data)
+        db.add(new_annotation)
+        db.commit()
+        db.refresh(new_annotation)
+        return new_annotation
+    else:
+        # Just update status or other non-modification fields
+        if "annotation_score" in data:
+            annotation.annotation_score = data["annotation_score"]
+        if "status" in data:
+            annotation.status = data["status"]
+        db.commit()
+        db.refresh(annotation)
+        return annotation
 
 
 ###############

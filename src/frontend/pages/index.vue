@@ -82,8 +82,7 @@ const handleSelectProject = (project) => {
 
 const handleSelectImage = (image) => {
   selectedImage.value = image
-  // TODO: Navigate to annotation page
-  console.log('Selected image for annotation:', image)
+  navigateTo(`/annotate/${image.id}`)
 }
 
 const handleModifyRequest = (image) => {

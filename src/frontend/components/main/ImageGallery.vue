@@ -295,7 +295,7 @@ const batchApprove = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/approve/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'certified' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'certified'
@@ -330,7 +330,7 @@ const batchRequestReview = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/request-review/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'to review' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'to review'
@@ -365,7 +365,7 @@ const batchReject = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/reject/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'rejected' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'rejected'
@@ -387,8 +387,8 @@ const batchReject = async () => {
 const handleApprove = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the approve endpoint
-    const response = await api.post(`/annotations/approve/${image.id}`)
+    // Call the update-status endpoint
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'certified' })
     console.log('Approve response:', response)
 
     // Update the image status in the UI
@@ -405,8 +405,8 @@ const handleApprove = async (image, event) => {
 const handleModify = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the request-review endpoint (similar to approve but for requesting review)
-    const response = await api.post(`/annotations/request-review/${image.id}`)
+    // Call the update-status endpoint to request review
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'to review' })
     console.log('Request review response:', response)
 
     // Update the image status in the UI
@@ -433,8 +433,8 @@ const handleAnnotate = (image, event) => {
 const handleDelete = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the reject endpoint (similar to approve but for rejection)
-    const response = await api.post(`/annotations/reject/${image.id}`)
+    // Call the update-status endpoint to reject
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'rejected' })
     console.log('Reject response:', response)
 
     // Update the image status in the UI

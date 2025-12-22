@@ -16,11 +16,10 @@
   },
   "dependencies": {
     "@clerk/clerk-js": "^5.0.0",
-    "konva": "^10.0.12",
+    "@recogito/annotorious": "^2.7.14",
     "lucide-vue-next": "^0.555.0",
     "nuxt": "^3.13.0",
-    "vue": "latest",
-    "vue-konva": "^3.2.6"
+    "vue": "latest"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
