@@ -434,6 +434,8 @@ const handleAnnotate = (image, event) => {
   event.stopPropagation()
   // Store image data in sessionStorage for the annotation page
   sessionStorage.setItem('currentImage', JSON.stringify(image))
+  // Store projectId for the annotation page
+  sessionStorage.setItem('currentProjectId', props.projectId)
   // Navigate to annotation page
   navigateTo(`/annotate/${image.id}`)
 }

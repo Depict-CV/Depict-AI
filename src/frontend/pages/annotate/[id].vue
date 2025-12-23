@@ -10,11 +10,18 @@ const router = useRouter()
 const api = useApi()
 
 const image = ref(null)
+const projectId = ref(null)
 const loading = ref(true)
 
 onMounted(async () => {
   try {
     const imageId = route.params.id
+
+    // Try to get projectId from sessionStorage first, otherwise from API
+    const storedProjectId = sessionStorage.getItem('currentProjectId')
+    if (storedProjectId) {
+      projectId.value = parseInt(storedProjectId)
+    }
 
     // Fetch the actual image data from the API
     const response = await api.post('/data/batch', {
@@ -23,6 +30,12 @@ onMounted(async () => {
 
     if (response && response.length > 0) {
       const imageData = response[0]
+
+      // Update projectId from API response if not already set
+      if (!projectId.value && imageData.project_id) {
+        projectId.value = imageData.project_id
+      }
+
       let imageUrl = imageData.location
 
       // Handle different image location types
@@ -86,7 +99,7 @@ const handleAnnotationRejected = (result) => {
     <template v-else>
       <!-- Left Sidebar -->
       <div class="w-64 bg-white flex flex-col shadow-lg border-r border-gray-200 overflow-y-auto">
-        <AnnotationHistory :imageId="route.params.id" />
+        <AnnotationHistory :imageId="route.params.id" :projectId="projectId" />
         <AIAnnotationButton :imageId="route.params.id" @generateAnnotation="handleAIAnnotation" />
       </div>
 
