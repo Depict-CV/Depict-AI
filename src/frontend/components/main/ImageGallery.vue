@@ -61,6 +61,7 @@ const fetchImages = async () => {
         // Fetch all annotations for this project
         const allAnnotations = await api.get('/annotations/', {
           project_id: props.projectId,
+          history_status: 'CURRENT',
           skip: 0,
           limit: 10000, // Get all annotations
         })
@@ -118,6 +119,7 @@ const fetchImages = async () => {
       // Original behavior: fetch images with annotations
       const annotations = await api.get('/annotations/', {
         project_id: props.projectId,
+        history_status: 'CURRENT',
         skip: skip.value,
         limit: limit,
       })
@@ -134,8 +136,14 @@ const fetchImages = async () => {
       // Apply status filter if provided
       let filteredAnnotations = annotations
       if (props.filters?.status && props.filters.status.length > 0) {
-        filteredAnnotations = annotations.filter((ann) => props.filters.status.includes(ann.status))
+        filteredAnnotations = filteredAnnotations.filter((ann) => props.filters.status.includes(ann.status))
         console.log('Filtered annotations by status:', filteredAnnotations.length)
+      }
+
+      // Apply tag filter if provided
+      if (props.filters?.tags && props.filters.tags.length > 0) {
+        filteredAnnotations = filteredAnnotations.filter((ann) => props.filters.tags.includes(ann.label))
+        console.log('Filtered annotations by tags:', filteredAnnotations.length)
       }
 
       if (filteredAnnotations.length === 0) {

@@ -47,7 +47,9 @@ const statuses = [
 const fetchTags = async () => {
   try {
     const annotations = await api.get(`/annotations/?project_id=${props.projectId}`)
-    // Extract unique tags from annotations
+    console.log('All annotations fetched:', annotations)
+
+    // Extract unique tags from ALL annotations
     const uniqueTags = new Set()
     annotations.forEach((annotation) => {
       if (annotation.label) {
@@ -55,6 +57,7 @@ const fetchTags = async () => {
       }
     })
     tags.value = Array.from(uniqueTags).sort()
+    console.log('Extracted tags:', tags.value)
   } catch (error) {
     console.error('Error fetching tags:', error)
   }

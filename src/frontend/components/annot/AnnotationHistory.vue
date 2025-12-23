@@ -23,14 +23,31 @@ const fetchHistory = async () => {
   loading.value = true
   try {
     // Fetch all annotations for this project
-    const response = await api.get('/annotations/', {
-      project_id: props.projectId,
-      skip: 0,
-      limit: 1000,
+    const response = await api.get(`/annotations/?project_id=${props.projectId}`)
+
+    console.log('Annotations fetched:', response)
+    console.log('Looking for imageId:', props.imageId)
+
+    // Filter annotations for this specific image (both current and history versions)
+    const imageAnnotations = response.filter((ann) => {
+      console.log(
+        'Comparing:',
+        ann.data_id,
+        '===',
+        props.imageId,
+        'Result:',
+        ann.data_id === props.imageId ||
+          ann.data_id === String(props.imageId) ||
+          String(ann.data_id) === String(props.imageId)
+      )
+      return (
+        ann.data_id === props.imageId ||
+        ann.data_id === String(props.imageId) ||
+        String(ann.data_id) === String(props.imageId)
+      )
     })
 
-    // Filter annotations for this specific image (both HISTORY and CURRENT status)
-    const imageAnnotations = response.filter((ann) => ann.data_id === props.imageId)
+    console.log('Filtered annotations:', imageAnnotations)
 
     // Sort by most recent first
     history.value = imageAnnotations.sort((a, b) => {

@@ -15,6 +15,14 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  projectId: {
+    type: Number,
+    required: true,
+  },
+  userId: {
+    type: Number,
+    required: true,
+  },
 })
 
 const api = useApi()
@@ -32,14 +40,47 @@ const showLabelInput = ref(false)
 const saving = ref(false)
 const currentAnnotation = ref(null)
 
-onMounted(async () => {
-  // Fetch available labels from API
+const fetchLabels = async () => {
   try {
-    const response = await api.get('/annotations/labels')
-    availableLabels.value = response || []
+    const annotations = await api.get(`/annotations/?project_id=${props.projectId}`)
+    // Extract unique labels from annotations
+    const uniqueLabels = new Set()
+    annotations.forEach((annotation) => {
+      if (annotation.label) {
+        uniqueLabels.add(annotation.label)
+      }
+    })
+    availableLabels.value = Array.from(uniqueLabels).sort()
   } catch (error) {
-    console.error('Failed to fetch labels:', error)
+    console.error('Error fetching labels:', error)
   }
+}
+
+const loadExistingAnnotation = async () => {
+  try {
+    const annotations = await api.get(`/annotations/?project_id=${props.projectId}`)
+    // Find annotation for this specific image
+    const existingAnnotation = annotations.find(
+      (ann) => ann.data_id === props.imageId || ann.data_id === String(props.imageId)
+    )
+
+    if (existingAnnotation) {
+      console.log('Found existing annotation:', existingAnnotation)
+      // Load the description and label from the existing annotation
+      description.value = existingAnnotation.description || ''
+      selectedLabel.value = existingAnnotation.label || ''
+    }
+  } catch (error) {
+    console.error('Error loading existing annotation:', error)
+  }
+}
+
+onMounted(async () => {
+  // Fetch available labels from dataset
+  await fetchLabels()
+
+  // Load existing annotation for this image if it exists
+  await loadExistingAnnotation()
 
   // Initialize Annotorious after image loads
   await nextTick()
@@ -172,20 +213,41 @@ const saveAnnotation = async () => {
     const canvas = document.querySelector('.a9s-annotationlayer canvas')
     const maskData = canvas?.toDataURL('image/png') || null
 
-    const annotationData = {
-      data_id: props.imageId,
-      description: description.value,
-      label: selectedLabel.value,
-      mask: maskData,
-      annotation_data: JSON.stringify(currentAnnotation.value),
-      status: 'human annotation',
+    // Check if annotation already exists for this image
+    const existingAnnotations = await api.get(`/annotations/?project_id=${props.projectId}`)
+    const existingAnnotation = existingAnnotations.find(
+      (ann) => ann.data_id === props.imageId || ann.data_id === String(props.imageId)
+    )
+
+    if (existingAnnotation) {
+      // Update existing annotation using PATCH
+      const updateData = {
+        id: existingAnnotation.id,
+        description: description.value,
+        label: selectedLabel.value,
+      }
+      const response = await api.patch('/annotations/', updateData)
+      console.log('Annotation updated:', response)
+      emit('save', response)
+      alert('✓ Annotation updated successfully!')
+    } else {
+      // Create new annotation using POST
+      const annotationData = {
+        data_id: props.imageId,
+        project_id: props.projectId,
+        author_id: props.userId,
+        description: description.value,
+        label: selectedLabel.value,
+        mask: maskData,
+        annotation_data: JSON.stringify(currentAnnotation.value),
+        status: 'human annotation',
+      }
+
+      const response = await api.post('/annotations/', annotationData)
+      console.log('Annotation saved:', response)
+      emit('save', response)
+      alert('✓ Annotation saved successfully!')
     }
-
-    const response = await api.post('/annotations/', annotationData)
-    console.log('Annotation saved:', response)
-
-    emit('save', response)
-    alert('✓ Annotation saved successfully!')
   } catch (error) {
     console.error('Failed to save annotation:', error)
     alert(`Failed to save annotation: ${error?.data?.detail || error?.message || 'Unknown error'}`)

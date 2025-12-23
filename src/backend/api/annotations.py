@@ -20,6 +20,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     status = data.get("status")
     annotation_score = data.get("annotation_score")
     label = data.get("label")
+    description = data.get("description")
 
     # Validate required fields
     if not data_id or not user_id or not project_id:
@@ -42,6 +43,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         status=status,
         annotation_score=annotation_score,
         label=label,
+        description=description,
         creation_date=datetime.now(),
     )
     db.add(new_annotation)
@@ -56,12 +58,15 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
 @router.get("/")
 def get_annotations(
     project_id: int = Query(..., description="Project ID to fetch annotations for"),
+    history_status: str = Query("CURRENT", description="Filter annotations by history status"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum number of records to return"),
     db: Session = Depends(get_session),
 ):
     """Get all annotations for a project with pagination"""
     statement = select(Annotation).where(Annotation.project_id == project_id).offset(skip).limit(limit)
+    if history_status:
+        statement = statement.where(Annotation.history_status == history_status)
     annotations = db.exec(statement).all()
     return annotations
 
@@ -150,6 +155,9 @@ def update_data_annotations_status(data_id: int, data: dict = Body(...), db: Ses
     # Update all annotations with new status
     for annotation in annotations:
         annotation.status = new_status
+        # If status is being changed to 'rejected', mark as HISTORY
+        if new_status == "rejected" and annotation.history_status == AnnotationHistoryStatus.CURRENT:
+            annotation.history_status = AnnotationHistoryStatus.HISTORY
 
     db.commit()
 
