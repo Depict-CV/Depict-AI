@@ -199,7 +199,7 @@ def get_project_users(project_id: int, db: Session = Depends(get_session)):
     for link in links:
         user = db.get(User, link.user_id)
         if user:
-            users.append({"id": user.id, "name": user.username, "email": user.email, "role": link.role})
+            users.append({"id": user.id, "name": user.username, "email": user.email})
 
     return users
 

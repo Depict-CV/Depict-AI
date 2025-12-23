@@ -26,6 +26,11 @@ class AnnotationStatus(str, Enum):
     CERTIFIED = "certified"
 
 
+class AnnotationHistoryStatus(str, Enum):
+    HISTORY = "history"
+    CURRENT = "current"
+
+
 class ProjectUserLink(SQLModel, table=True):
     project_id: int | None = Field(default=None, foreign_key="project.id", primary_key=True)
     user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
@@ -90,12 +95,13 @@ class Annotation(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     status: AnnotationStatus
+    history_status: AnnotationHistoryStatus = Field(default=AnnotationHistoryStatus.CURRENT)
     # frame_position: int | None = Field(default=None, nullable=True) # for video & frames
     # box coordinates
-    # x1:int | None
-    # y1:int | None
-    # x2:int | None
-    # y2:int | None
+    x1: int | None = Field(default=None, nullable=True)
+    y1: int | None = Field(default=None, nullable=True)
+    x2: int | None = Field(default=None, nullable=True)
+    y2: int | None = Field(default=None, nullable=True)
     # keypoints coordinates
     # keypoints_nodes: List[Tuple[int, int]] # todo
     # keypoints_edges:List[Tuple[int, int]] # todo
@@ -104,12 +110,10 @@ class Annotation(SQLModel, table=True):
     # mask_segments:List[Tuple[int, int]] # todo
     # label and description
     label: str | None = Field(default=None, nullable=True)
-    # description: str | None = Field(default=None, nullable=True)
+    description: str | None = Field(default=None, nullable=True)
     # other info
     annotation_score: float | None = Field(default=None, nullable=True)
     creation_date: datetime | None = Field(default=None, nullable=True)
-    # last_updated_date: datetime | None  = Field(default=None, nullable=True)
-
     # annotation colud be another image as well
 
     data_id: int | None = Field(default=None, foreign_key="data.id")

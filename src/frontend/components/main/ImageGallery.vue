@@ -61,6 +61,7 @@ const fetchImages = async () => {
         // Fetch all annotations for this project
         const allAnnotations = await api.get('/annotations/', {
           project_id: props.projectId,
+          history_status: 'CURRENT',
           skip: 0,
           limit: 10000, // Get all annotations
         })
@@ -118,6 +119,7 @@ const fetchImages = async () => {
       // Original behavior: fetch images with annotations
       const annotations = await api.get('/annotations/', {
         project_id: props.projectId,
+        history_status: 'CURRENT',
         skip: skip.value,
         limit: limit,
       })
@@ -134,8 +136,14 @@ const fetchImages = async () => {
       // Apply status filter if provided
       let filteredAnnotations = annotations
       if (props.filters?.status && props.filters.status.length > 0) {
-        filteredAnnotations = annotations.filter((ann) => props.filters.status.includes(ann.status))
+        filteredAnnotations = filteredAnnotations.filter((ann) => props.filters.status.includes(ann.status))
         console.log('Filtered annotations by status:', filteredAnnotations.length)
+      }
+
+      // Apply tag filter if provided
+      if (props.filters?.tags && props.filters.tags.length > 0) {
+        filteredAnnotations = filteredAnnotations.filter((ann) => props.filters.tags.includes(ann.label))
+        console.log('Filtered annotations by tags:', filteredAnnotations.length)
       }
 
       if (filteredAnnotations.length === 0) {
@@ -295,7 +303,7 @@ const batchApprove = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/approve/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'certified' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'certified'
@@ -330,7 +338,7 @@ const batchRequestReview = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/request-review/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'to review' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'to review'
@@ -365,7 +373,7 @@ const batchReject = async () => {
 
   for (const imageId of selectedImages.value) {
     try {
-      await api.post(`/annotations/reject/${imageId}`)
+      await api.post(`/annotations/update-status/${imageId}`, { status: 'rejected' })
       const imageIndex = images.value.findIndex((img) => img.id === imageId)
       if (imageIndex !== -1) {
         images.value[imageIndex].status = 'rejected'
@@ -387,8 +395,8 @@ const batchReject = async () => {
 const handleApprove = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the approve endpoint
-    const response = await api.post(`/annotations/approve/${image.id}`)
+    // Call the update-status endpoint
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'certified' })
     console.log('Approve response:', response)
 
     // Update the image status in the UI
@@ -405,8 +413,8 @@ const handleApprove = async (image, event) => {
 const handleModify = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the request-review endpoint (similar to approve but for requesting review)
-    const response = await api.post(`/annotations/request-review/${image.id}`)
+    // Call the update-status endpoint to request review
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'to review' })
     console.log('Request review response:', response)
 
     // Update the image status in the UI
@@ -426,6 +434,8 @@ const handleAnnotate = (image, event) => {
   event.stopPropagation()
   // Store image data in sessionStorage for the annotation page
   sessionStorage.setItem('currentImage', JSON.stringify(image))
+  // Store projectId for the annotation page
+  sessionStorage.setItem('currentProjectId', props.projectId)
   // Navigate to annotation page
   navigateTo(`/annotate/${image.id}`)
 }
@@ -433,8 +443,8 @@ const handleAnnotate = (image, event) => {
 const handleDelete = async (image, event) => {
   event.stopPropagation()
   try {
-    // Call the reject endpoint (similar to approve but for rejection)
-    const response = await api.post(`/annotations/reject/${image.id}`)
+    // Call the update-status endpoint to reject
+    const response = await api.post(`/annotations/update-status/${image.id}`, { status: 'rejected' })
     console.log('Reject response:', response)
 
     // Update the image status in the UI
