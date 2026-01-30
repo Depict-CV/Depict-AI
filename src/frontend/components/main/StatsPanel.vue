@@ -97,7 +97,7 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div class="stats-panel">
+  <div class="p-5">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Project Statistics</h2>
       <button
@@ -110,68 +110,79 @@ const formatDate = (dateString) => {
       </button>
     </div>
 
-    <div v-if="!projectId" class="empty-state">
+    <div v-if="!projectId" class="flex flex-col items-center justify-center p-20 text-center">
       <Database :size="48" class="text-gray-300 mb-3" />
       <p class="text-gray-500 text-lg">Please select a project to view statistics</p>
     </div>
 
-    <div v-else-if="loading" class="loading-state">
-      <div class="spinner"></div>
+    <div v-else-if="loading" class="flex flex-col items-center justify-center p-20 gap-4">
+      <div class="border-4 border-gray-200 border-t-blue-500 rounded-full w-10 h-10 animate-spin"></div>
       <p class="text-gray-600">Loading statistics...</p>
     </div>
 
-    <div v-else class="stats-content">
+    <div v-else>
       <!-- Overview Cards -->
       <div class="flex flex-col gap-1 mb-6">
-        <div class="stat-card">
-          <div class="stat-icon bg-blue-100 text-blue-600">
+        <div
+          class="flex items-center gap-4 p-1 bg-white rounded-lg shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
             <ImageIcon :size="15" />
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Total Images</p>
-            <p class="stat-value">{{ stats.totalImages }}</p>
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Total Images</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.totalImages }}</p>
           </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon bg-green-100 text-green-600">
+        <div
+          class="flex items-center gap-4 p-1 bg-white rounded-lg shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-green-100 text-green-600 flex-shrink-0">
             <CheckCircle :size="15" />
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Annotated</p>
-            <p class="stat-value">{{ stats.annotatedImages }}</p>
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Annotated</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.annotatedImages }}</p>
           </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon bg-amber-100 text-amber-600">
+        <div
+          class="flex items-center gap-4 p-1 bg-white rounded-lg shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0">
             <Clock :size="15" />
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Pending</p>
-            <p class="stat-value">{{ stats.pendingImages }}</p>
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Pending</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.pendingImages }}</p>
           </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-icon bg-purple-100 text-purple-600">
+        <div
+          class="flex items-center gap-4 p-1 bg-white rounded-lg shadow hover:shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex-shrink-0">
             <Tag :size="15" />
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Annotations</p>
-            <p class="stat-value">{{ stats.totalAnnotations }}</p>
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Annotations</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.totalAnnotations }}</p>
           </div>
         </div>
       </div>
 
       <!-- Completion Progress -->
-      <div class="progress-card mb-6">
+      <div class="p-6 bg-white rounded-lg shadow mb-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-lg font-semibold text-gray-800">Completion Progress</h3>
           <span class="text-2xl font-bold text-blue-600">{{ stats.completionRate }}%</span>
         </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar" :style="{ width: stats.completionRate + '%' }"></div>
+        <div class="w-full h-6 bg-gray-200 rounded-lg overflow-hidden">
+          <div
+            class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg transition-all duration-500"
+            :style="{ width: stats.completionRate + '%' }"
+          ></div>
         </div>
         <div class="flex justify-between text-sm text-gray-600 mt-2">
           <span>{{ stats.annotatedImages }} / {{ stats.totalImages }} images annotated</span>
@@ -182,21 +193,24 @@ const formatDate = (dateString) => {
       <!-- Two Column Layout -->
       <div class="flex flex-col gap-6 mb-6">
         <!-- Annotations by Type -->
-        <div class="chart-card">
-          <h3 class="chart-title">Annotations by Status</h3>
-          <div v-if="Object.keys(stats.annotationsByType).length === 0" class="empty-chart">
+        <div class="p-6 bg-white rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-5">Annotations by Status</h3>
+          <div
+            v-if="Object.keys(stats.annotationsByType).length === 0"
+            class="flex flex-col items-center justify-center p-10 text-center"
+          >
             <AlertCircle :size="32" class="text-gray-300 mb-2" />
             <p class="text-gray-400 text-sm">No annotations yet</p>
           </div>
-          <div v-else class="chart-content">
-            <div v-for="(count, type) in stats.annotationsByType" :key="type" class="chart-item">
+          <div v-else class="flex flex-col gap-4">
+            <div v-for="(count, type) in stats.annotationsByType" :key="type">
               <div class="flex items-center justify-between mb-2">
-                <span class="chart-label">{{ type }}</span>
-                <span class="chart-value">{{ count }}</span>
+                <span class="text-sm font-semibold text-gray-700 capitalize">{{ type }}</span>
+                <span class="text-sm font-bold text-gray-600">{{ count }}</span>
               </div>
-              <div class="chart-bar-container">
+              <div class="w-full h-2 bg-gray-200 rounded overflow-hidden">
                 <div
-                  class="chart-bar bg-blue-500"
+                  class="h-full bg-blue-500 rounded transition-all duration-500"
                   :style="{
                     width: (count / stats.totalAnnotations) * 100 + '%',
                   }"
@@ -207,21 +221,24 @@ const formatDate = (dateString) => {
         </div>
 
         <!-- Annotations by Label -->
-        <div class="chart-card">
-          <h3 class="chart-title">Annotations by Label</h3>
-          <div v-if="Object.keys(stats.annotationsByLabel).length === 0" class="empty-chart">
+        <div class="p-6 bg-white rounded-lg shadow">
+          <h3 class="text-lg font-semibold text-gray-900 mb-5">Annotations by Label</h3>
+          <div
+            v-if="Object.keys(stats.annotationsByLabel).length === 0"
+            class="flex flex-col items-center justify-center p-10 text-center"
+          >
             <AlertCircle :size="32" class="text-gray-300 mb-2" />
             <p class="text-gray-400 text-sm">No labels assigned</p>
           </div>
-          <div v-else class="chart-content">
-            <div v-for="(count, label) in stats.annotationsByLabel" :key="label" class="chart-item">
+          <div v-else class="flex flex-col gap-4">
+            <div v-for="(count, label) in stats.annotationsByLabel" :key="label">
               <div class="flex items-center justify-between mb-2">
-                <span class="chart-label">{{ label }}</span>
-                <span class="chart-value">{{ count }}</span>
+                <span class="text-sm font-semibold text-gray-700 capitalize">{{ label }}</span>
+                <span class="text-sm font-bold text-gray-600">{{ count }}</span>
               </div>
-              <div class="chart-bar-container">
+              <div class="w-full h-2 bg-gray-200 rounded overflow-hidden">
                 <div
-                  class="chart-bar bg-green-500"
+                  class="h-full bg-green-500 rounded transition-all duration-500"
                   :style="{
                     width: (count / stats.totalAnnotations) * 100 + '%',
                   }"
@@ -233,35 +250,46 @@ const formatDate = (dateString) => {
       </div>
 
       <!-- Recent Activity -->
-      <div class="activity-card">
-        <h3 class="activity-title">
+      <div class="p-6 bg-white rounded-lg shadow">
+        <h3 class="flex items-center gap-2 text-lg font-semibold text-gray-900 mb-5">
           <Calendar :size="20" />
           <span>Recent Activity</span>
         </h3>
-        <div v-if="stats.recentActivity.length === 0" class="empty-activity">
+        <div
+          v-if="stats.recentActivity.length === 0"
+          class="flex flex-col items-center justify-center p-10 text-center"
+        >
           <Clock :size="32" class="text-gray-300 mb-2" />
           <p class="text-gray-400 text-sm">No recent activity</p>
         </div>
-        <div v-else class="activity-list">
-          <div v-for="activity in stats.recentActivity" :key="activity.id" class="activity-item">
-            <div class="activity-indicator"></div>
-            <div class="activity-content">
-              <div class="activity-header">
-                <span class="activity-type">{{ activity.annotation_type || 'Annotation' }}</span>
-                <span v-if="activity.label" class="activity-label">{{ activity.label }}</span>
+        <div v-else class="flex flex-col gap-4">
+          <div
+            v-for="activity in stats.recentActivity"
+            :key="activity.id"
+            class="flex gap-4 p-4 bg-gray-50 rounded border-l-4 border-blue-600 hover:bg-gray-100 hover:translate-x-1 transition-all"
+          >
+            <div class="w-3 h-3 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold text-gray-900 capitalize">{{
+                  activity.annotation_type || 'Annotation'
+                }}</span>
+                <span v-if="activity.label" class="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-900 rounded">{{
+                  activity.label
+                }}</span>
               </div>
-              <div class="activity-meta">
+              <div class="flex items-center gap-3 text-xs">
                 <span
-                  class="activity-status"
+                  class="font-semibold px-2 py-1 rounded uppercase"
                   :class="{
-                    'status-pending': activity.status === 'PENDING',
-                    'status-approved': activity.status === 'APPROVED',
-                    'status-ml': activity.status === 'ML_ANNOTATION',
+                    'bg-yellow-100 text-yellow-900': activity.status === 'PENDING',
+                    'bg-green-100 text-green-900': activity.status === 'APPROVED',
+                    'bg-indigo-100 text-indigo-900': activity.status === 'ML_ANNOTATION',
                   }"
                 >
                   {{ activity.status || 'PENDING' }}
                 </span>
-                <span class="activity-time">{{ formatDate(activity.created_at) }}</span>
+                <span class="text-gray-600">{{ formatDate(activity.created_at) }}</span>
               </div>
             </div>
           </div>
@@ -270,292 +298,3 @@ const formatDate = (dateString) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.stats-panel {
-  padding: 20px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-}
-
-.spinner {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Stat Cards */
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 5px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
-}
-
-.stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 25px;
-  height: 25px;
-  border-radius: 12px;
-  flex-shrink: 0;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-/* Progress Card */
-.progress-card {
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar-container {
-  width: 100%;
-  height: 24px;
-  background: #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-  transition: width 0.5s ease;
-  border-radius: 12px;
-}
-
-/* Chart Cards */
-.chart-card {
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.chart-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 20px;
-}
-
-.empty-chart {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.chart-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.chart-item {
-  /* No additional styles needed */
-}
-
-.chart-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  text-transform: capitalize;
-}
-
-.chart-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #6b7280;
-}
-
-.chart-bar-container {
-  width: 100%;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.chart-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-}
-
-/* Activity Card */
-.activity-card {
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.activity-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 20px;
-}
-
-.empty-activity {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border-left: 3px solid #3b82f6;
-  transition: all 0.2s;
-}
-
-.activity-item:hover {
-  background: #f3f4f6;
-  transform: translateX(4px);
-}
-
-.activity-indicator {
-  width: 12px;
-  height: 12px;
-  background: #3b82f6;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-.activity-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.activity-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.activity-type {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-  text-transform: capitalize;
-}
-
-.activity-label {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 8px;
-  background: #dbeafe;
-  color: #1e40af;
-  border-radius: 4px;
-}
-
-.activity-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-}
-
-.activity-status {
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-approved {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-ml {
-  background: #e0e7ff;
-  color: #3730a3;
-}
-
-.activity-time {
-  color: #6b7280;
-}
-</style>

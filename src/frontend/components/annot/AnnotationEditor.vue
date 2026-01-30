@@ -1,8 +1,6 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { Annotorious } from '@recogito/annotorious'
-import '@recogito/annotorious/dist/annotorious.min.css'
-import { Save, X, Check, Trash2, Plus, Undo2 } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { Save, Check, Trash2, Plus } from 'lucide-vue-next'
 
 const emit = defineEmits(['save', 'reject', 'accept'])
 
@@ -27,9 +25,6 @@ const props = defineProps({
 
 const api = useApi()
 const imageRef = ref(null)
-const annoRef = ref(null)
-const drawingMode = ref(false)
-const annotations = ref([])
 
 // Annotation state
 const description = ref('')
@@ -38,7 +33,6 @@ const availableLabels = ref([])
 const newLabel = ref('')
 const showLabelInput = ref(false)
 const saving = ref(false)
-const currentAnnotation = ref(null)
 
 const fetchLabels = async () => {
   try {
@@ -81,91 +75,7 @@ onMounted(async () => {
 
   // Load existing annotation for this image if it exists
   await loadExistingAnnotation()
-
-  // Initialize Annotorious after image loads
-  await nextTick()
-  initializeAnnotorious()
 })
-
-const initializeAnnotorious = () => {
-  if (!imageRef.value) return
-
-  // Create Annotorious instance
-  annoRef.value = new Annotorious({
-    image: imageRef.value,
-    readOnly: false,
-  })
-
-  // Event listeners
-  annoRef.value.on('createAnnotation', (annotation) => {
-    console.log('Annotation created:', annotation)
-    annotations.value.push(annotation)
-    currentAnnotation.value = annotation
-  })
-
-  annoRef.value.on('updateAnnotation', (annotation) => {
-    console.log('Annotation updated:', annotation)
-    const index = annotations.value.findIndex((a) => a.id === annotation.id)
-    if (index !== -1) {
-      annotations.value[index] = annotation
-    }
-    currentAnnotation.value = annotation
-  })
-
-  annoRef.value.on('deleteAnnotation', (annotation) => {
-    console.log('Annotation deleted:', annotation)
-    const index = annotations.value.findIndex((a) => a.id === annotation.id)
-    if (index !== -1) {
-      annotations.value.splice(index, 1)
-    }
-    if (currentAnnotation.value?.id === annotation.id) {
-      currentAnnotation.value = null
-      description.value = ''
-      selectedLabel.value = ''
-    }
-  })
-
-  annoRef.value.on('selectAnnotation', (annotation) => {
-    console.log('Annotation selected:', annotation)
-    currentAnnotation.value = annotation
-    // Load annotation details if they exist
-    if (annotation.body && annotation.body.length > 0) {
-      const body = annotation.body[0]
-      description.value = body.value || ''
-      selectedLabel.value = body.purpose || ''
-    }
-  })
-}
-
-const toggleDrawingMode = () => {
-  drawingMode.value = !drawingMode.value
-  if (annoRef.value) {
-    annoRef.value.setReadOnly(!drawingMode.value)
-  }
-}
-
-const clearAllAnnotations = () => {
-  if (annoRef.value && annotations.value.length > 0) {
-    annotations.value.forEach((annotation) => {
-      annoRef.value.removeAnnotation(annotation)
-    })
-    annotations.value = []
-    currentAnnotation.value = null
-    description.value = ''
-    selectedLabel.value = ''
-  }
-}
-
-const undoLastAnnotation = () => {
-  if (annotations.value.length > 0) {
-    const lastAnnotation = annotations.value[annotations.value.length - 1]
-    annoRef.value.removeAnnotation(lastAnnotation)
-    annotations.value.pop()
-    currentAnnotation.value = null
-    description.value = ''
-    selectedLabel.value = ''
-  }
-}
 
 const addLabel = async () => {
   if (!newLabel.value.trim()) return
@@ -190,29 +100,8 @@ const saveAnnotation = async () => {
     return
   }
 
-  if (!currentAnnotation.value) {
-    alert('Please create an annotation on the image first')
-    return
-  }
-
   saving.value = true
   try {
-    // Update current annotation with label and description
-    const annotationBody = [
-      {
-        type: 'TextualBody',
-        purpose: selectedLabel.value,
-        value: description.value,
-      },
-    ]
-
-    currentAnnotation.value.body = annotationBody
-    annoRef.value.updateAnnotation(currentAnnotation.value)
-
-    // Get canvas as PNG for mask
-    const canvas = document.querySelector('.a9s-annotationlayer canvas')
-    const maskData = canvas?.toDataURL('image/png') || null
-
     // Check if annotation already exists for this image
     const existingAnnotations = await api.get(`/annotations/?project_id=${props.projectId}`)
     const existingAnnotation = existingAnnotations.find(
@@ -238,8 +127,6 @@ const saveAnnotation = async () => {
         author_id: props.userId,
         description: description.value,
         label: selectedLabel.value,
-        mask: maskData,
-        annotation_data: JSON.stringify(currentAnnotation.value),
         status: 'human annotation',
       }
 
@@ -290,38 +177,10 @@ const rejectAnnotation = async () => {
 
 <template>
   <div class="flex-1 flex flex-col">
-    <!-- Annotorious Drawing Area -->
+    <!-- Image Display Area -->
     <div class="flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-auto">
       <div class="relative bg-white rounded-lg shadow-md">
         <img ref="imageRef" :src="imageSrc" alt="Annotation image" class="max-w-full max-h-[600px] object-contain" />
-      </div>
-
-      <!-- Drawing Mode Info -->
-      <div
-        v-if="drawingMode"
-        class="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 space-y-3 max-w-xs"
-      >
-        <div class="text-xs text-center text-gray-700 font-semibold">📍 Drawing Mode Active</div>
-        <div class="text-xs text-gray-600 text-center">Draw shapes or rectangles on the image</div>
-        <div class="text-xs text-gray-500 text-center">{{ annotations.length }} annotation(s) created</div>
-
-        <div class="flex gap-2">
-          <button
-            @click="undoLastAnnotation"
-            :disabled="annotations.length === 0"
-            class="flex-1 px-3 py-2 text-sm bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white rounded transition-colors flex items-center justify-center gap-1"
-          >
-            <Undo2 :size="14" />
-            Undo
-          </button>
-          <button
-            @click="clearAllAnnotations"
-            :disabled="annotations.length === 0"
-            class="flex-1 px-3 py-2 text-sm bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white rounded transition-colors"
-          >
-            Clear All
-          </button>
-        </div>
       </div>
     </div>
 
@@ -381,21 +240,6 @@ const rejectAnnotation = async () => {
             Cancel
           </button>
         </div>
-      </div>
-
-      <!-- Drawing Mode Toggle -->
-      <div>
-        <button
-          @click="toggleDrawingMode"
-          :class="[
-            'w-full px-4 py-2 rounded-lg font-medium transition-colors text-sm',
-            drawingMode
-              ? 'bg-purple-600 hover:bg-purple-700 text-white'
-              : 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-          ]"
-        >
-          {{ drawingMode ? '✓ Drawing Mode Active' : 'Draw Annotation' }}
-        </button>
       </div>
 
       <!-- Action Buttons -->
