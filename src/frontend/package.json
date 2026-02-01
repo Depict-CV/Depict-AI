@@ -17,9 +17,11 @@
   "dependencies": {
     "@clerk/clerk-js": "^5.0.0",
     "@recogito/annotorious": "^2.7.14",
+    "konva": "^10.2.0",
     "lucide-vue-next": "^0.555.0",
     "nuxt": "^3.13.0",
-    "vue": "latest"
+    "vue": "latest",
+    "vue-konva": "^3.3.0"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config-typescript": "^12.1.0",

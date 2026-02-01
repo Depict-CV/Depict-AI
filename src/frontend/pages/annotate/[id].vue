@@ -99,22 +99,26 @@ const handleAnnotationRejected = (result) => {
     <template v-else>
       <!-- Left Sidebar -->
       <div class="w-64 bg-white flex flex-col shadow-lg border-r border-gray-200 overflow-y-auto">
+        <!-- Header Info -->
+        <div class="p-4 border-b border-gray-200 bg-gray-50">
+          <button
+            @click="goBack"
+            class="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition mb-3 text-sm font-medium hover:bg-gray-100 px-2 py-1 rounded"
+            title="Go back"
+          >
+            <ArrowLeft :size="20" />
+            <span>Back</span>
+          </button>
+          <div class="text-xs text-gray-500 mb-1">Image ID</div>
+          <div class="text-sm font-medium text-gray-800">{{ route.params.id }}</div>
+        </div>
+
         <AnnotationHistory :imageId="route.params.id" :projectId="projectId" />
         <AIAnnotationButton :imageId="route.params.id" @generateAnnotation="handleAIAnnotation" />
       </div>
 
       <!-- Main Content Area -->
       <div class="flex-1 flex flex-col">
-        <!-- Header -->
-        <div class="bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-200 shadow-sm">
-          <button @click="goBack" class="text-gray-700 hover:text-gray-900 transition" title="Go back">
-            <ArrowLeft size="24" />
-          </button>
-          <div>
-            <p class="text-sm text-gray-600">Image ID: {{ route.params.id }}</p>
-          </div>
-        </div>
-
         <!-- Annotation Editor -->
         <AnnotationEditor
           v-if="image"
