@@ -464,23 +464,22 @@ const setupDrawingEvents = () => {
 
     const pos = stage.value.getRelativePointerPosition()
 
-    // Handle mask mode - draw mask inside selected box
+    // Handle mask mode - draw mask freely
     if (drawingMode.value === 'mask') {
-      if (selectedShape.value && selectedShape.value.className === 'Rect') {
-        isDrawingMask.value = true
-        maskPoints.value = [pos.x, pos.y]
+      isDrawingMask.value = true
+      maskPoints.value = [pos.x, pos.y]
 
-        currentMask.value = new Konva.Line({
-          points: maskPoints.value,
-          stroke: '#ff00ff',
-          strokeWidth: 2,
-          lineCap: 'round',
-          lineJoin: 'round',
-          globalCompositeOperation: 'source-over',
-        })
+      const color = selectedLabel.value ? getLabelColor(selectedLabel.value) : '#ff00ff'
+      currentMask.value = new Konva.Line({
+        points: maskPoints.value,
+        stroke: color,
+        strokeWidth: 2,
+        lineCap: 'round',
+        lineJoin: 'round',
+        globalCompositeOperation: 'source-over',
+      })
 
-        layer.value.add(currentMask.value)
-      }
+      layer.value.add(currentMask.value)
       return
     }
 
@@ -577,16 +576,75 @@ const setupDrawingEvents = () => {
     if (isDrawingMask.value) {
       isDrawingMask.value = false
 
-      if (currentMask.value && selectedShape.value) {
+      if (currentMask.value && maskPoints.value.length >= 6) {
         // Close the mask path
         currentMask.value.closed(true)
-        currentMask.value.fill('rgba(255, 0, 255, 0.3)')
+        const maskColor = currentMask.value.stroke()
+        currentMask.value.fill(maskColor + '30')
 
-        // Store mask with the selected box
-        if (!selectedShape.value.masks) {
-          selectedShape.value.masks = []
+        // Calculate bounding box from mask points
+        const xs = []
+        const ys = []
+        for (let i = 0; i < maskPoints.value.length; i += 2) {
+          xs.push(maskPoints.value[i])
+          ys.push(maskPoints.value[i + 1])
         }
-        selectedShape.value.masks.push(currentMask.value)
+        const minX = Math.min(...xs)
+        const maxX = Math.max(...xs)
+        const minY = Math.min(...ys)
+        const maxY = Math.max(...ys)
+
+        // Create bounding box
+        const boundingBox = new Konva.Rect({
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+          stroke: maskColor,
+          strokeWidth: 2,
+          draggable: false,
+          listening: true,
+          strokeScaleEnabled: false,
+        })
+
+        // Store metadata
+        boundingBox.metadata = {
+          type: 'rectangle',
+          label: selectedLabel.value || '',
+          createdAt: new Date().toISOString(),
+          hasMask: true,
+        }
+
+        // Initialize masks array and add the mask
+        boundingBox.masks = [currentMask.value]
+
+        // Add click event for selection
+        boundingBox.on('click tap', (e) => {
+          if (drawingMode.value === 'select') {
+            e.cancelBubble = true
+            selectShape(boundingBox)
+          }
+        })
+
+        // Add visual feedback on hover
+        boundingBox.on('mouseenter', () => {
+          if (drawingMode.value === 'select') {
+            stage.value.container().style.cursor = 'pointer'
+          }
+        })
+
+        boundingBox.on('mouseleave', () => {
+          if (drawingMode.value === 'select') {
+            stage.value.container().style.cursor = 'default'
+          }
+        })
+
+        // Add bounding box to layer and shapes
+        layer.value.add(boundingBox)
+        boundingBox.moveToTop()
+        currentMask.value.moveToTop()
+        shapes.value.push(boundingBox)
+        saveHistory()
 
         currentMask.value = null
         maskPoints.value = []
@@ -1282,8 +1340,7 @@ const rejectAnnotation = async () => {
                 ? 'bg-blue-500 text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
             ]"
-            :disabled="!selectedShape || selectedShape.className !== 'Rect'"
-            title="Mask Mode - Draw inside selected box"
+            title="Mask Mode - Draw freely, auto-creates bounding box"
           >
             <Brush :size="18" />
             <span>Mask</span>

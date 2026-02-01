@@ -51,9 +51,6 @@ poetry env activate
 
 **Backend (FastAPI):**
 ```bash
-cd src/backend
-poetry run fastapi dev endpoints.py
-# or
 poetry env activate
 cd src/backend
 fastapi dev endpoints.py
