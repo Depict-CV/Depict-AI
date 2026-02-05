@@ -62,6 +62,7 @@ const zoomLevel = ref(1)
 const currentMask = ref(null)
 const maskPoints = ref([])
 const isDrawingMask = ref(false)
+const maskSubMode = ref('paint') // 'paint' or 'polygon'
 
 // Polygon drawing state
 const polygonPoints = ref([])
@@ -97,28 +98,10 @@ const labelColors = ref({
 
 // Skeleton state
 const currentSkeleton = ref(null)
-
-// Define human pose skeleton structure (COCO format)
-const SKELETON_STRUCTURE = [
-  [0, 1],
-  [0, 2], // nose to eyes
-  [1, 3],
-  [2, 4], // eyes to ears
-  [0, 5],
-  [0, 6], // nose to shoulders
-  [5, 7],
-  [7, 9], // left arm
-  [6, 8],
-  [8, 10], // right arm
-  [5, 11],
-  [6, 12], // shoulders to hips
-  [11, 13],
-  [13, 15], // left leg
-  [12, 14],
-  [14, 16], // right leg
-]
-
-const KEYPOINT_NAMES = [
+const skeletonPhase = ref('nodes') // 'nodes', 'edges', 'labels'
+const selectedNodeForEdge = ref(null)
+const selectedNodeForLabel = ref(null)
+const availableBodyParts = ref([
   'nose',
   'left_eye',
   'right_eye',
@@ -136,7 +119,11 @@ const KEYPOINT_NAMES = [
   'right_knee',
   'left_ankle',
   'right_ankle',
-]
+  'head',
+  'neck',
+  'torso',
+  'other',
+])
 
 // Annotation state
 const description = ref('')
@@ -251,10 +238,17 @@ const handleKeyboard = (e) => {
     e.preventDefault()
     finishPolygon()
   }
+  // Enter: Finish mask polygon
+  else if (e.key === 'Enter' && isDrawingMask.value && maskSubMode.value === 'polygon') {
+    e.preventDefault()
+    finishMaskPolygon()
+  }
   // Escape: Cancel current drawing or deselect
   else if (e.key === 'Escape') {
     if (isDrawingPolygon.value) {
       cancelPolygon()
+    } else if (isDrawingMask.value && maskSubMode.value === 'polygon') {
+      cancelMaskPolygon()
     } else if (selectedShape.value) {
       deselectShape()
     }
@@ -464,22 +458,60 @@ const setupDrawingEvents = () => {
 
     const pos = stage.value.getRelativePointerPosition()
 
-    // Handle mask mode - draw mask freely
+    // Handle mask mode - draw mask freely or with polygon
     if (drawingMode.value === 'mask') {
-      isDrawingMask.value = true
-      maskPoints.value = [pos.x, pos.y]
+      if (maskSubMode.value === 'paint') {
+        // Paint mode - free drawing
+        isDrawingMask.value = true
+        maskPoints.value = [pos.x, pos.y]
 
-      const color = selectedLabel.value ? getLabelColor(selectedLabel.value) : '#ff00ff'
-      currentMask.value = new Konva.Line({
-        points: maskPoints.value,
-        stroke: color,
-        strokeWidth: 2,
-        lineCap: 'round',
-        lineJoin: 'round',
-        globalCompositeOperation: 'source-over',
-      })
+        const color = selectedLabel.value ? getLabelColor(selectedLabel.value) : '#ff00ff'
+        currentMask.value = new Konva.Line({
+          points: maskPoints.value,
+          stroke: color,
+          strokeWidth: 2,
+          lineCap: 'round',
+          lineJoin: 'round',
+          globalCompositeOperation: 'source-over',
+        })
 
-      layer.value.add(currentMask.value)
+        layer.value.add(currentMask.value)
+      } else if (maskSubMode.value === 'polygon') {
+        // Polygon mode - click to add points
+        if (!isDrawingMask.value) {
+          // Start new mask polygon
+          isDrawingMask.value = true
+          maskPoints.value = [pos.x, pos.y]
+
+          const color = selectedLabel.value ? getLabelColor(selectedLabel.value) : '#ff00ff'
+          currentMask.value = new Konva.Line({
+            points: maskPoints.value,
+            stroke: color,
+            strokeWidth: 2,
+            closed: false,
+            lineCap: 'round',
+            lineJoin: 'round',
+          })
+
+          layer.value.add(currentMask.value)
+        } else {
+          // Add point to existing mask polygon
+          maskPoints.value.push(pos.x, pos.y)
+          currentMask.value.points(maskPoints.value)
+        }
+
+        // Draw point indicator
+        const point = new Konva.Circle({
+          x: pos.x,
+          y: pos.y,
+          radius: 4,
+          fill: '#ffffff',
+          stroke: '#ff0000',
+          strokeWidth: 2,
+        })
+        layer.value.add(point)
+        layer.value.draw()
+      }
       return
     }
 
@@ -550,8 +582,8 @@ const setupDrawingEvents = () => {
   })
 
   stage.value.on('mousemove touchmove', (e) => {
-    // Handle mask drawing
-    if (isDrawingMask.value && currentMask.value) {
+    // Handle mask drawing (paint mode only)
+    if (isDrawingMask.value && currentMask.value && maskSubMode.value === 'paint') {
       const pos = stage.value.getRelativePointerPosition()
       maskPoints.value.push(pos.x, pos.y)
       currentMask.value.points(maskPoints.value)
@@ -572,8 +604,8 @@ const setupDrawingEvents = () => {
   })
 
   stage.value.on('mouseup touchend', () => {
-    // Handle mask drawing completion
-    if (isDrawingMask.value) {
+    // Handle mask drawing completion (paint mode only)
+    if (isDrawingMask.value && maskSubMode.value === 'paint') {
       isDrawingMask.value = false
 
       if (currentMask.value && maskPoints.value.length >= 6) {
@@ -801,93 +833,148 @@ const setDrawingMode = (mode) => {
 }
 
 const addKeypoint = (pos) => {
-  if (!currentSkeleton.value) {
-    // Start a new skeleton
-    currentSkeleton.value = {
-      keypoints: [],
-      connections: [],
-      group: new Konva.Group({
-        draggable: false,
-      }),
+  if (skeletonPhase.value === 'nodes') {
+    // Add node phase
+    if (!currentSkeleton.value) {
+      // Start a new skeleton
+      currentSkeleton.value = {
+        keypoints: [],
+        connections: [],
+        group: new Konva.Group({
+          draggable: false,
+        }),
+      }
+      layer.value.add(currentSkeleton.value.group)
     }
-    layer.value.add(currentSkeleton.value.group)
-  }
 
-  const skeleton = currentSkeleton.value
-  const keypointIndex = skeleton.keypoints.length
+    const skeleton = currentSkeleton.value
+    const keypointIndex = skeleton.keypoints.length
 
-  // Create keypoint circle
-  const keypoint = new Konva.Circle({
-    x: pos.x,
-    y: pos.y,
-    radius: 5,
-    fill: '#ff0000',
-    stroke: '#ffffff',
-    strokeWidth: 2,
-    draggable: false,
-  })
+    // Create keypoint circle
+    const keypoint = new Konva.Circle({
+      x: pos.x,
+      y: pos.y,
+      radius: 6,
+      fill: '#ff0000',
+      stroke: '#ffffff',
+      strokeWidth: 2,
+      draggable: false,
+    })
 
-  // Add label text
-  const label = new Konva.Text({
-    x: pos.x + 8,
-    y: pos.y - 8,
-    text: `${keypointIndex}: ${KEYPOINT_NAMES[keypointIndex] || 'point'}`,
-    fontSize: 12,
-    fill: '#ffffff',
-    stroke: '#000000',
-    strokeWidth: 0.5,
-  })
+    // Add index label
+    const label = new Konva.Text({
+      x: pos.x + 10,
+      y: pos.y - 10,
+      text: `${keypointIndex}`,
+      fontSize: 14,
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeWidth: 1,
+      fontStyle: 'bold',
+    })
 
-  // Update label position when keypoint is dragged
-  keypoint.on('dragmove', () => {
-    label.x(keypoint.x() + 8)
-    label.y(keypoint.y() - 8)
-    updateSkeletonConnections(skeleton)
-  })
+    // Add click handler for edge drawing and label assignment
+    keypoint.on('click tap', (e) => {
+      e.cancelBubble = true
+      if (skeletonPhase.value === 'edges') {
+        handleNodeClickForEdge(keypointIndex)
+      } else if (skeletonPhase.value === 'labels') {
+        handleNodeClickForLabel(keypointIndex)
+      }
+    })
 
-  skeleton.keypoints.push({ circle: keypoint, label, pos: { x: pos.x, y: pos.y } })
-  skeleton.group.add(keypoint)
-  skeleton.group.add(label)
+    // Hover effect
+    keypoint.on('mouseenter', () => {
+      if (skeletonPhase.value === 'edges' || skeletonPhase.value === 'labels') {
+        keypoint.radius(8)
+        layer.value.draw()
+      }
+    })
 
-  // Draw connections based on skeleton structure
-  if (keypointIndex > 0) {
-    updateSkeletonConnections(skeleton)
-  }
+    keypoint.on('mouseleave', () => {
+      keypoint.radius(6)
+      layer.value.draw()
+    })
 
-  layer.value.draw()
+    skeleton.keypoints.push({
+      circle: keypoint,
+      label,
+      pos: { x: pos.x, y: pos.y },
+      bodyPart: null,
+      index: keypointIndex,
+    })
+    skeleton.group.add(keypoint)
+    skeleton.group.add(label)
 
-  // If we've placed all keypoints, finish the skeleton
-  if (skeleton.keypoints.length >= KEYPOINT_NAMES.length) {
-    finishSkeleton()
+    layer.value.draw()
   }
 }
 
-const updateSkeletonConnections = (skeleton) => {
-  // Remove old connection lines
-  skeleton.connections.forEach((line) => line.destroy())
-  skeleton.connections = []
+const handleNodeClickForEdge = (nodeIndex) => {
+  if (!selectedNodeForEdge.value && selectedNodeForEdge.value !== 0) {
+    // First node selected
+    selectedNodeForEdge.value = nodeIndex
+    const kp = currentSkeleton.value.keypoints[nodeIndex]
+    kp.circle.stroke('#ffff00') // Highlight selected node
+    kp.circle.strokeWidth(3)
+    layer.value.draw()
+  } else {
+    // Second node selected - create edge
+    const startIdx = selectedNodeForEdge.value
+    const endIdx = nodeIndex
 
-  // Draw connections based on SKELETON_STRUCTURE
-  SKELETON_STRUCTURE.forEach(([startIdx, endIdx]) => {
-    if (startIdx < skeleton.keypoints.length && endIdx < skeleton.keypoints.length) {
-      const startKp = skeleton.keypoints[startIdx]
-      const endKp = skeleton.keypoints[endIdx]
-
-      const line = new Konva.Line({
-        points: [startKp.circle.x(), startKp.circle.y(), endKp.circle.x(), endKp.circle.y()],
-        stroke: '#00ff00',
-        strokeWidth: 2,
-        lineCap: 'round',
-        lineJoin: 'round',
-      })
-
-      skeleton.group.add(line)
-      line.moveToBottom()
-      skeleton.connections.push(line)
+    if (startIdx !== endIdx) {
+      addSkeletonEdge(startIdx, endIdx)
     }
+
+    // Reset selection
+    const kp = currentSkeleton.value.keypoints[startIdx]
+    kp.circle.stroke('#ffffff')
+    kp.circle.strokeWidth(2)
+    selectedNodeForEdge.value = null
+    layer.value.draw()
+  }
+}
+
+const addSkeletonEdge = (startIdx, endIdx) => {
+  const skeleton = currentSkeleton.value
+  const startKp = skeleton.keypoints[startIdx]
+  const endKp = skeleton.keypoints[endIdx]
+
+  const line = new Konva.Line({
+    points: [startKp.circle.x(), startKp.circle.y(), endKp.circle.x(), endKp.circle.y()],
+    stroke: '#00ff00',
+    strokeWidth: 3,
+    lineCap: 'round',
+    lineJoin: 'round',
   })
 
+  line.metadata = {
+    startIdx,
+    endIdx,
+  }
+
+  skeleton.group.add(line)
+  line.moveToBottom()
+  skeleton.connections.push(line)
   layer.value.draw()
+}
+
+const handleNodeClickForLabel = (nodeIndex) => {
+  selectedNodeForLabel.value = nodeIndex
+}
+
+const assignBodyPartToNode = (bodyPart) => {
+  if (selectedNodeForLabel.value !== null && currentSkeleton.value) {
+    const kp = currentSkeleton.value.keypoints[selectedNodeForLabel.value]
+    kp.bodyPart = bodyPart
+
+    // Update label text
+    kp.label.text(`${selectedNodeForLabel.value}: ${bodyPart}`)
+
+    selectedNodeForLabel.value = null
+    layer.value.draw()
+  }
 }
 
 const finishSkeleton = () => {
@@ -906,6 +993,9 @@ const clearCurrentSkeleton = () => {
   if (currentSkeleton.value) {
     currentSkeleton.value.group.destroy()
     currentSkeleton.value = null
+    skeletonPhase.value = 'nodes'
+    selectedNodeForEdge.value = null
+    selectedNodeForLabel.value = null
     layer.value.draw()
   }
 }
@@ -914,6 +1004,24 @@ const finishSkeletonEarly = () => {
   if (currentSkeleton.value && currentSkeleton.value.keypoints.length > 0) {
     finishSkeleton()
     alert(`Skeleton saved with ${currentSkeleton.value?.keypoints.length || 0} keypoints`)
+    skeletonPhase.value = 'nodes'
+    selectedNodeForEdge.value = null
+    selectedNodeForLabel.value = null
+  }
+}
+
+const setSkeletonPhase = (phase) => {
+  skeletonPhase.value = phase
+  selectedNodeForEdge.value = null
+  selectedNodeForLabel.value = null
+
+  // Reset any highlights
+  if (currentSkeleton.value) {
+    currentSkeleton.value.keypoints.forEach((kp) => {
+      kp.circle.stroke('#ffffff')
+      kp.circle.strokeWidth(2)
+    })
+    layer.value.draw()
   }
 }
 
@@ -1055,6 +1163,104 @@ const cancelPolygon = () => {
   layer.value.draw()
 }
 
+// Mask polygon functions
+const finishMaskPolygon = () => {
+  if (!currentMask.value || maskPoints.value.length < 6) return
+
+  isDrawingMask.value = false
+
+  // Close the mask path
+  currentMask.value.closed(true)
+  const maskColor = currentMask.value.stroke()
+  currentMask.value.fill(maskColor + '30')
+
+  // Calculate bounding box from mask points
+  const xs = []
+  const ys = []
+  for (let i = 0; i < maskPoints.value.length; i += 2) {
+    xs.push(maskPoints.value[i])
+    ys.push(maskPoints.value[i + 1])
+  }
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+
+  // Create bounding box
+  const boundingBox = new Konva.Rect({
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+    stroke: maskColor,
+    strokeWidth: 2,
+    draggable: false,
+    listening: true,
+    strokeScaleEnabled: false,
+  })
+
+  // Store metadata
+  boundingBox.metadata = {
+    type: 'mask',
+    label: selectedLabel.value || '',
+    createdAt: new Date().toISOString(),
+    hasMask: true,
+  }
+
+  // Initialize masks array and add the mask
+  boundingBox.masks = [currentMask.value]
+
+  // Add click event for selection
+  boundingBox.on('click tap', (e) => {
+    if (drawingMode.value === 'select') {
+      e.cancelBubble = true
+      selectShape(boundingBox)
+    }
+  })
+
+  // Add visual feedback on hover
+  boundingBox.on('mouseenter', () => {
+    if (drawingMode.value === 'select') {
+      stage.value.container().style.cursor = 'pointer'
+    }
+  })
+
+  boundingBox.on('mouseleave', () => {
+    if (drawingMode.value === 'select') {
+      stage.value.container().style.cursor = 'default'
+    }
+  })
+
+  // Add bounding box to layer and shapes
+  layer.value.add(boundingBox)
+  boundingBox.moveToTop()
+  currentMask.value.moveToTop()
+  shapes.value.push(boundingBox)
+  saveHistory()
+
+  currentMask.value = null
+  maskPoints.value = []
+  layer.value.draw()
+}
+
+const cancelMaskPolygon = () => {
+  if (currentMask.value) {
+    currentMask.value.destroy()
+    currentMask.value = null
+  }
+  isDrawingMask.value = false
+  maskPoints.value = []
+  layer.value.draw()
+}
+
+const setMaskSubMode = (mode) => {
+  maskSubMode.value = mode
+  // Cancel any current mask drawing when switching modes
+  if (isDrawingMask.value) {
+    cancelMaskPolygon()
+  }
+}
+
 // Copy/Paste
 const copyShape = () => {
   if (!selectedShape.value) return
@@ -1177,8 +1383,16 @@ const addLabel = async () => {
 }
 
 const saveAnnotation = async () => {
-  if (!selectedLabel.value) {
-    alert('Please select or create a label')
+  // Validate required props
+  if (!props.projectId) {
+    alert('Error: Project ID is missing. Cannot save annotation.')
+    console.error('Missing projectId prop:', props)
+    return
+  }
+
+  if (!props.imageId) {
+    alert('Error: Image ID is missing. Cannot save annotation.')
+    console.error('Missing imageId prop:', props)
     return
   }
 
@@ -1265,6 +1479,66 @@ const rejectAnnotation = async () => {
       <div class="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 space-y-3 z-10 max-w-xs">
         <div class="font-bold text-sm text-gray-700 mb-2 border-b pb-2">Annotation Tools</div>
 
+        <!-- Label Selection (Before Drawing) -->
+        <div class="pb-3 border-b border-gray-200">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">Active Label</label>
+          <div class="flex gap-1">
+            <select
+              v-model="selectedLabel"
+              class="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">No label</option>
+              <option v-for="label in availableLabels" :key="label" :value="label">
+                {{ label }}
+              </option>
+            </select>
+            <button
+              @click="showLabelInput = !showLabelInput"
+              class="px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+              title="Add new label"
+            >
+              <Plus :size="14" />
+            </button>
+          </div>
+
+          <!-- Add New Label Input -->
+          <div v-if="showLabelInput" class="mt-2 flex gap-1">
+            <input
+              v-model="newLabel"
+              type="text"
+              placeholder="New label name..."
+              class="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              @keyup.enter="addLabel"
+            />
+            <button
+              @click="addLabel"
+              class="px-2 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded transition-colors text-xs"
+            >
+              Add
+            </button>
+            <button
+              @click="
+                showLabelInput = false
+                newLabel = ''
+              "
+              class="px-2 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded transition-colors text-xs"
+            >
+              ×
+            </button>
+          </div>
+
+          <!-- Current Label Color Indicator -->
+          <div v-if="selectedLabel" class="mt-2 flex items-center gap-2">
+            <div
+              class="w-4 h-4 rounded border border-gray-300"
+              :style="{ backgroundColor: getLabelColor(selectedLabel) }"
+            ></div>
+            <span class="text-xs text-gray-600"
+              >Drawing with: <strong>{{ selectedLabel }}</strong></span
+            >
+          </div>
+        </div>
+
         <!-- Mode Buttons -->
         <div class="grid grid-cols-2 gap-2">
           <button
@@ -1307,19 +1581,6 @@ const rejectAnnotation = async () => {
             <span>Box</span>
           </button>
           <button
-            @click="setDrawingMode('polygon')"
-            :class="[
-              'flex items-center gap-2 p-2 rounded-lg transition-all text-sm font-medium',
-              drawingMode === 'polygon'
-                ? 'bg-blue-500 text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-            ]"
-            title="Polygon Mode (G) - Click to add points, Enter to finish"
-          >
-            <Pentagon :size="18" />
-            <span>Polygon</span>
-          </button>
-          <button
             @click="setDrawingMode('skeleton')"
             :class="[
               'flex items-center gap-2 p-2 rounded-lg transition-all text-sm font-medium',
@@ -1356,22 +1617,151 @@ const rejectAnnotation = async () => {
           <div class="text-blue-600">Click to add points<br />Press Enter to finish<br />Press Escape to cancel</div>
         </div>
 
+        <!-- Mask Mode Options -->
+        <div v-if="drawingMode === 'mask'" class="space-y-2">
+          <!-- Sub-mode Selection -->
+          <div class="grid grid-cols-2 gap-1">
+            <button
+              @click="setMaskSubMode('paint')"
+              :class="[
+                'p-1.5 rounded text-xs font-medium transition-all',
+                maskSubMode === 'paint' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+              ]"
+            >
+              <Brush :size="14" class="inline mr-1" />
+              Paint
+            </button>
+            <button
+              @click="setMaskSubMode('polygon')"
+              :class="[
+                'p-1.5 rounded text-xs font-medium transition-all',
+                maskSubMode === 'polygon' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+              ]"
+            >
+              <Pentagon :size="14" class="inline mr-1" />
+              Polygon
+            </button>
+          </div>
+
+          <!-- Instructions -->
+          <div class="text-xs bg-pink-50 p-2 rounded border border-pink-200">
+            <div v-if="maskSubMode === 'paint'" class="text-pink-700">
+              <div class="font-medium mb-1">Paint Mode</div>
+              <div>Click and drag to paint freely. Auto-creates bounding box.</div>
+            </div>
+            <div v-else-if="maskSubMode === 'polygon'" class="text-pink-700">
+              <div class="font-medium mb-1">Polygon Mode</div>
+              <div>Click to add points<br />Press Enter to finish<br />Press Escape to cancel</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons for Polygon Mode -->
+          <div v-if="maskSubMode === 'polygon' && isDrawingMask" class="flex gap-2">
+            <button
+              @click="finishMaskPolygon"
+              class="flex-1 p-2 rounded bg-green-100 hover:bg-green-200 transition-colors text-xs font-medium text-green-700"
+              title="Finish Mask"
+            >
+              Done
+            </button>
+            <button
+              @click="cancelMaskPolygon"
+              class="flex-1 p-2 rounded bg-red-100 hover:bg-red-200 transition-colors text-xs font-medium text-red-700"
+              title="Cancel Mask"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+
         <!-- Skeleton Instructions -->
-        <div v-if="drawingMode === 'skeleton' && currentSkeleton" class="flex gap-2">
-          <button
-            @click="finishSkeletonEarly"
-            class="flex-1 p-2 rounded bg-green-100 hover:bg-green-200 transition-colors text-xs font-medium text-green-700"
-            title="Finish Skeleton"
-          >
-            Done
-          </button>
-          <button
-            @click="clearCurrentSkeleton"
-            class="flex-1 p-2 rounded bg-yellow-100 hover:bg-yellow-200 transition-colors text-xs font-medium text-yellow-700"
-            title="Cancel Skeleton"
-          >
-            Cancel
-          </button>
+        <div v-if="drawingMode === 'skeleton'" class="space-y-2">
+          <!-- Phase Selection -->
+          <div class="grid grid-cols-3 gap-1">
+            <button
+              @click="setSkeletonPhase('nodes')"
+              :class="[
+                'p-1.5 rounded text-xs font-medium transition-all',
+                skeletonPhase === 'nodes' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+              ]"
+            >
+              1. Nodes
+            </button>
+            <button
+              @click="setSkeletonPhase('edges')"
+              :class="[
+                'p-1.5 rounded text-xs font-medium transition-all',
+                skeletonPhase === 'edges' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+              ]"
+              :disabled="!currentSkeleton || currentSkeleton.keypoints.length < 2"
+            >
+              2. Edges
+            </button>
+            <button
+              @click="setSkeletonPhase('labels')"
+              :class="[
+                'p-1.5 rounded text-xs font-medium transition-all',
+                skeletonPhase === 'labels' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+              ]"
+              :disabled="!currentSkeleton || currentSkeleton.keypoints.length === 0"
+            >
+              3. Labels
+            </button>
+          </div>
+
+          <!-- Phase Instructions -->
+          <div class="text-xs bg-purple-50 p-2 rounded border border-purple-200">
+            <div v-if="skeletonPhase === 'nodes'" class="text-purple-700">
+              <div class="font-medium mb-1">Phase 1: Place Nodes</div>
+              <div>Click on the image to place keypoint nodes</div>
+            </div>
+            <div v-else-if="skeletonPhase === 'edges'" class="text-purple-700">
+              <div class="font-medium mb-1">Phase 2: Draw Edges</div>
+              <div>Click two nodes to connect them with an edge</div>
+              <div v-if="selectedNodeForEdge !== null" class="mt-1 font-medium text-purple-900">
+                Node {{ selectedNodeForEdge }} selected - click another node
+              </div>
+            </div>
+            <div v-else-if="skeletonPhase === 'labels'" class="text-purple-700">
+              <div class="font-medium mb-1">Phase 3: Assign Body Parts</div>
+              <div>Click a node, then select a body part below</div>
+              <div v-if="selectedNodeForLabel !== null" class="mt-1 font-medium text-purple-900">
+                Node {{ selectedNodeForLabel }} selected
+              </div>
+            </div>
+          </div>
+
+          <!-- Body Part Selection (only in labels phase) -->
+          <div v-if="skeletonPhase === 'labels' && selectedNodeForLabel !== null" class="max-h-32 overflow-y-auto">
+            <div class="grid grid-cols-2 gap-1">
+              <button
+                v-for="part in availableBodyParts"
+                :key="part"
+                @click="assignBodyPartToNode(part)"
+                class="p-1.5 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+              >
+                {{ part }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div v-if="currentSkeleton" class="flex gap-2">
+            <button
+              @click="finishSkeletonEarly"
+              class="flex-1 p-2 rounded bg-green-100 hover:bg-green-200 transition-colors text-xs font-medium text-green-700"
+              title="Finish Skeleton"
+            >
+              Done
+            </button>
+            <button
+              @click="clearCurrentSkeleton"
+              class="flex-1 p-2 rounded bg-red-100 hover:bg-red-200 transition-colors text-xs font-medium text-red-700"
+              title="Cancel Skeleton"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
 
         <!-- Edit Actions -->
@@ -1547,47 +1937,24 @@ const rejectAnnotation = async () => {
         />
       </div>
 
-      <!-- Label Selection -->
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Label</label>
-        <div class="flex gap-2">
-          <select
-            v-model="selectedLabel"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            <option value="">Select a label...</option>
-            <option v-for="label in availableLabels" :key="label" :value="label">
-              {{ label }}
-            </option>
-          </select>
+      <!-- All Labels in Project -->
+      <div v-if="availableLabels.length > 0">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Project Labels <span class="text-xs font-normal text-gray-500">({{ availableLabels.length }} total)</span>
+        </label>
+        <div class="flex flex-wrap gap-2">
           <button
-            @click="showLabelInput = !showLabelInput"
-            class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-1"
-            title="Add new label"
+            v-for="label in availableLabels"
+            :key="label"
+            @click="selectedLabel = label"
+            :class="[
+              'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-all',
+              selectedLabel === label ? 'ring-2 ring-blue-500' : '',
+            ]"
+            :style="{ backgroundColor: getLabelColor(label) + '20', color: getLabelColor(label) }"
           >
-            <Plus :size="16" />
-          </button>
-        </div>
-
-        <!-- Add New Label Input -->
-        <div v-if="showLabelInput" class="mt-2 flex gap-2">
-          <input
-            v-model="newLabel"
-            type="text"
-            placeholder="New label name..."
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-          <button
-            @click="addLabel"
-            class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
-          >
-            Add
-          </button>
-          <button
-            @click="showLabelInput = false"
-            class="px-3 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg transition-colors text-sm"
-          >
-            Cancel
+            <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: getLabelColor(label) }"></div>
+            {{ label }}
           </button>
         </div>
       </div>

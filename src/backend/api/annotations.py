@@ -34,8 +34,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not label:
-        raise HTTPException(status_code=400, detail="label is required")
+    # Label is optional - can be None for general annotations
     new_annotation = Annotation(
         data_id=data_id,
         author_id=user_id,

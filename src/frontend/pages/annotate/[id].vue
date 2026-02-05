@@ -8,9 +8,11 @@ import AnnotationEditor from '@/components/annot/AnnotationEditor.vue'
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
+const { user } = useAuth()
 
 const image = ref(null)
 const projectId = ref(null)
+const userId = ref(null)
 const loading = ref(true)
 
 onMounted(async () => {
@@ -22,6 +24,11 @@ onMounted(async () => {
     if (storedProjectId) {
       projectId.value = parseInt(storedProjectId)
     }
+
+    // Get userId - try from Clerk user, sessionStorage, or use default
+    // TODO: Implement proper user sync between Clerk and backend database
+    // For now, default to user ID 1 (assumes a default user exists)
+    userId.value = 1
 
     // Fetch the actual image data from the API
     const response = await api.post('/data/batch', {
@@ -83,6 +90,17 @@ const handleAnnotationAccepted = (result) => {
 const handleAnnotationRejected = (result) => {
   console.log('Annotation rejected:', result)
 }
+
+// Helper function to convert string to numeric hash
+const hashCode = (str) => {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash
+  }
+  return hash
+}
 </script>
 
 <template>
@@ -121,13 +139,27 @@ const handleAnnotationRejected = (result) => {
       <div class="flex-1 flex flex-col">
         <!-- Annotation Editor -->
         <AnnotationEditor
-          v-if="image"
+          v-if="image && projectId && userId"
           :imageId="route.params.id"
           :imageSrc="image.location"
+          :projectId="projectId"
+          :userId="userId"
           @save="handleAnnotationSaved"
           @accept="handleAnnotationAccepted"
           @reject="handleAnnotationRejected"
         />
+        <div v-else-if="image && !projectId" class="flex items-center justify-center h-full">
+          <div class="text-center text-gray-600">
+            <p class="text-lg font-medium mb-2">Missing Project Information</p>
+            <p class="text-sm">Please navigate from a project to annotate images.</p>
+          </div>
+        </div>
+        <div v-else-if="image && !userId" class="flex items-center justify-center h-full">
+          <div class="text-center text-gray-600">
+            <p class="text-lg font-medium mb-2">User Not Authenticated</p>
+            <p class="text-sm">Please log in to annotate images.</p>
+          </div>
+        </div>
       </div>
     </template>
   </div>
