@@ -762,7 +762,15 @@ const clearAllShapes = () => {
     if (shape.masks) {
       shape.masks.forEach((mask) => mask.destroy())
     }
-    shape.destroy()
+
+    // Handle different shape types
+    if (shape.destroy) {
+      // Regular shapes (rectangles, polygons, lines, circles)
+      shape.destroy()
+    } else if (shape.group && shape.group.destroy) {
+      // Skeleton shapes (have a group property)
+      shape.group.destroy()
+    }
   })
   shapes.value = []
   selectedShape.value = null
@@ -773,6 +781,7 @@ const clearAllShapes = () => {
     transformer.value.hide()
   }
 
+  saveHistory()
   layer.value.draw()
 }
 
@@ -1365,6 +1374,30 @@ const exportAnnotations = (format = 'json') => {
   URL.revokeObjectURL(url)
 }
 
+const updateShapeLabel = (newLabelValue) => {
+  if (!selectedShape.value) return
+
+  // Update metadata
+  if (!selectedShape.value.metadata) {
+    selectedShape.value.metadata = {}
+  }
+  selectedShape.value.metadata.label = newLabelValue
+
+  // Update color
+  const newColor = getLabelColor(newLabelValue)
+  selectedShape.value.stroke(newColor)
+
+  // Update mask colors if present
+  if (selectedShape.value.masks) {
+    selectedShape.value.masks.forEach((mask) => {
+      mask.stroke(newColor)
+      mask.fill(newColor + '30')
+    })
+  }
+
+  layer.value.draw()
+}
+
 const addLabel = async () => {
   if (!newLabel.value.trim()) return
 
@@ -1398,25 +1431,83 @@ const saveAnnotation = async () => {
 
   saving.value = true
   try {
-    // Check if annotation already exists for this image
-    const existingAnnotations = await api.get(`/annotations/?project_id=${props.projectId}`)
-    const existingAnnotation = existingAnnotations.find(
-      (ann) => ann.data_id === props.imageId || ann.data_id === String(props.imageId)
-    )
+    // Serialize all shapes data
+    const annotations = []
 
-    if (existingAnnotation) {
-      // Update existing annotation using PATCH
-      const updateData = {
-        id: existingAnnotation.id,
+    shapes.value.forEach((shape) => {
+      const annotation = {
+        data_id: props.imageId,
+        project_id: props.projectId,
+        author_id: props.userId,
         description: description.value,
-        label: selectedLabel.value,
+        label: shape.metadata?.label || selectedLabel.value,
+        status: 'human annotation',
       }
-      const response = await api.patch('/annotations/', updateData)
-      console.log('Annotation updated:', response)
-      emit('save', response)
-      alert('✓ Annotation updated successfully!')
+
+      // Handle different shape types
+      if (shape.className === 'Rect' || shape.metadata?.type === 'rectangle') {
+        // Bounding box
+        annotation.x1 = Math.round(shape.x())
+        annotation.y1 = Math.round(shape.y())
+        annotation.x2 = Math.round(shape.x() + shape.width())
+        annotation.y2 = Math.round(shape.y() + shape.height())
+
+        // If has masks, serialize them
+        if (shape.masks && shape.masks.length > 0) {
+          const maskSegments = shape.masks.map((mask) => mask.points())
+          annotation.mask_segments = JSON.stringify(maskSegments)
+        }
+      } else if (shape.className === 'Line' && shape.metadata?.type === 'polygon') {
+        // Polygon
+        annotation.polygon = JSON.stringify(shape.points())
+
+        // Calculate bounding box for polygon
+        const points = shape.points()
+        const xs = []
+        const ys = []
+        for (let i = 0; i < points.length; i += 2) {
+          xs.push(points[i])
+          ys.push(points[i + 1])
+        }
+        annotation.x1 = Math.round(Math.min(...xs))
+        annotation.y1 = Math.round(Math.min(...ys))
+        annotation.x2 = Math.round(Math.max(...xs))
+        annotation.y2 = Math.round(Math.max(...ys))
+      } else if (shape.keypoints) {
+        // Skeleton/pose
+        const nodes = shape.keypoints.map((kp) => ({
+          x: Math.round(kp.circle.x()),
+          y: Math.round(kp.circle.y()),
+          index: kp.index,
+          body_part: kp.bodyPart || null,
+        }))
+
+        const edges = shape.connections.map((conn) => [conn.metadata.startIdx, conn.metadata.endIdx])
+
+        annotation.keypoints = JSON.stringify({ nodes, edges })
+
+        // Calculate bounding box for skeleton
+        const xs = nodes.map((n) => n.x)
+        const ys = nodes.map((n) => n.y)
+        annotation.x1 = Math.min(...xs)
+        annotation.y1 = Math.min(...ys)
+        annotation.x2 = Math.max(...xs)
+        annotation.y2 = Math.max(...ys)
+      }
+
+      annotations.push(annotation)
+    })
+
+    // Save all annotations
+    if (annotations.length > 0) {
+      for (const annot of annotations) {
+        await api.post('/annotations/', annot)
+      }
+      console.log(`Saved ${annotations.length} annotation(s)`)
+      emit('save', annotations)
+      alert(`✓ Saved ${annotations.length} annotation(s) successfully!`)
     } else {
-      // Create new annotation using POST
+      // No shapes - just save description/label
       const annotationData = {
         data_id: props.imageId,
         project_id: props.projectId,
@@ -1425,7 +1516,6 @@ const saveAnnotation = async () => {
         label: selectedLabel.value,
         status: 'human annotation',
       }
-
       const response = await api.post('/annotations/', annotationData)
       console.log('Annotation saved:', response)
       emit('save', response)
@@ -1899,21 +1989,37 @@ const rejectAnnotation = async () => {
 
         <!-- Shape Info -->
         <div v-if="selectedShape" class="bg-white rounded-lg shadow-lg p-3">
-          <div class="text-xs font-medium text-gray-600 mb-2">Selected</div>
-          <div class="space-y-1 text-xs text-gray-700">
+          <div class="text-xs font-medium text-gray-600 mb-2">Selected Shape</div>
+          <div class="space-y-2 text-xs text-gray-700">
             <div><span class="font-medium">Type:</span> {{ selectedShape.metadata?.type || 'N/A' }}</div>
-            <div><span class="font-medium">Label:</span> {{ selectedShape.metadata?.label || 'None' }}</div>
             <div v-if="selectedShape.attrs?.width">
               <span class="font-medium">Size:</span> {{ Math.round(selectedShape.attrs.width) }}×{{
                 Math.round(selectedShape.attrs.height)
               }}
             </div>
+
+            <!-- Label Selector -->
+            <div class="pt-2 border-t border-gray-200">
+              <label class="block font-medium mb-1">Label:</label>
+              <select
+                :value="selectedShape.metadata?.label || ''"
+                @change="updateShapeLabel($event.target.value)"
+                class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">No label</option>
+                <option v-for="label in availableLabels" :key="label" :value="label">
+                  {{ label }}
+                </option>
+              </select>
+
+              <!-- Color indicator -->
+              <div
+                v-if="selectedShape.metadata?.label"
+                class="mt-2 w-full h-2 rounded"
+                :style="{ backgroundColor: getLabelColor(selectedShape.metadata.label) }"
+              ></div>
+            </div>
           </div>
-          <div
-            v-if="selectedShape.metadata?.label"
-            class="mt-2 w-full h-2 rounded"
-            :style="{ backgroundColor: getLabelColor(selectedShape.metadata.label) }"
-          ></div>
         </div>
       </div>
 
@@ -1935,28 +2041,6 @@ const rejectAnnotation = async () => {
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
           rows="2"
         />
-      </div>
-
-      <!-- All Labels in Project -->
-      <div v-if="availableLabels.length > 0">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-          Project Labels <span class="text-xs font-normal text-gray-500">({{ availableLabels.length }} total)</span>
-        </label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="label in availableLabels"
-            :key="label"
-            @click="selectedLabel = label"
-            :class="[
-              'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-all',
-              selectedLabel === label ? 'ring-2 ring-blue-500' : '',
-            ]"
-            :style="{ backgroundColor: getLabelColor(label) + '20', color: getLabelColor(label) }"
-          >
-            <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: getLabelColor(label) }"></div>
-            {{ label }}
-          </button>
-        </div>
       </div>
 
       <!-- Action Buttons -->

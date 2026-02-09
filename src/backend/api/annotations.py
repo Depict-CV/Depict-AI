@@ -22,6 +22,15 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     label = data.get("label")
     description = data.get("description")
 
+    # Geometry fields
+    x1 = data.get("x1")
+    y1 = data.get("y1")
+    x2 = data.get("x2")
+    y2 = data.get("y2")
+    keypoints = data.get("keypoints")
+    mask_segments = data.get("mask_segments")
+    polygon = data.get("polygon")
+
     # Validate required fields
     if not data_id or not user_id or not project_id:
         raise HTTPException(status_code=400, detail="data_id, author_id, and project_id are required")
@@ -43,6 +52,13 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         annotation_score=annotation_score,
         label=label,
         description=description,
+        x1=x1,
+        y1=y1,
+        x2=x2,
+        y2=y2,
+        keypoints=keypoints,
+        mask_segments=mask_segments,
+        polygon=polygon,
         creation_date=datetime.now(),
     )
     db.add(new_annotation)
