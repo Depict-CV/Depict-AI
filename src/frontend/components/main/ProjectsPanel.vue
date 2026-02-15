@@ -62,6 +62,7 @@ const handleCreateProject = async () => {
 
     // Refresh the projects list
     emit('refreshProjects')
+    await fetchAllProjects()
   } catch (error) {
     console.error('Failed to create project:', error)
     errorMessage.value = error?.data?.detail || error?.message || 'Failed to create project. Please try again.'
