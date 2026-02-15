@@ -184,6 +184,156 @@ const loadExistingAnnotation = async () => {
   }
 }
 
+const displayHistoryAnnotation = (annotation) => {
+  console.log('Displaying history annotation:', annotation)
+
+  // Update description and label
+  description.value = annotation.description || ''
+  selectedLabel.value = annotation.label || ''
+
+  // Clear existing shapes
+  shapes.value.forEach((shape) => {
+    shape.destroy()
+  })
+  shapes.value = []
+
+  if (!stage.value || !layer.value || !imageNode.value) {
+    console.warn('Konva not initialized yet')
+    return
+  }
+
+  const color = selectedLabel.value ? getLabelColor(selectedLabel.value) : '#00ff00'
+
+  // Draw bounding box if coordinates exist
+  if (annotation.x1 != null && annotation.y1 != null && annotation.x2 != null && annotation.y2 != null) {
+    const rect = new Konva.Rect({
+      x: annotation.x1,
+      y: annotation.y1,
+      width: annotation.x2 - annotation.x1,
+      height: annotation.y2 - annotation.y1,
+      stroke: color,
+      strokeWidth: 3,
+      draggable: false,
+      listening: true,
+      strokeScaleEnabled: false,
+    })
+
+    rect.metadata = {
+      type: 'rectangle',
+      label: annotation.label || '',
+      createdAt: annotation.creation_date,
+      historyItem: true,
+    }
+
+    layer.value.add(rect)
+    shapes.value.push(rect)
+  }
+
+  // Draw polygon if exists
+  if (annotation.polygon) {
+    try {
+      const polygonPoints = JSON.parse(annotation.polygon)
+      const polygon = new Konva.Line({
+        points: polygonPoints,
+        stroke: color,
+        strokeWidth: 3,
+        closed: true,
+        draggable: false,
+        listening: true,
+        strokeScaleEnabled: false,
+      })
+
+      polygon.metadata = {
+        type: 'polygon',
+        label: annotation.label || '',
+        createdAt: annotation.creation_date,
+        historyItem: true,
+      }
+
+      layer.value.add(polygon)
+      shapes.value.push(polygon)
+    } catch (e) {
+      console.error('Error parsing polygon data:', e)
+    }
+  }
+
+  // Draw mask segments if exist
+  if (annotation.mask_segments) {
+    try {
+      const maskSegments = JSON.parse(annotation.mask_segments)
+      maskSegments.forEach((segment) => {
+        const mask = new Konva.Line({
+          points: segment,
+          stroke: color,
+          strokeWidth: 2,
+          opacity: 0.6,
+          draggable: false,
+          listening: true,
+          strokeScaleEnabled: false,
+        })
+
+        mask.metadata = {
+          type: 'mask',
+          label: annotation.label || '',
+          createdAt: annotation.creation_date,
+          historyItem: true,
+        }
+
+        layer.value.add(mask)
+        shapes.value.push(mask)
+      })
+    } catch (e) {
+      console.error('Error parsing mask segments:', e)
+    }
+  }
+
+  // Draw keypoints if exist
+  if (annotation.keypoints) {
+    try {
+      const keypointsData = JSON.parse(annotation.keypoints)
+      if (keypointsData.nodes && keypointsData.edges) {
+        // Draw edges first
+        keypointsData.edges.forEach(([startIdx, endIdx]) => {
+          const startNode = keypointsData.nodes[startIdx]
+          const endNode = keypointsData.nodes[endIdx]
+          if (startNode && endNode) {
+            const line = new Konva.Line({
+              points: [startNode.x, startNode.y, endNode.x, endNode.y],
+              stroke: color,
+              strokeWidth: 2,
+              listening: false,
+            })
+            layer.value.add(line)
+          }
+        })
+
+        // Draw nodes
+        keypointsData.nodes.forEach((node) => {
+          const circle = new Konva.Circle({
+            x: node.x,
+            y: node.y,
+            radius: 5,
+            fill: color,
+            stroke: '#ffffff',
+            strokeWidth: 2,
+            listening: false,
+          })
+          layer.value.add(circle)
+        })
+      }
+    } catch (e) {
+      console.error('Error parsing keypoints:', e)
+    }
+  }
+
+  layer.value.batchDraw()
+}
+
+// Expose method to parent component
+defineExpose({
+  displayHistoryAnnotation,
+})
+
 onMounted(async () => {
   // Fetch available labels from dataset
   await fetchLabels()
@@ -199,77 +349,11 @@ onMounted(async () => {
       initKonva()
     }
   }
-
-  // Setup keyboard shortcuts
-  window.addEventListener('keydown', handleKeyboard)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyboard)
+  // Cleanup
 })
-
-const handleKeyboard = (e) => {
-  // Ctrl/Cmd + Z: Undo
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-    e.preventDefault()
-    undo()
-  }
-  // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y: Redo
-  else if ((e.ctrlKey || e.metaKey) && ((e.shiftKey && e.key === 'z') || e.key === 'y')) {
-    e.preventDefault()
-    redo()
-  }
-  // Ctrl/Cmd + C: Copy
-  else if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedShape.value) {
-    e.preventDefault()
-    copyShape()
-  }
-  // Ctrl/Cmd + V: Paste
-  else if ((e.ctrlKey || e.metaKey) && e.key === 'v' && clipboard.value) {
-    e.preventDefault()
-    pasteShape()
-  }
-  // Delete: Delete selected
-  else if (e.key === 'Delete' && selectedShape.value) {
-    deleteSelectedShape()
-  }
-  // Enter: Finish polygon
-  else if (e.key === 'Enter' && isDrawingPolygon.value) {
-    e.preventDefault()
-    finishPolygon()
-  }
-  // Enter: Finish mask polygon
-  else if (e.key === 'Enter' && isDrawingMask.value && maskSubMode.value === 'polygon') {
-    e.preventDefault()
-    finishMaskPolygon()
-  }
-  // Escape: Cancel current drawing or deselect
-  else if (e.key === 'Escape') {
-    if (isDrawingPolygon.value) {
-      cancelPolygon()
-    } else if (isDrawingMask.value && maskSubMode.value === 'polygon') {
-      cancelMaskPolygon()
-    } else if (selectedShape.value) {
-      deselectShape()
-    }
-  }
-  // P: Pan mode
-  else if (e.key === 'p' || e.key === 'P') {
-    setDrawingMode('pan')
-  }
-  // S: Select mode
-  else if (e.key === 's' || e.key === 'S') {
-    setDrawingMode('select')
-  }
-  // R: Rectangle mode
-  else if (e.key === 'r' || e.key === 'R') {
-    setDrawingMode('rectangle')
-  }
-  // G: Polygon mode
-  else if (e.key === 'g' || e.key === 'G') {
-    setDrawingMode('polygon')
-  }
-}
 
 const initKonva = () => {
   if (!konvaContainerRef.value || !imageRef.value) return

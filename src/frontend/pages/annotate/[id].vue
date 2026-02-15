@@ -14,6 +14,7 @@ const image = ref(null)
 const projectId = ref(null)
 const userId = ref(null)
 const loading = ref(true)
+const annotationEditorRef = ref(null)
 
 onMounted(async () => {
   try {
@@ -91,6 +92,13 @@ const handleAnnotationRejected = (result) => {
   console.log('Annotation rejected:', result)
 }
 
+const handleViewHistoryAnnotation = (annotation) => {
+  console.log('Viewing history annotation:', annotation)
+  if (annotationEditorRef.value) {
+    annotationEditorRef.value.displayHistoryAnnotation(annotation)
+  }
+}
+
 // Helper function to convert string to numeric hash
 const hashCode = (str) => {
   let hash = 0
@@ -131,7 +139,11 @@ const hashCode = (str) => {
           <div class="text-sm font-medium text-gray-800">{{ route.params.id }}</div>
         </div>
 
-        <AnnotationHistory :imageId="route.params.id" :projectId="projectId" />
+        <AnnotationHistory
+          :imageId="route.params.id"
+          :projectId="projectId"
+          @viewAnnotation="handleViewHistoryAnnotation"
+        />
         <AIAnnotationButton :imageId="route.params.id" @generateAnnotation="handleAIAnnotation" />
       </div>
 
@@ -140,6 +152,7 @@ const hashCode = (str) => {
         <!-- Annotation Editor -->
         <AnnotationEditor
           v-if="image && projectId && userId"
+          ref="annotationEditorRef"
           :imageId="route.params.id"
           :imageSrc="image.location"
           :projectId="projectId"
