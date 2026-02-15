@@ -22,6 +22,15 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     label = data.get("label")
     description = data.get("description")
 
+    # Geometry fields
+    x1 = data.get("x1")
+    y1 = data.get("y1")
+    x2 = data.get("x2")
+    y2 = data.get("y2")
+    keypoints = data.get("keypoints")
+    mask_segments = data.get("mask_segments")
+    polygon = data.get("polygon")
+
     # Validate required fields
     if not data_id or not user_id or not project_id:
         raise HTTPException(status_code=400, detail="data_id, author_id, and project_id are required")
@@ -34,8 +43,7 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not label:
-        raise HTTPException(status_code=400, detail="label is required")
+    # Label is optional - can be None for general annotations
     new_annotation = Annotation(
         data_id=data_id,
         author_id=user_id,
@@ -44,6 +52,13 @@ def create_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         annotation_score=annotation_score,
         label=label,
         description=description,
+        x1=x1,
+        y1=y1,
+        x2=x2,
+        y2=y2,
+        keypoints=keypoints,
+        mask_segments=mask_segments,
+        polygon=polygon,
         creation_date=datetime.now(),
     )
     db.add(new_annotation)
@@ -176,9 +191,9 @@ def update_annotation(data: dict = Body(...), db: Session = Depends(get_session)
     if not annotation:
         raise HTTPException(status_code=404, detail="Annotation not found")
 
-    # If this is a modification (updating label, description, coordinates, etc.)
-    # Mark the current annotation as HISTORY and create a new one as CURRENT
-    is_modification = any(key in data for key in ["label", "description", "x1", "y1", "x2", "y2", "annotation_score"])
+    # Define which fields trigger history tracking
+    modification_fields = ["label", "description", "x1", "y1", "x2", "y2", "keypoints", "mask_segments", "polygon"]
+    is_modification = any(key in data for key in modification_fields)
 
     if is_modification and annotation.history_status == AnnotationHistoryStatus.CURRENT:
         # Mark current annotation as HISTORY
@@ -186,32 +201,36 @@ def update_annotation(data: dict = Body(...), db: Session = Depends(get_session)
         db.commit()
 
         # Create a new annotation as CURRENT with updated values
-        new_annotation_data = {
-            "data_id": annotation.data_id,
-            "author_id": annotation.author_id,
-            "project_id": annotation.project_id,
-            "status": annotation.status,
-            "history_status": AnnotationHistoryStatus.CURRENT,
-            "label": data.get("label", annotation.label),
-            "description": data.get("description", annotation.description),
-            "x1": data.get("x1", annotation.x1),
-            "y1": data.get("y1", annotation.y1),
-            "x2": data.get("x2", annotation.x2),
-            "y2": data.get("y2", annotation.y2),
-            "annotation_score": data.get("annotation_score", annotation.annotation_score),
-            "creation_date": datetime.now(),
-        }
-        new_annotation = Annotation(**new_annotation_data)
+        # Copy all fields from the original annotation
+        new_annotation = Annotation(
+            data_id=annotation.data_id,
+            author_id=data.get("author_id", annotation.author_id),  # Use new author if provided
+            project_id=annotation.project_id,
+            status=data.get("status", annotation.status),
+            history_status=AnnotationHistoryStatus.CURRENT,
+            # Annotation content fields - use new values if provided, otherwise keep original
+            label=data.get("label", annotation.label),
+            description=data.get("description", annotation.description),
+            x1=data.get("x1", annotation.x1),
+            y1=data.get("y1", annotation.y1),
+            x2=data.get("x2", annotation.x2),
+            y2=data.get("y2", annotation.y2),
+            keypoints=data.get("keypoints", annotation.keypoints),
+            mask_segments=data.get("mask_segments", annotation.mask_segments),
+            polygon=data.get("polygon", annotation.polygon),
+            annotation_score=data.get("annotation_score", annotation.annotation_score),
+            creation_date=datetime.now(),
+        )
         db.add(new_annotation)
         db.commit()
         db.refresh(new_annotation)
         return new_annotation
     else:
-        # Just update status or other non-modification fields
-        if "annotation_score" in data:
-            annotation.annotation_score = data["annotation_score"]
+        # Just update status or annotation_score without creating history
         if "status" in data:
             annotation.status = data["status"]
+        if "annotation_score" in data and not is_modification:
+            annotation.annotation_score = data["annotation_score"]
         db.commit()
         db.refresh(annotation)
         return annotation

@@ -102,12 +102,15 @@ class Annotation(SQLModel, table=True):
     y1: int | None = Field(default=None, nullable=True)
     x2: int | None = Field(default=None, nullable=True)
     y2: int | None = Field(default=None, nullable=True)
-    # keypoints coordinates
-    # keypoints_nodes: List[Tuple[int, int]] # todo
-    # keypoints_edges:List[Tuple[int, int]] # todo
-    # mask
-    # mask_path: str  # todo path to local server only
-    # mask_segments:List[Tuple[int, int]] # todo
+    # keypoints coordinates (store as JSON string)
+    # Format: {"nodes": [{"x": 100, "y": 200, "index": 0, "body_part": "nose"}, ...], "edges": [[0, 1], [1, 2], ...]}
+    keypoints: str | None = Field(default=None, nullable=True)
+    # mask segments (store as JSON string)
+    # Format: [[x1, y1, x2, y2, ...], [x1, y1, x2, y2, ...]] - array of polygon point arrays
+    mask_segments: str | None = Field(default=None, nullable=True)
+    # polygon coordinates (store as JSON string)
+    # Format: [x1, y1, x2, y2, ...] - flat array of polygon points
+    polygon: str | None = Field(default=None, nullable=True)
     # label and description
     label: str | None = Field(default=None, nullable=True)
     description: str | None = Field(default=None, nullable=True)

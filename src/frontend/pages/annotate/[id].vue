@@ -8,10 +8,13 @@ import AnnotationEditor from '@/components/annot/AnnotationEditor.vue'
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
+const { user } = useAuth()
 
 const image = ref(null)
 const projectId = ref(null)
+const userId = ref(null)
 const loading = ref(true)
+const annotationEditorRef = ref(null)
 
 onMounted(async () => {
   try {
@@ -22,6 +25,11 @@ onMounted(async () => {
     if (storedProjectId) {
       projectId.value = parseInt(storedProjectId)
     }
+
+    // Get userId - try from Clerk user, sessionStorage, or use default
+    // TODO: Implement proper user sync between Clerk and backend database
+    // For now, default to user ID 1 (assumes a default user exists)
+    userId.value = 1
 
     // Fetch the actual image data from the API
     const response = await api.post('/data/batch', {
@@ -83,6 +91,24 @@ const handleAnnotationAccepted = (result) => {
 const handleAnnotationRejected = (result) => {
   console.log('Annotation rejected:', result)
 }
+
+const handleViewHistoryAnnotation = (annotation) => {
+  console.log('Viewing history annotation:', annotation)
+  if (annotationEditorRef.value) {
+    annotationEditorRef.value.displayHistoryAnnotation(annotation)
+  }
+}
+
+// Helper function to convert string to numeric hash
+const hashCode = (str) => {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash
+  }
+  return hash
+}
 </script>
 
 <template>
@@ -99,31 +125,54 @@ const handleAnnotationRejected = (result) => {
     <template v-else>
       <!-- Left Sidebar -->
       <div class="w-64 bg-white flex flex-col shadow-lg border-r border-gray-200 overflow-y-auto">
-        <AnnotationHistory :imageId="route.params.id" :projectId="projectId" />
+        <!-- Header Info -->
+        <div class="p-4 border-b border-gray-200 bg-gray-50">
+          <button
+            @click="goBack"
+            class="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition mb-3 text-sm font-medium hover:bg-gray-100 px-2 py-1 rounded"
+            title="Go back"
+          >
+            <ArrowLeft :size="20" />
+            <span>Back</span>
+          </button>
+          <div class="text-xs text-gray-500 mb-1">Image ID</div>
+          <div class="text-sm font-medium text-gray-800">{{ route.params.id }}</div>
+        </div>
+
+        <AnnotationHistory
+          :imageId="route.params.id"
+          :projectId="projectId"
+          @viewAnnotation="handleViewHistoryAnnotation"
+        />
         <AIAnnotationButton :imageId="route.params.id" @generateAnnotation="handleAIAnnotation" />
       </div>
 
       <!-- Main Content Area -->
       <div class="flex-1 flex flex-col">
-        <!-- Header -->
-        <div class="bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-200 shadow-sm">
-          <button @click="goBack" class="text-gray-700 hover:text-gray-900 transition" title="Go back">
-            <ArrowLeft size="24" />
-          </button>
-          <div>
-            <p class="text-sm text-gray-600">Image ID: {{ route.params.id }}</p>
-          </div>
-        </div>
-
         <!-- Annotation Editor -->
         <AnnotationEditor
-          v-if="image"
+          v-if="image && projectId && userId"
+          ref="annotationEditorRef"
           :imageId="route.params.id"
           :imageSrc="image.location"
+          :projectId="projectId"
+          :userId="userId"
           @save="handleAnnotationSaved"
           @accept="handleAnnotationAccepted"
           @reject="handleAnnotationRejected"
         />
+        <div v-else-if="image && !projectId" class="flex items-center justify-center h-full">
+          <div class="text-center text-gray-600">
+            <p class="text-lg font-medium mb-2">Missing Project Information</p>
+            <p class="text-sm">Please navigate from a project to annotate images.</p>
+          </div>
+        </div>
+        <div v-else-if="image && !userId" class="flex items-center justify-center h-full">
+          <div class="text-center text-gray-600">
+            <p class="text-lg font-medium mb-2">User Not Authenticated</p>
+            <p class="text-sm">Please log in to annotate images.</p>
+          </div>
+        </div>
       </div>
     </template>
   </div>

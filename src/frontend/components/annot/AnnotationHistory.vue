@@ -88,6 +88,12 @@ const getStatusColor = (status) => {
       return 'bg-gray-100 text-gray-800'
   }
 }
+
+const emit = defineEmits(['viewAnnotation'])
+
+const viewAnnotation = (annotation) => {
+  emit('viewAnnotation', annotation)
+}
 </script>
 
 <template>
@@ -114,7 +120,8 @@ const getStatusColor = (status) => {
         <div
           v-for="(item, index) in history"
           :key="index"
-          class="border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors"
+          class="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+          @click="viewAnnotation(item)"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
             <div class="flex items-center gap-2">
