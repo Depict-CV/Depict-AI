@@ -73,7 +73,7 @@ const handleAnnotationsCreated = () => {
 const handleSelectProject = (project) => {
   selectedProject.value = project
   showImageGallery.value = true
-  activeMenu.value = null
+  // Keep sidebar open after selecting project
   // Persist selected project to sessionStorage
   if (project) {
     sessionStorage.setItem('selectedProject', JSON.stringify(project))

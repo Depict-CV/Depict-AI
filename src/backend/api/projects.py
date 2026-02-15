@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlmodel import Session, func, select
 
 from src.backend.api.clerk_auth import get_current_clerk_user, get_session
-from src.backend.db.tables import Annotation, Data, Project, ProjectUserLink, User
+from src.backend.db.tables import Annotation, Data, Project, ProjectStatus, ProjectUserLink, User
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -18,6 +18,7 @@ class ProjectResponse(BaseModel):
     description: Optional[str] = None
     owner_id: Optional[int] = None
     created_at: datetime
+    status: str = "active"
     members: int = 0
     images: int = 0
     role: str = "Viewer"
@@ -41,7 +42,12 @@ def create_project(
     current_user: User = Depends(get_current_clerk_user),
 ):
     """Create a new project with the current user as owner"""
-    project = Project(name=project_data.name, description=project_data.description, owner_id=current_user.id)
+    project = Project(
+        name=project_data.name,
+        description=project_data.description,
+        owner_id=current_user.id,
+        created_at=datetime.now(),
+    )
     db.add(project)
     db.commit()
     db.refresh(project)
@@ -65,7 +71,8 @@ def create_project(
         name=project.name,
         description=project.description,
         owner_id=project.owner_id,
-        created_at=datetime.now(),
+        status=project.status.value,
+        created_at=project.created_at,
         images=0,
     )
 
@@ -105,7 +112,7 @@ def add_user_to_project(project_id: int, user_id: int, db: Session = Depends(get
 ###############
 @router.get("/my-projects", response_model=list[ProjectResponse])
 def get_user_projects(db: Session = Depends(get_session), current_user: User = Depends(get_current_clerk_user)):
-    """Get all projects for the current user"""
+    """Get all projects for the current user (excluding deleted)"""
     # Get all project links for the user
     statement = select(ProjectUserLink).where(ProjectUserLink.user_id == current_user.id)
     user_links = db.exec(statement).all()
@@ -113,7 +120,7 @@ def get_user_projects(db: Session = Depends(get_session), current_user: User = D
     projects_response = []
     for link in user_links:
         project = db.get(Project, link.project_id)
-        if not project:
+        if not project or project.status == ProjectStatus.DELETED:
             continue
 
         # Count members
@@ -133,7 +140,7 @@ def get_user_projects(db: Session = Depends(get_session), current_user: User = D
                 name=project.name,
                 description=project.description,
                 owner_id=project.owner_id,
-                status="active",
+                status=project.status.value,
                 created_at=datetime.now(),
                 members=member_count,
                 images=image_count,
@@ -146,10 +153,10 @@ def get_user_projects(db: Session = Depends(get_session), current_user: User = D
 
 @router.get("/all")
 def read_all_projects(db: Session = Depends(get_session)):
-    """Get all projects with image and annotation counts"""
+    """Get all projects with image and annotation counts (excluding deleted)"""
     from src.backend.db.tables import Annotation, Data
 
-    projects = db.exec(select(Project)).all()
+    projects = db.exec(select(Project).where(Project.status != ProjectStatus.DELETED)).all()
     if not projects:
         return []
 
@@ -171,6 +178,7 @@ def read_all_projects(db: Session = Depends(get_session)):
             "name": project.name,
             "description": project.description,
             "owner_id": project.owner_id,
+            "status": project.status.value,
             "created_at": project.created_at,
             "images": len(image_count),
             "annotations": len(annotation_count),
@@ -339,10 +347,15 @@ def update_project(project_id: int, updated_project: Project, db: Session = Depe
 ###############
 @router.delete("/{project_id}")
 def delete_project(project_id: int, db: Session = Depends(get_session)):
+    """Soft delete a project by setting status to DELETED"""
     statement = select(Project).where(Project.id == project_id)
     project = db.exec(statement).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    db.delete(project)
+
+    # Soft delete: set status to DELETED instead of removing from database
+    project.status = ProjectStatus.DELETED
+    db.add(project)
     db.commit()
-    return {"message": f"Project with id {project_id} deleted"}
+
+    return {"message": f"Project with id {project_id} marked as deleted"}

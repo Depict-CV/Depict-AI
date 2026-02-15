@@ -31,6 +31,12 @@ class AnnotationHistoryStatus(str, Enum):
     CURRENT = "current"
 
 
+class ProjectStatus(str, Enum):
+    ACTIVE = "active"
+    DELETED = "deleted"
+    ARCHIVED = "archived"
+
+
 class ProjectUserLink(SQLModel, table=True):
     project_id: int | None = Field(default=None, foreign_key="project.id", primary_key=True)
     user_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
@@ -57,6 +63,7 @@ class Project(SQLModel, table=True):
     description: str | None = Field(default=None, nullable=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id")
     created_at: datetime | None = Field(default=None, nullable=True)
+    status: ProjectStatus = Field(default=ProjectStatus.ACTIVE)
 
     # Relation many-to-many
     users: List[User] = Relationship(back_populates="projects", link_model=ProjectUserLink)
