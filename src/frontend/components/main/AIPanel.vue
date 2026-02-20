@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   Database,
   RefreshCw,
+  Microscope,
 } from 'lucide-vue-next'
 
 const props = defineProps({
