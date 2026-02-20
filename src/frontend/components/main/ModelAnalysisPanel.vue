@@ -65,7 +65,7 @@ const clearAnalysis = () => {
     <h2 class="text-2xl font-bold mb-6">Model Analysis</h2>
 
     <p class="text-sm text-gray-600 mb-1">
-      <span class="font-medium">in this panel we can perform fp/fn analysis</span>
+      <span class="font-medium">In this panel you can perform false positive/false negative analysis.</span>
     </p>
 
     <div class="space-y-6">
