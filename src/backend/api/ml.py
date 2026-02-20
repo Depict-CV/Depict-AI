@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from src.backend.api.deps import get_session
 from src.backend.db.tables import Annotation, AnnotationStatus, Data, MinIOConfig, Project
+from src.ml.hugging_face_models import get_huggingface_models, run_local_inference
 from src.ml.main import infer_resnet50
 
 router = APIRouter(prefix="/infer", tags=["ML_Inference"])
@@ -176,4 +177,127 @@ def infer_project(payload: dict = Body(...), db: Session = Depends(get_session))
         "annotations_saved": save_annotations,
         "project_id": project_id,
         "project_name": project.name,
+    }
+
+
+@router.get("/models")
+def models(task: str):
+    return get_huggingface_models(task)
+
+
+@router.post("/huggingface/run")
+def run_huggingface_inference(payload: dict = Body(...)):
+    """Run inference using any Hugging Face model"""
+    model_id = payload.get("model_id")
+    task = payload.get("task")
+    input_data = payload.get("input")
+
+    if not model_id:
+        raise HTTPException(status_code=400, detail="Missing model_id in request body")
+    if not task:
+        raise HTTPException(status_code=400, detail="Missing task in request body")
+    if not input_data:
+        raise HTTPException(status_code=400, detail="Missing input in request body")
+
+    try:
+        result = run_local_inference(model_id, task, input_data)
+        return {"success": True, "model_id": model_id, "task": task, "output": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+
+
+@router.post("/huggingface/batch")
+def run_huggingface_batch(payload: dict = Body(...), db: Session = Depends(get_session)):
+    """Run batch inference with Hugging Face model and optionally save as annotations"""
+    model_id = payload.get("model_id")
+    task = payload.get("task")
+    data_ids = payload.get("data_ids", [])
+    project_id = payload.get("project_id")
+    save_annotations = payload.get("save_annotations", False)
+    limit = payload.get("limit")
+
+    if not model_id:
+        raise HTTPException(status_code=400, detail="Missing model_id")
+    if not task:
+        raise HTTPException(status_code=400, detail="Missing task")
+    if not project_id:
+        raise HTTPException(status_code=400, detail="Missing project_id")
+
+    # Verify project exists
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Get data items
+    if data_ids:
+        statement = select(Data).where(Data.id.in_(data_ids))
+    else:
+        # Get non-annotated data items
+        statement = select(Data).where(
+            (Data.project_id == project_id)
+            & (~Data.id.in_(select(Annotation.data_id).where(Annotation.project_id == project_id)))
+        )
+
+    if limit:
+        statement = statement.limit(limit)
+
+    data_items = db.exec(statement).all()
+
+    if not data_items:
+        return {
+            "total": 0,
+            "successful": 0,
+            "failed": 0,
+            "results": [],
+            "message": "No unannotated images found",
+        }
+
+    results = []
+
+    for data_item in data_items:
+        try:
+            result = run_local_inference(model_id, task, data_item.location)
+
+            # Extract label from result (format varies by task)
+            label = None
+            if isinstance(result, list) and len(result) > 0:
+                if isinstance(result[0], dict) and "label" in result[0]:
+                    label = result[0]["label"]
+
+            results.append(
+                {"data_id": data_item.id, "location": data_item.location, "prediction": result, "status": "success"}
+            )
+
+            # Save as annotation
+            if save_annotations and label:
+                annotation = Annotation(
+                    status=AnnotationStatus.ML_ANNOTATION,
+                    label=label,
+                    annotation_score=None,
+                    data_id=data_item.id,
+                    project_id=project_id,
+                    creation_date=datetime.now(),
+                )
+                db.add(annotation)
+
+        except Exception as e:
+            results.append(
+                {"data_id": data_item.id, "location": data_item.location, "error": str(e), "status": "failed"}
+            )
+
+    if save_annotations:
+        db.commit()
+
+    successful = len([r for r in results if r["status"] == "success"])
+    failed = len([r for r in results if r["status"] == "failed"])
+
+    return {
+        "total": len(results),
+        "successful": successful,
+        "failed": failed,
+        "results": results,
+        "annotations_saved": save_annotations,
+        "model_id": model_id,
+        "task": task,
+        "project_id": project_id,
     }

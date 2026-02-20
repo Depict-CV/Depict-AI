@@ -14,13 +14,11 @@ import {
   Trash2,
   CheckCircle,
   Settings2,
-  Tag,
 } from 'lucide-vue-next'
 import ProjectsPanel from '~/components/main/ProjectsPanel.vue'
 import StatsPanel from '~/components/main/StatsPanel.vue'
 import AIPanel from '~/components/main/AIPanel.vue'
 import ImportPanel from '~/components/main/ImportPanel.vue'
-import BatchAnnotationPanel from '~/components/main/BatchAnnotationPanel.vue'
 import ExportPanel from '~/components/main/ExportPanel.vue'
 import ModelAnalysisPanel from '~/components/main/ModelAnalysisPanel.vue'
 import FilterPanel from '~/components/main/FilterPanel.vue'
@@ -51,23 +49,20 @@ const showNotificationCenter = ref(false)
 const currentFilters = ref({})
 const selectedImagesFromGallery = ref(new Set())
 const imageGalleryKey = ref(0)
+const inferenceResults = ref(null)
 
 const handleApplyFilters = (filters) => {
   currentFilters.value = filters
-  activeMenu.value = null // Close filter panel
   console.log('Filters applied:', filters)
+}
+
+const handleInferenceResults = (results) => {
+  inferenceResults.value = results
+  console.log('Inference results received:', results)
 }
 
 const handleSelectionChange = (selectedImages) => {
   selectedImagesFromGallery.value = selectedImages
-}
-
-const handleAnnotationsCreated = () => {
-  // Clear selection
-  selectedImagesFromGallery.value.clear()
-
-  // Refresh the gallery by forcing re-render
-  imageGalleryKey.value++
 }
 
 const handleSelectProject = (project) => {
@@ -310,25 +305,6 @@ onMounted(async () => {
 
             <button
               :class="[
-                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative',
-                activeMenu === 'batch-annotation'
-                  ? 'bg-blue-950 text-white'
-                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
-              ]"
-              title="Batch Annotation"
-              @click="activeMenu = activeMenu === 'batch-annotation' ? null : 'batch-annotation'"
-            >
-              <Tag :size="20" />
-              <span
-                v-if="selectedImagesFromGallery.size > 0"
-                class="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-              >
-                {{ selectedImagesFromGallery.size }}
-              </span>
-            </button>
-
-            <button
-              :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'filter'
                   ? 'bg-blue-950 text-white'
@@ -411,14 +387,13 @@ onMounted(async () => {
             @select-project="handleSelectProject"
           />
           <StatsPanel v-if="activeMenu === 'stats'" :project-id="selectedProject?.id" />
-          <AIPanel v-if="activeMenu === 'ai'" :project-id="selectedProject?.id" />
-          <ImportPanel v-if="activeMenu === 'import'" :project-id="selectedProject?.id" />
-          <BatchAnnotationPanel
-            v-if="activeMenu === 'batch-annotation'"
+          <AIPanel
+            v-if="activeMenu === 'ai'"
             :project-id="selectedProject?.id"
             :selected-images="selectedImagesFromGallery"
-            @annotations-created="handleAnnotationsCreated"
+            @inference-results="handleInferenceResults"
           />
+          <ImportPanel v-if="activeMenu === 'import'" :project-id="selectedProject?.id" />
           <ExportPanel v-if="activeMenu === 'export'" :project-id="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel
@@ -547,6 +522,7 @@ onMounted(async () => {
             :key="imageGalleryKey"
             :project-id="selectedProject?.id"
             :filters="currentFilters"
+            :inference-results="inferenceResults"
             @select-image="handleSelectImage"
             @modify-request="handleModifyRequest"
             @selection-change="handleSelectionChange"
