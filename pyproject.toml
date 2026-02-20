@@ -32,6 +32,13 @@ dependencies = [
 line-length = 120
 extend-select = ["I"]
 
+[tool.poetry]
+packages = [
+    {include = "backend", from = "src"},
+    {include = "frontend", from = "src"},
+    {include = "ml", from = "src"}
+]
+
 [tool.poetry.dependencies]
 python = ">=3.12,<3.15"
 

@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      FRONTEND_URL: "http://localhost:3000"
+    volumes:
+      - ./:/app
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8000"
+    depends_on:
+      - backend
+    volumes:
+      - ./src/frontend:/app/src/frontend
+      - /app/src/frontend/node_modules
