@@ -17,7 +17,13 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  selectedImages: {
+    type: Set,
+    default: () => new Set(),
+  },
 })
+
+const emit = defineEmits(['inferenceResults'])
 
 const api = useApi()
 
@@ -27,6 +33,7 @@ const inferenceLimit = ref(null)
 const isInferring = ref(false)
 const inferenceResult = ref(null)
 const selectedImages = ref([]) // For future: allow selecting specific images
+const rememberedSelection = ref(null) // Store the selection used for inference
 
 // Hugging Face integration
 const selectedTask = ref('image-classification')
@@ -45,12 +52,49 @@ const selectedPredictions = ref(new Set())
 const isSavingAnnotations = ref(false)
 
 const availableTasks = [
-  { id: 'image-classification', name: 'Image Classification', description: 'Classify images into categories' },
-  { id: 'object-detection', name: 'Object Detection', description: 'Detect objects in images' },
-  { id: 'image-segmentation', name: 'Image Segmentation', description: 'Segment images into regions' },
-  { id: 'image-to-image', name: 'Image-to-Image', description: 'Transform images' },
-  { id: 'depth-estimation', name: 'Depth Estimation', description: 'Estimate depth from images' },
-  { id: 'zero-shot-image-classification', name: 'Zero-Shot Classification', description: 'Classify without training' },
+  { id: 'depth-estimation', name: 'Depth Estimation', description: 'Estimate depth information from images' },
+  {
+    id: 'image-classification',
+    name: 'Image Classification',
+    description: 'Classify images into predefined categories',
+  },
+  { id: 'object-detection', name: 'Object Detection', description: 'Detect and localize objects in images' },
+  {
+    id: 'image-segmentation',
+    name: 'Image Segmentation',
+    description: 'Segment images into semantic or instance regions',
+  },
+  { id: 'text-to-image', name: 'Text-to-Image', description: 'Generate images from text prompts' },
+  { id: 'image-to-text', name: 'Image-to-Text', description: 'Generate textual descriptions from images' },
+  { id: 'image-to-image', name: 'Image-to-Image', description: 'Transform images into other images' },
+  { id: 'image-to-video', name: 'Image-to-Video', description: 'Generate videos from images' },
+  {
+    id: 'unconditional-image-generation',
+    name: 'Unconditional Image Generation',
+    description: 'Generate images without any conditioning input',
+  },
+  { id: 'video-classification', name: 'Video Classification', description: 'Classify videos into categories' },
+  { id: 'text-to-video', name: 'Text-to-Video', description: 'Generate videos from text prompts' },
+  {
+    id: 'zero-shot-image-classification',
+    name: 'Zero-Shot Image Classification',
+    description: 'Classify images without task-specific training',
+  },
+  { id: 'mask-generation', name: 'Mask Generation', description: 'Generate segmentation masks for images' },
+  {
+    id: 'zero-shot-object-detection',
+    name: 'Zero-Shot Object Detection',
+    description: 'Detect objects using text queries without training',
+  },
+  { id: 'text-to-3d', name: 'Text-to-3D', description: 'Generate 3D assets from text prompts' },
+  { id: 'image-to-3d', name: 'Image-to-3D', description: 'Reconstruct 3D assets from images' },
+  {
+    id: 'image-feature-extraction',
+    name: 'Image Feature Extraction',
+    description: 'Extract embeddings or features from images',
+  },
+  { id: 'keypoint-detection', name: 'Keypoint Detection', description: 'Detect keypoints or landmarks in images' },
+  { id: 'video-to-video', name: 'Video-to-Video', description: 'Transform or edit videos using AI models' },
 ]
 
 const availableModels = [
@@ -154,7 +198,17 @@ const runInference = async () => {
       save_annotations: false, // Always preview first
     }
 
-    if (inferenceLimit.value && inferenceLimit.value > 0) {
+    // Use remembered selection, or current selection, or all images
+    const currentSelection = rememberedSelection.value || (props.selectedImages?.size > 0 ? props.selectedImages : null)
+
+    if (currentSelection) {
+      // Store the selection for future inference runs
+      if (!rememberedSelection.value) {
+        rememberedSelection.value = new Set(currentSelection)
+      }
+      payload.data_ids = Array.from(currentSelection)
+      console.log(`Running inference on ${currentSelection.size} selected images`)
+    } else if (inferenceLimit.value && inferenceLimit.value > 0) {
       payload.limit = inferenceLimit.value
     }
 
@@ -167,7 +221,13 @@ const runInference = async () => {
       result = await api.post('/infer/huggingface/batch', payload)
     } else {
       // Built-in model (resnet50)
-      result = await api.post('/infer/resnet50/project', payload)
+      if (hasSelectedImages.value) {
+        // Use batch endpoint for selected images
+        result = await api.post('/infer/resnet50/batch', payload)
+      } else {
+        // Use project endpoint for all images
+        result = await api.post('/infer/resnet50/project', payload)
+      }
     }
 
     inferenceResult.value = result
@@ -181,19 +241,30 @@ const runInference = async () => {
       selectedPredictions.value = new Set(successfulIndices)
     }
 
+    // Emit results to parent for display in ImageGallery
+    emit('inferenceResults', {
+      results: result,
+      modelId: selectedModel.value,
+      task: selectedTask.value,
+      isHuggingFace: isHuggingFaceModel.value,
+    })
+
     if (result.successful > 0) {
       // Don't alert immediately, let user review
-      console.log(`Generated ${result.successful} predictions. Review them below.`)
+      const target = hasSelectedImages.value ? `${selectedImagesCount.value} selected images` : 'project images'
+      console.log(`Generated ${result.successful} predictions on ${target}. View them in the image gallery.`)
     } else if (result.total === 0) {
-      alert('No unannotated images found in this project.')
+      const msg = hasSelectedImages.value
+        ? 'No selected images found or all already have annotations.'
+        : 'No unannotated images found in this project.'
+      console.warn(msg)
       reviewMode.value = false
     } else {
-      alert(`Inference failed for all ${result.failed} images. Check console for errors.`)
+      console.error(`Inference failed for all ${result.failed} images. Check console for errors.`)
       reviewMode.value = false
     }
   } catch (error) {
-    console.error('Inference failed:', error)
-    alert('Inference failed: ' + (error.response?.data?.detail || error.message))
+    console.error('Inference failed:', error.response?.data?.detail || error.message, error)
     reviewMode.value = false
   } finally {
     isInferring.value = false
@@ -280,6 +351,13 @@ const successRate = computed(() => {
   if (!inferenceResult.value || inferenceResult.value.total === 0) return 0
   return Math.round((inferenceResult.value.successful / inferenceResult.value.total) * 100)
 })
+
+const selectedImagesCount = computed(() => rememberedSelection.value?.size || props.selectedImages?.size || 0)
+const hasSelectedImages = computed(() => selectedImagesCount.value > 0)
+
+const clearRememberedSelection = () => {
+  rememberedSelection.value = null
+}
 </script>
 
 <template>
@@ -327,24 +405,28 @@ const successRate = computed(() => {
         <div class="text-sm font-medium text-gray-700 mb-2">
           Found {{ huggingFaceModels.length }} models (sorted by downloads)
         </div>
-        <div class="max-h-64 overflow-y-auto space-y-2 bg-white p-2 rounded-lg border border-gray-200">
+        <div class="max-h-96 overflow-y-auto space-y-2 bg-white p-2 rounded-lg border border-gray-200">
           <label
             v-for="model in huggingFaceModels"
             :key="model.fullId"
             class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-orange-50 cursor-pointer transition-colors"
             :class="{ 'border-orange-500 bg-orange-100': selectedModel === model.fullId }"
           >
-            <input type="radio" v-model="selectedModel" :value="model.fullId" class="w-4 h-4 text-orange-600 mt-1" />
+            <input
+              type="radio"
+              v-model="selectedModel"
+              :value="model.fullId"
+              class="w-4 h-4 text-orange-600 mt-1 flex-shrink-0"
+            />
             <div class="flex-1 min-w-0">
-              <div class="font-medium text-gray-900 text-sm truncate" :title="model.fullId">
+              <div class="font-medium text-gray-900 text-sm break-words" :title="model.fullId">
                 {{ model.name }}
               </div>
-              <div class="text-xs text-gray-600 mt-0.5 truncate" :title="model.fullId">
+              <div class="text-xs text-gray-600 mt-0.5 break-all" :title="model.fullId">
                 {{ model.fullId }}
               </div>
-              <div class="text-xs text-gray-500 mt-1 flex items-center gap-3">
-                <span>📥 {{ model.downloads.toLocaleString() }}</span>
-                <span>❤️ {{ model.likes }}</span>
+              <div class="text-xs text-gray-500 mt-1 flex items-center gap-3 flex-wrap">
+                <span class="whitespace-nowrap">📥 {{ model.downloads.toLocaleString() }}</span>
               </div>
             </div>
           </label>
@@ -361,6 +443,39 @@ const successRate = computed(() => {
     <!-- Built-in Model Selection -->
     <div class="mb-6">
       <label class="block text-sm font-medium text-gray-700 mb-3">Or Select Built-in Model</label>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Model</label>
+        <div
+          class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-purple-400 transition-colors"
+        >
+          <input
+            type="file"
+            @change="handleModelUpload"
+            accept=".h5,.pt,.pth,.onnx,.pkl"
+            class="hidden"
+            id="model-upload"
+          />
+          <label for="model-upload" class="cursor-pointer">
+            <Microscope :size="28" class="mx-auto text-gray-400 mb-2" />
+            <p class="text-sm text-gray-600 mb-1">
+              <span class="text-purple-600 font-medium">Upload model file</span>
+            </p>
+            <p class="text-xs text-gray-500">PyTorch, TensorFlow, ONNX</p>
+          </label>
+        </div>
+
+        <div
+          v-if="modelFile"
+          class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between"
+        >
+          <div class="flex items-center gap-2">
+            <Microscope :size="18" class="text-purple-600" />
+            <span class="text-sm font-medium text-gray-900">{{ modelFile.name }}</span>
+          </div>
+          <button @click="modelFile = null" class="text-red-600 hover:text-red-700 text-sm font-medium">Remove</button>
+        </div>
+      </div>
+
       <div class="space-y-2">
         <label
           v-for="model in availableModels"
@@ -385,112 +500,24 @@ const successRate = computed(() => {
       </div>
     </div>
 
-    <!-- Test Model Section -->
-    <div
-      v-if="selectedModel"
-      class="mb-6 bg-gradient-to-r from-green-50 to-teal-50 border border-teal-200 rounded-lg p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <Play :size="20" class="text-teal-600" />
-        <h3 class="text-lg font-semibold text-gray-900">Test Model</h3>
-      </div>
-
-      <div class="mb-3">
-        <label class="block text-sm font-medium text-gray-700 mb-2"> Test Input (Image URL or Path) </label>
-        <input
-          v-model="testInput"
-          type="text"
-          placeholder="e.g., https://example.com/image.jpg or /path/to/image.jpg"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-        />
-      </div>
-
-      <button
-        @click="runTestInference"
-        :disabled="isTestingModel || !testInput"
-        class="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-3"
-      >
-        <template v-if="isTestingModel">
-          <Loader :size="18" class="animate-spin" />
-          <span>Testing...</span>
-        </template>
-        <template v-else>
-          <Play :size="18" />
-          <span>Test Selected Model</span>
-        </template>
-      </button>
-
-      <!-- Test Result Display -->
-      <div v-if="testResult" class="bg-white border border-gray-200 rounded-lg p-3">
-        <div v-if="testResult.success || testResult.output" class="space-y-2">
-          <div class="flex items-center gap-2 text-green-700 font-medium text-sm mb-2">
-            <CheckCircle :size="16" />
-            <span>Test Successful!</span>
-          </div>
-          <div class="text-xs text-gray-600"><strong>Model:</strong> {{ selectedModel }}</div>
-          <div v-if="isHuggingFaceModel" class="text-xs text-gray-600"><strong>Task:</strong> {{ selectedTask }}</div>
-          <div class="mt-2">
-            <strong class="text-xs text-gray-700">Output:</strong>
-            <pre class="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">{{
-              JSON.stringify(testResult.output || testResult, null, 2)
-            }}</pre>
+    <!-- Remembered Selection Notice -->
+    <div v-if="rememberedSelection" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <CheckCircle :size="18" class="text-blue-600" />
+          <div>
+            <p class="text-sm font-medium text-blue-900">
+              Using remembered selection: {{ rememberedSelection.size }} images
+            </p>
+            <p class="text-xs text-blue-700 mt-0.5">Subsequent predictions will use the same images</p>
           </div>
         </div>
-        <div v-else-if="testResult.error" class="flex items-start gap-2 text-red-700">
-          <AlertCircle :size="16" class="mt-0.5" />
-          <div class="text-sm">
-            <strong>Test Failed:</strong>
-            <p class="mt-1 text-xs">{{ testResult.error }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Inference Options -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-3">Options</label>
-      <div class="space-y-3">
-        <div class="p-3 border border-gray-200 rounded-lg">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Batch Limit (Optional)</label>
-          <input
-            type="number"
-            v-model.number="inferenceLimit"
-            placeholder="Leave empty to process all images"
-            min="1"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <p class="text-xs text-gray-500 mt-1">Limit number of images to process (useful for testing)</p>
-        </div>
-
-        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-          <p class="text-sm text-indigo-900 font-medium mb-1">📋 Preview Mode Enabled</p>
-          <p class="text-xs text-indigo-700">
-            All predictions will be shown for review before saving. You can select which ones to keep as annotations.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Info Box -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <div class="flex items-start gap-3">
-        <Bot :size="20" class="text-blue-600 mt-0.5" />
-        <div>
-          <p class="text-sm font-semibold text-blue-900 mb-1">How it works</p>
-          <ul class="text-xs text-blue-800 space-y-1">
-            <li>• Only processes images without existing annotations</li>
-            <li>• All predictions are shown for review before saving</li>
-            <li>• You can select which predictions to keep as annotations</li>
-            <li>• Saved predictions are marked as "ML Annotation" status</li>
-            <li v-if="isHuggingFaceModel">
-              • Using Hugging Face model: <strong>{{ selectedModel }}</strong> ({{ selectedTask }})
-            </li>
-            <li v-else-if="selectedModel === 'resnet50'">
-              • ResNet-50 classifies images into 1000 ImageNet categories
-            </li>
-            <li v-else>• Select a model to start</li>
-          </ul>
-        </div>
+        <button
+          @click="clearRememberedSelection"
+          class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded transition-colors"
+        >
+          Clear Selection
+        </button>
       </div>
     </div>
 
@@ -506,41 +533,13 @@ const successRate = computed(() => {
       </template>
       <template v-else>
         <Zap :size="20" />
-        <span>Generate Predictions (Preview Mode)</span>
+        <span v-if="hasSelectedImages">Generate Predictions for {{ selectedImagesCount }} Selected</span>
+        <span v-else>Generate Predictions (Preview Mode)</span>
       </template>
     </button>
 
-    <!-- Results Display -->
+    <!-- Results Summary -->
     <div v-if="hasResults" class="space-y-4">
-      <!-- Review Mode Header -->
-      <div v-if="reviewMode" class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-purple-900 mb-2 flex items-center gap-2">
-          <Bot :size="22" />
-          Review Predictions
-        </h3>
-        <p class="text-sm text-purple-700 mb-3">
-          Review the predictions below and select which ones you want to save as annotations. Uncheck any predictions
-          you don't want to keep.
-        </p>
-        <div class="flex gap-2">
-          <button
-            @click="selectAllPredictions"
-            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors"
-          >
-            Select All
-          </button>
-          <button
-            @click="deselectAllPredictions"
-            class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors"
-          >
-            Deselect All
-          </button>
-          <span class="text-sm text-purple-700 self-center ml-auto"> {{ selectedPredictions.size }} selected </span>
-        </div>
-      </div>
-
-      <h3 v-else class="text-lg font-semibold">Inference Results</h3>
-
       <!-- Summary Stats -->
       <div class="grid grid-cols-3 gap-3">
         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -586,96 +585,6 @@ const successRate = computed(() => {
             :style="{ width: successRate + '%' }"
           ></div>
         </div>
-      </div>
-
-      <!-- Detailed Results (scrollable) -->
-      <div class="border border-gray-200 rounded-lg">
-        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-          <h4 class="font-medium text-gray-900">Detailed Results</h4>
-        </div>
-        <div class="max-h-64 overflow-y-auto">
-          <div
-            v-for="(result, index) in inferenceResult.results"
-            :key="index"
-            class="px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-            :class="{ 'bg-purple-50': reviewMode && selectedPredictions.has(index) }"
-          >
-            <div class="flex items-start gap-3">
-              <!-- Checkbox for review mode -->
-              <input
-                v-if="reviewMode && result.status === 'success'"
-                type="checkbox"
-                :checked="selectedPredictions.has(index)"
-                @change="togglePrediction(index)"
-                class="w-5 h-5 rounded text-purple-600 mt-0.5 cursor-pointer"
-              />
-
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-gray-900 truncate">
-                  {{ result.location.split('/').pop() }}
-                </div>
-                <div v-if="result.status === 'success'" class="text-xs text-gray-600 mt-1">
-                  Prediction:
-                  <span class="font-semibold text-purple-700">
-                    {{
-                      result.prediction.class_name ||
-                      (Array.isArray(result.prediction) && result.prediction[0]?.label) ||
-                      JSON.stringify(result.prediction)
-                    }}
-                  </span>
-                  <span v-if="result.prediction.class_id" class="text-gray-400 ml-1"
-                    >(ID: {{ result.prediction.class_id }})</span
-                  >
-                </div>
-                <div v-else class="text-xs text-red-600 mt-1">Error: {{ result.error }}</div>
-
-                <div v-if="result.saved" class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                  <CheckCircle :size="12" />
-                  <span>Saved as annotation</span>
-                </div>
-              </div>
-              <div>
-                <CheckCircle v-if="result.status === 'success'" :size="18" class="text-green-600" />
-                <AlertCircle v-else :size="18" class="text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review Actions -->
-      <div v-if="reviewMode" class="flex gap-3">
-        <button
-          @click="saveSelectedAnnotations"
-          :disabled="isSavingAnnotations || selectedPredictions.size === 0"
-          class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <template v-if="isSavingAnnotations">
-            <Loader :size="20" class="animate-spin" />
-            <span>Saving...</span>
-          </template>
-          <template v-else>
-            <CheckCircle :size="20" />
-            <span>Save Selected ({{ selectedPredictions.size }})</span>
-          </template>
-        </button>
-
-        <button
-          @click="discardPredictions"
-          :disabled="isSavingAnnotations"
-          class="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <AlertCircle :size="20" />
-          <span>Discard All</span>
-        </button>
-      </div>
-
-      <!-- Info about saved annotations (only show when not in review mode) -->
-      <div
-        v-if="inferenceResult.annotations_saved && !reviewMode"
-        class="bg-green-50 border border-green-200 rounded-lg p-3"
-      >
-        <p class="text-sm text-green-800">✓ Annotations have been saved to the database with status "ML Annotation"</p>
       </div>
     </div>
 

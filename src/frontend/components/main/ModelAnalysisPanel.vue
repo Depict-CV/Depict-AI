@@ -64,6 +64,10 @@ const clearAnalysis = () => {
   <div>
     <h2 class="text-2xl font-bold mb-6">Model Analysis</h2>
 
+    <p class="text-sm text-gray-600 mb-1">
+      <span class="font-medium">in this panel we can perform fp/fn analysis</span>
+    </p>
+
     <div class="space-y-6">
       <!-- Upload Section -->
       <div v-if="!analysisResults" class="space-y-4">

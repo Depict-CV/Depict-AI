@@ -13,6 +13,10 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  inferenceResults: {
+    type: Object,
+    default: null,
+  },
 })
 
 const api = useApi()
@@ -26,18 +30,35 @@ const limit = 20
 const selectionMode = ref(false)
 const selectedImages = ref(new Set())
 
+// Inference results state
+const reviewMode = ref(false)
+const selectedPredictions = ref(new Set())
+const isSavingAnnotations = ref(false)
+const displayedInferenceResults = ref([])
+
 const isAllSelected = computed(() => {
+  if (reviewMode.value) {
+    return (
+      displayedInferenceResults.value.length > 0 &&
+      selectedPredictions.value.size === displayedInferenceResults.value.length
+    )
+  }
   return images.value.length > 0 && selectedImages.value.size === images.value.length
 })
 
-const selectedCount = computed(() => selectedImages.value.size)
+const selectedCount = computed(() => {
+  if (reviewMode.value) {
+    return selectedPredictions.value.size
+  }
+  return selectedImages.value.size
+})
 
 const fetchImages = async () => {
   if (loading.value || !hasMore.value || !props.projectId) return
 
   loading.value = true
   try {
-    const displayMode = props.filters?.displayMode || 'annotations'
+    const displayMode = props.filters?.displayMode || 'all-images'
 
     if (displayMode === 'all-images') {
       // Fetch all images in the project
@@ -244,6 +265,7 @@ watch(
       hasMore.value = true
       selectedImages.value.clear()
       selectionMode.value = false
+      reviewMode.value = false
       fetchImages()
     } else {
       // Clear images when no project selected
@@ -252,6 +274,56 @@ watch(
       hasMore.value = true
       selectedImages.value.clear()
       selectionMode.value = false
+      reviewMode.value = false
+    }
+  },
+  { deep: true }
+)
+
+// Watch for inference results
+watch(
+  () => props.inferenceResults,
+  (newResults) => {
+    if (newResults && newResults.results) {
+      console.log('Inference results received in gallery:', newResults)
+      reviewMode.value = true
+      selectionMode.value = false // Exit selection mode
+      selectedImages.value.clear() // Clear any previous selections
+      emit('selectionChange', selectedImages.value)
+
+      // Transform inference results to gallery format
+      displayedInferenceResults.value = newResults.results.results
+        .filter((r) => r.status === 'success')
+        .map((result, index) => {
+          let imageUrl = result.location
+
+          if (result.location.startsWith('minio://')) {
+            const minioPath = result.location.replace('minio://', '')
+            imageUrl = `http://localhost:8000/images/minio/${props.projectId}?object_path=${encodeURIComponent(minioPath)}`
+          } else if (!result.location.startsWith('http://') && !result.location.startsWith('https://')) {
+            const encodedPath = encodeURIComponent(result.location)
+            imageUrl = `http://localhost:8000/images/serve?path=${encodedPath}`
+          }
+
+          return {
+            id: result.data_id,
+            location: imageUrl,
+            type: 'image',
+            status: 'ml annotation',
+            prediction: result.prediction,
+            inferenceIndex: index,
+          }
+        })
+
+      // Auto-select all predictions
+      selectedPredictions.value = new Set(displayedInferenceResults.value.map((_, i) => i))
+
+      console.log('Displaying', displayedInferenceResults.value.length, 'inference results')
+    } else if (newResults === null) {
+      // Clear inference results when set to null
+      reviewMode.value = false
+      displayedInferenceResults.value = []
+      selectedPredictions.value.clear()
     }
   },
   { deep: true }
@@ -457,12 +529,134 @@ const handleDelete = async (image, event) => {
     alert(`Failed to reject image: ${error?.data?.detail || error?.message || 'Unknown error'}`)
   }
 }
+
+// Inference prediction handlers
+const togglePredictionSelection = (index) => {
+  if (selectedPredictions.value.has(index)) {
+    selectedPredictions.value.delete(index)
+  } else {
+    selectedPredictions.value.add(index)
+  }
+}
+
+const selectAllPredictions = () => {
+  selectedPredictions.value = new Set(displayedInferenceResults.value.map((_, i) => i))
+}
+
+const deselectAllPredictions = () => {
+  selectedPredictions.value.clear()
+}
+
+const saveSelectedPredictions = async () => {
+  if (selectedPredictions.value.size === 0) {
+    alert('Please select at least one prediction to save')
+    return
+  }
+
+  isSavingAnnotations.value = true
+
+  try {
+    const selectedResults = Array.from(selectedPredictions.value).map((index) => displayedInferenceResults.value[index])
+    const dataIds = selectedResults.map((r) => r.id)
+
+    const payload = {
+      project_id: props.projectId,
+      data_ids: dataIds,
+      save_annotations: true,
+    }
+
+    // Use the appropriate endpoint based on model type
+    const modelInfo = props.inferenceResults
+    if (modelInfo.isHuggingFace) {
+      payload.model_id = modelInfo.modelId
+      payload.task = modelInfo.task
+      await api.post('/infer/huggingface/batch', payload)
+    } else {
+      await api.post('/infer/resnet50/batch', payload)
+    }
+
+    alert(`Successfully saved ${selectedPredictions.value.size} annotations!`)
+
+    // Exit review mode and refresh
+    reviewMode.value = false
+    displayedInferenceResults.value = []
+    selectedPredictions.value.clear()
+
+    // Refresh the gallery
+    images.value = []
+    skip.value = 0
+    hasMore.value = true
+    fetchImages()
+  } catch (error) {
+    console.error('Failed to save annotations:', error)
+    alert('Failed to save annotations: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    isSavingAnnotations.value = false
+  }
+}
+
+const discardPredictions = () => {
+  if (confirm('Are you sure you want to discard all predictions without saving?')) {
+    reviewMode.value = false
+    displayedInferenceResults.value = []
+    selectedPredictions.value.clear()
+  }
+}
 </script>
 
 <template>
   <div class="w-full">
-    <!-- Selection Mode Toolbar -->
-    <div class="mb-4 flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+    <!-- Review Mode Toolbar (for inference results) -->
+    <div v-if="reviewMode" class="mb-4 bg-purple-50 border-2 border-purple-300 rounded-lg p-4 shadow-sm">
+      <h3 class="text-lg font-semibold text-purple-900 mb-2 flex items-center gap-2">
+        <CheckSquare :size="22" />
+        Review AI Predictions
+      </h3>
+      <p class="text-sm text-purple-700 mb-3">
+        Review the predictions below and select which ones you want to save as annotations. Uncheck any predictions you
+        don't want to keep.
+      </p>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button
+            @click="selectAllPredictions"
+            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors"
+          >
+            Select All
+          </button>
+          <button
+            @click="deselectAllPredictions"
+            class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors"
+          >
+            Deselect All
+          </button>
+          <span class="text-sm text-purple-700 font-medium">{{ selectedCount }} selected</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="saveSelectedPredictions"
+            :disabled="isSavingAnnotations || selectedCount === 0"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Check v-if="!isSavingAnnotations" :size="18" />
+            <span>{{ isSavingAnnotations ? 'Saving...' : `Save Selected (${selectedCount})` }}</span>
+          </button>
+          <button
+            @click="discardPredictions"
+            :disabled="isSavingAnnotations"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          >
+            Discard All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection Mode Toolbar (for normal gallery) -->
+    <div
+      v-else
+      class="mb-4 flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
+    >
       <div class="flex items-center gap-3">
         <button
           @click="toggleSelectionMode"
@@ -515,7 +709,68 @@ const handleDelete = async (image, event) => {
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-1.5 sm:gap-3 md:gap-2.5 lg:gap-1.5 mb-5">
+    <!-- Inference Results Display -->
+    <div
+      v-if="reviewMode && displayedInferenceResults.length > 0"
+      class="flex flex-wrap gap-1.5 sm:gap-3 md:gap-2.5 lg:gap-1.5 mb-5"
+    >
+      <div
+        v-for="(result, index) in displayedInferenceResults"
+        :key="`inference-${index}`"
+        class="relative overflow-hidden bg-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-[180px] sm:h-[250px] md:h-[200px] lg:h-[220px] xl:h-[250px] group"
+        :class="{
+          'ring-4 ring-purple-500': selectedPredictions.has(index),
+        }"
+        @click="togglePredictionSelection(index)"
+      >
+        <img
+          :src="result.location"
+          :alt="`Prediction ${index}`"
+          loading="lazy"
+          class="w-auto h-full object-cover block"
+        />
+
+        <!-- Selection Checkbox -->
+        <div class="absolute top-2 left-2 z-20" @click.stop="togglePredictionSelection(index)">
+          <div
+            class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all"
+            :class="
+              selectedPredictions.has(index) ? 'bg-purple-600 text-white' : 'bg-white/90 text-gray-600 hover:bg-white'
+            "
+          >
+            <CheckSquare v-if="selectedPredictions.has(index)" :size="20" />
+            <Square v-else :size="20" />
+          </div>
+        </div>
+
+        <!-- Prediction Badge -->
+        <div
+          class="absolute top-2 right-2 px-2 py-1 rounded-xl text-xs font-semibold uppercase z-[5] backdrop-blur-sm bg-purple-500/90 text-purple-950"
+        >
+          AI Prediction
+        </div>
+
+        <!-- Prediction Label Overlay -->
+        <div
+          class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/90 to-transparent px-3 py-3 text-white z-[5]"
+        >
+          <div class="text-sm font-bold truncate">
+            {{
+              result.prediction?.class_name ||
+              (Array.isArray(result.prediction) && result.prediction[0]?.label) ||
+              'Prediction'
+            }}
+          </div>
+          <div v-if="result.prediction?.class_id" class="text-xs opacity-75">ID: {{ result.prediction.class_id }}</div>
+          <div v-if="result.prediction?.score || result.prediction?.confidence" class="text-xs opacity-75">
+            Confidence: {{ ((result.prediction?.score || result.prediction?.confidence) * 100).toFixed(1) }}%
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Normal Gallery Display -->
+    <div v-else-if="!reviewMode" class="flex flex-wrap gap-1.5 sm:gap-3 md:gap-2.5 lg:gap-1.5 mb-5">
       <div
         v-for="image in images"
         :key="image.id"
