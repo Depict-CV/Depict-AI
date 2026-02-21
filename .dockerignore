@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ruff_cache
+node_modules
+src/frontend/.nuxt
+src/frontend/.output
+dist
+build
+docs/site
+.DS_Store
+*.log
