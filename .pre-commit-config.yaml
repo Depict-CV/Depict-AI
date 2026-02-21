@@ -20,7 +20,7 @@ repos:
     hooks:
       - id: prettier
         name: Prettier
-        entry: powershell.exe -Command "cd src/frontend; npm run format"
+        entry: npm --prefix src/frontend run format
         language: system
         files: ^src/frontend/.*\.(js|ts|vue|json|css|md)$
         pass_filenames: false
