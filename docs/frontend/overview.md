@@ -240,7 +240,7 @@ Install [Vue DevTools](https://devtools.vuejs.org/) browser extension for debugg
 
 ## Testing
 
-See [Frontend Testing](../testing/frontend.md) for testing strategies.
+See [Frontend Testing](../contributing.md) for testing strategies.
 
 ```bash
 # Run unit tests (if configured)

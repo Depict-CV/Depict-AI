@@ -436,6 +436,6 @@ For endpoints returning lists, pagination will be added in future versions:
 
 ## Next Steps
 
-- [Database Models](models.md) - Schema reference
-- [Authentication](authentication.md) - Auth implementation
-- [Testing](tests.md) - API testing guide
+- [Database Schema](../architecture/database.md) - Schema reference
+- [User Management](../USER_MANAGEMENT.md) - Auth implementation
+- [Contributing](../contributing.md) - Testing and development guide
