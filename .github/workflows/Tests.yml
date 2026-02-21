@@ -20,5 +20,4 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[test]"
-      - run: pytest tests/
+      - run: poetry run pytest tests/
