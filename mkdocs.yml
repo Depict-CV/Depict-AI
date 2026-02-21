@@ -8,14 +8,11 @@ nav:
   - Getting Started:
       - Installation: installation.md
       - Quick Start: quickstart.md
-      - OAuth2 Setup: oauth2_setup.md
-  - Backend (FastAPI):
+  - Backend:
       - Overview: backend/overview.md
       - API Reference: backend/api.md
-      - Database Models: backend/models.md
-      - Authentication: backend/authentication.md
-      - Testing: backend/tests.md
-  - Frontend (Vue.js):
+      - AI Inference: backend/AI_Inference_Guide.md
+  - Frontend:
       - Overview: frontend/overview.md
       - Components: frontend/components.md
       - State Management: frontend/state.md
