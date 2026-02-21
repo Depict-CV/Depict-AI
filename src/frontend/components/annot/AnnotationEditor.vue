@@ -1499,6 +1499,11 @@ const addLabel = async () => {
   }
 }
 
+const cancelLabelInput = () => {
+  showLabelInput.value = false
+  newLabel.value = ''
+}
+
 const saveAnnotation = async () => {
   // Validate required props
   if (!props.projectId) {
@@ -1691,10 +1696,7 @@ const rejectAnnotation = async () => {
               Add
             </button>
             <button
-              @click="
-                showLabelInput = false
-                newLabel = ''
-              "
+              @click="cancelLabelInput"
               class="px-2 py-1.5 bg-gray-400 hover:bg-gray-500 text-white rounded transition-colors text-xs"
             >
               ×
