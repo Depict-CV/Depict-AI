@@ -56,7 +56,7 @@ src/backend/
 
 ## Database Schema
 
-See [Database Models](models.md) for complete schema details.
+See [Database Schema](../architecture/database.md) for complete schema details.
 
 Main entities:
 - **User** - Authentication and profile
@@ -144,7 +144,7 @@ SENTRY_DSN="..."
 
 ## Testing
 
-See [Backend Testing](tests.md) for testing strategies.
+See [Testing](../contributing.md) for testing strategies.
 
 ```bash
 # Run all tests
@@ -157,6 +157,6 @@ poetry run pytest --cov=src/backend
 ## Next Steps
 
 - [API Reference](api.md) - Complete API documentation
-- [Database Models](models.md) - Schema details
-- [Authentication](authentication.md) - Auth implementation details
-- [Testing](tests.md) - Testing guide
+- [Database Schema](../architecture/database.md) - Schema details
+- [User Management](../USER_MANAGEMENT.md) - Auth implementation details
+- [Contributing](../contributing.md) - Testing guide

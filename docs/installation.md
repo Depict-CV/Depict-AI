@@ -55,7 +55,7 @@ Edit `.env` to set:
 - Database URL
 - Sentry DSN (optional)
 
-See [OAuth2 Setup](oauth2_setup.md) for social login configuration.
+See [Authentication Setup](USER_MANAGEMENT.md) for social login configuration.
 
 ## Verify Installation
 
@@ -157,6 +157,6 @@ If port 8000 or 5173 is already in use, you can change them:
 ## Next Steps
 
 - [Quick Start Guide](quickstart.md)
-- [OAuth2 Setup](oauth2_setup.md)
+- [Authentication Setup](USER_MANAGEMENT.md)
 - [Backend Documentation](backend/overview.md)
 - [Frontend Documentation](frontend/overview.md)

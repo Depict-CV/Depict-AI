@@ -108,13 +108,13 @@ npm run dev
 
 Enable social login with Google, Microsoft, or GitHub:
 
-- [OAuth2 Setup Guide](oauth2_setup.md)
+- [Authentication Setup Guide](USER_MANAGEMENT.md)
 
 ### Explore Documentation
 
 - [Backend API Reference](backend/api.md)
 - [Frontend Components](frontend/components.md)
-- [Database Models](backend/models.md)
+- [Database Schema](architecture/database.md)
 
 ### Run Tests
 

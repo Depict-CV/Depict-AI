@@ -75,7 +75,7 @@ Production deployment guides:
 ## 🚀 Quick Links
 
 - [Installation Guide](installation.md)
-- [OAuth2 Setup](oauth2_setup.md)
+- [Authentication Setup](USER_MANAGEMENT.md)
 - [API Reference](backend/api.md)
 - [Component Documentation](frontend/components.md)
 - [Contributing Guidelines](contributing.md)

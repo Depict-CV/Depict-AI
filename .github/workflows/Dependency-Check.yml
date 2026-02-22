@@ -2,15 +2,16 @@ name: Dependency Compatibility Check
 
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
   pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
-  pip-compatibility:
-    name: Check pip dependencies
+  poetry-compatibility:
+    name: Check Poetry dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -18,21 +19,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - run: pip install -e ".[test,docs]"
-      - run: pip check
-
-  conda-compatibility:
-    name: Check conda environment
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up Miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-      - name: Create and verify conda environment
-        run: |
-          conda env create -f environment.yml --name test-env
-          source $(conda info --base)/etc/profile.d/conda.sh
-          conda activate test-env
-          conda list
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Validate project metadata
+        run: poetry check --lock
+      - name: Install dependencies
+        run: poetry install --only dev --no-root
+      - name: Check dependency health
+        run: poetry run pip check
