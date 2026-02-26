@@ -7,4 +7,4 @@ exclude = [
   "https://depict-cv.github.io/Depict-AI/",
 ]
 
-cache_timeout = 86400
+max_cache_age = "1d"
