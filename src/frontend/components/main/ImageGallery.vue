@@ -29,10 +29,12 @@ const limit = 20
 // Selection mode state
 const selectionMode = ref(false)
 const selectedImages = ref(new Set())
+const lastSelectedImageIndex = ref(null)
 
 // Inference results state
 const reviewMode = ref(false)
 const selectedPredictions = ref(new Set())
+const lastSelectedPredictionIndex = ref(null)
 const isSavingAnnotations = ref(false)
 const displayedInferenceResults = ref([])
 
@@ -264,6 +266,7 @@ watch(
       skip.value = 0
       hasMore.value = true
       selectedImages.value.clear()
+      lastSelectedImageIndex.value = null
       selectionMode.value = false
       reviewMode.value = false
       fetchImages()
@@ -273,6 +276,7 @@ watch(
       skip.value = 0
       hasMore.value = true
       selectedImages.value.clear()
+      lastSelectedImageIndex.value = null
       selectionMode.value = false
       reviewMode.value = false
     }
@@ -317,6 +321,9 @@ watch(
 
       // Auto-select all predictions
       selectedPredictions.value = new Set(displayedInferenceResults.value.map((_, i) => i))
+      lastSelectedPredictionIndex.value = displayedInferenceResults.value.length
+        ? displayedInferenceResults.value.length - 1
+        : null
 
       console.log('Displaying', displayedInferenceResults.value.length, 'inference results')
     } else if (newResults === null) {
@@ -324,6 +331,7 @@ watch(
       reviewMode.value = false
       displayedInferenceResults.value = []
       selectedPredictions.value.clear()
+      lastSelectedPredictionIndex.value = null
     }
   },
   { deep: true }
@@ -337,24 +345,46 @@ const toggleSelectionMode = () => {
   selectionMode.value = !selectionMode.value
   if (!selectionMode.value) {
     selectedImages.value.clear()
+    lastSelectedImageIndex.value = null
     emit('selectionChange', selectedImages.value)
   }
 }
 
-const toggleImageSelection = (imageId) => {
+const toggleImageSelection = (imageId, event = null) => {
+  const currentIndex = images.value.findIndex((img) => img.id === imageId)
+
+  if (event?.shiftKey && lastSelectedImageIndex.value !== null && currentIndex !== -1) {
+    const start = Math.min(lastSelectedImageIndex.value, currentIndex)
+    const end = Math.max(lastSelectedImageIndex.value, currentIndex)
+
+    for (let i = start; i <= end; i++) {
+      selectedImages.value.add(images.value[i].id)
+    }
+
+    emit('selectionChange', selectedImages.value)
+    return
+  }
+
   if (selectedImages.value.has(imageId)) {
     selectedImages.value.delete(imageId)
   } else {
     selectedImages.value.add(imageId)
   }
+
+  if (currentIndex !== -1) {
+    lastSelectedImageIndex.value = currentIndex
+  }
+
   emit('selectionChange', selectedImages.value)
 }
 
 const toggleSelectAll = () => {
   if (isAllSelected.value) {
     selectedImages.value.clear()
+    lastSelectedImageIndex.value = null
   } else {
     images.value.forEach((img) => selectedImages.value.add(img.id))
+    lastSelectedImageIndex.value = images.value.length > 0 ? images.value.length - 1 : null
   }
   emit('selectionChange', selectedImages.value)
 }
@@ -388,6 +418,7 @@ const batchApprove = async () => {
   }
 
   selectedImages.value.clear()
+  lastSelectedImageIndex.value = null
   selectionMode.value = false
   emit('selectionChange', selectedImages.value)
 
@@ -423,6 +454,7 @@ const batchRequestReview = async () => {
   }
 
   selectedImages.value.clear()
+  lastSelectedImageIndex.value = null
   selectionMode.value = false
   emit('selectionChange', selectedImages.value)
 
@@ -458,6 +490,7 @@ const batchReject = async () => {
   }
 
   selectedImages.value.clear()
+  lastSelectedImageIndex.value = null
   selectionMode.value = false
   emit('selectionChange', selectedImages.value)
 
@@ -531,20 +564,37 @@ const handleDelete = async (image, event) => {
 }
 
 // Inference prediction handlers
-const togglePredictionSelection = (index) => {
+const togglePredictionSelection = (index, event = null) => {
+  if (event?.shiftKey && lastSelectedPredictionIndex.value !== null) {
+    const start = Math.min(lastSelectedPredictionIndex.value, index)
+    const end = Math.max(lastSelectedPredictionIndex.value, index)
+
+    for (let i = start; i <= end; i++) {
+      selectedPredictions.value.add(i)
+    }
+
+    return
+  }
+
   if (selectedPredictions.value.has(index)) {
     selectedPredictions.value.delete(index)
   } else {
     selectedPredictions.value.add(index)
   }
+
+  lastSelectedPredictionIndex.value = index
 }
 
 const selectAllPredictions = () => {
   selectedPredictions.value = new Set(displayedInferenceResults.value.map((_, i) => i))
+  lastSelectedPredictionIndex.value = displayedInferenceResults.value.length
+    ? displayedInferenceResults.value.length - 1
+    : null
 }
 
 const deselectAllPredictions = () => {
   selectedPredictions.value.clear()
+  lastSelectedPredictionIndex.value = null
 }
 
 const saveSelectedPredictions = async () => {
@@ -581,6 +631,7 @@ const saveSelectedPredictions = async () => {
     reviewMode.value = false
     displayedInferenceResults.value = []
     selectedPredictions.value.clear()
+    lastSelectedPredictionIndex.value = null
 
     // Refresh the gallery
     images.value = []
@@ -600,6 +651,7 @@ const discardPredictions = () => {
     reviewMode.value = false
     displayedInferenceResults.value = []
     selectedPredictions.value.clear()
+    lastSelectedPredictionIndex.value = null
   }
 }
 </script>
@@ -721,7 +773,7 @@ const discardPredictions = () => {
         :class="{
           'ring-4 ring-purple-500': selectedPredictions.has(index),
         }"
-        @click="togglePredictionSelection(index)"
+        @click="togglePredictionSelection(index, $event)"
       >
         <img
           :src="result.location"
@@ -731,7 +783,7 @@ const discardPredictions = () => {
         />
 
         <!-- Selection Checkbox -->
-        <div class="absolute top-2 left-2 z-20" @click.stop="togglePredictionSelection(index)">
+        <div class="absolute top-2 left-2 z-20" @click.stop="togglePredictionSelection(index, $event)">
           <div
             class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all"
             :class="
@@ -778,12 +830,16 @@ const discardPredictions = () => {
         :class="{
           'ring-4 ring-blue-500': selectionMode && selectedImages.has(image.id),
         }"
-        @click="selectionMode ? toggleImageSelection(image.id) : null"
+        @click="selectionMode ? toggleImageSelection(image.id, $event) : null"
       >
         <img :src="image.location" :alt="`Image ${image.id}`" loading="lazy" class="w-auto h-full object-cover block" />
 
         <!-- Selection Checkbox (only in selection mode) -->
-        <div v-if="selectionMode" class="absolute top-2 left-2 z-20" @click.stop="toggleImageSelection(image.id)">
+        <div
+          v-if="selectionMode"
+          class="absolute top-2 left-2 z-20"
+          @click.stop="toggleImageSelection(image.id, $event)"
+        >
           <div
             class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all"
             :class="

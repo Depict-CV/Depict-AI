@@ -19,18 +19,15 @@ Depict AI is a full-stack application designed for:
 Quick setup guides to get you up and running:
 
 - Installation instructions
-- OAuth2 configuration (Google, Microsoft, GitHub)
 - Quick start tutorial
 
-### [Backend (FastAPI)](backend/overview.md)
+### [Backend](backend/overview.md)
 Complete backend documentation:
 
 - REST API endpoints
 - Database models and schemas
-- Authentication & authorization
-- Testing strategies
 
-### [Frontend (Vue.js)](frontend/overview.md)
+### [Frontend](frontend/overview.md)
 Frontend architecture and components:
 
 - Component library

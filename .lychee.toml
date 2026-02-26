@@ -5,6 +5,7 @@ exclude = [
   "^http://localhost.*",
   "^http://127\\.0\\.0\\.1.*",
   "https://depict-cv.github.io/Depict-AI/",
+  "^https://vuejs\\.org/style-guide/?$",
 ]
 
-cache_timeout = 86400
+max_cache_age = "1d"
