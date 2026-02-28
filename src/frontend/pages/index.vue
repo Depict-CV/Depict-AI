@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Download,
   Upload,
+  Database,
   Microscope,
   Filter,
   Bell,
@@ -19,6 +20,7 @@ import ProjectsPanel from '~/components/main/ProjectsPanel.vue'
 import StatsPanel from '~/components/main/StatsPanel.vue'
 import AIPanel from '~/components/main/AIPanel.vue'
 import ImportPanel from '~/components/main/ImportPanel.vue'
+import DataAquisitionPanel from '~/components/main/DataAquisitionPanel.vue'
 import ExportPanel from '~/components/main/ExportPanel.vue'
 import ModelAnalysisPanel from '~/components/main/ModelAnalysisPanel.vue'
 import FilterPanel from '~/components/main/FilterPanel.vue'
@@ -28,6 +30,7 @@ import SettingsDialog from '~/components/main/SettingsDialog.vue'
 import SubscriptionPanel from '~/components/main/SubscriptionPanel.vue'
 import OrganisationPanel from '~/components/main/OrganisationPanel.vue'
 import ImageGallery from '~/components/main/ImageGallery.vue'
+import SatelliteStacPanel from '~/components/main/SatelliteStacPanel.vue'
 
 const { isSignedIn, user, signOut } = useAuth()
 
@@ -50,6 +53,7 @@ const currentFilters = ref({})
 const selectedImagesFromGallery = ref(new Set())
 const imageGalleryKey = ref(0)
 const inferenceResults = ref(null)
+const mainViewMode = ref('gallery')
 
 const handleApplyFilters = (filters) => {
   currentFilters.value = filters
@@ -63,6 +67,20 @@ const handleInferenceResults = (results) => {
 
 const handleSelectionChange = (selectedImages) => {
   selectedImagesFromGallery.value = selectedImages
+}
+
+const handleDataAquisitionSelect = (category) => {
+  if (category?.key === 'satellite') {
+    mainViewMode.value = 'satellite-stac'
+    return
+  }
+
+  if (category?.key === 'hugging-face-dataset') {
+    mainViewMode.value = 'hf-datasets'
+    return
+  }
+
+  mainViewMode.value = 'gallery'
 }
 
 const handleSelectProject = (project) => {
@@ -295,6 +313,19 @@ onMounted(async () => {
             <button
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
+                activeMenu === 'data-aquisition'
+                  ? 'bg-blue-950 text-white'
+                  : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
+              ]"
+              title="Data aquisition"
+              @click="activeMenu = activeMenu === 'data-aquisition' ? null : 'data-aquisition'"
+            >
+              <Database :size="20" />
+            </button>
+
+            <button
+              :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'ai' ? 'bg-blue-950 text-white' : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="AI Tools"
@@ -394,6 +425,7 @@ onMounted(async () => {
             @inference-results="handleInferenceResults"
           />
           <ImportPanel v-if="activeMenu === 'import'" :project-id="selectedProject?.id" />
+          <DataAquisitionPanel v-if="activeMenu === 'data-aquisition'" @select-category="handleDataAquisitionSelect" />
           <ExportPanel v-if="activeMenu === 'export'" :project-id="selectedProject?.id" />
           <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
           <FilterPanel
@@ -518,7 +550,10 @@ onMounted(async () => {
               </p>
             </div>
           </div>
+          <SatelliteStacPanel v-if="mainViewMode === 'satellite-stac'" :project-id="selectedProject?.id" />
+          <HuggingFaceDatasetsPanel v-else-if="mainViewMode === 'hf-datasets'" />
           <ImageGallery
+            v-else
             :key="imageGalleryKey"
             :project-id="selectedProject?.id"
             :filters="currentFilters"
