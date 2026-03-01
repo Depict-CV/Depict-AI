@@ -20,17 +20,23 @@ Please read and follow our [Code of Conduct](code_of_conduct.md).
 1. **Fork the repository**
 
 2. **Clone your fork:**
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/Depict-AI.git
 cd Depict-AI
 ```
 
 3. **Install dependencies:**
+
 ```bash
-make install
+poetry install
+cd src/frontend
+npm install
+cd ../..
 ```
 
 4. **Create a branch:**
+
 ```bash
 git checkout -b feature/your-feature-name
 ```
@@ -40,35 +46,27 @@ git checkout -b feature/your-feature-name
 ### Backend Development
 
 ```bash
-# Start backend server
-make backend
-
-# Run tests
-make test
-
-# Activate Poetry
-make shell
+cd src/backend
+poetry run fastapi dev endpoints.py
 ```
+
 
 ### Frontend Development
 
 ```bash
-# Start frontend server
-make frontend
-
-# Install new package
 cd src/frontend
-npm install <package-name>
+npm run dev
 ```
+
 
 ### Documentation
 
 ```bash
 # Start documentation server
-make docs
+poetry run mkdocs serve
 
-# Generate API docs
-poetry run python scripts/generate_api_docs.py
+# Build static documentation
+poetry run mkdocs build
 ```
 
 ## Code Style
@@ -80,9 +78,9 @@ poetry run python scripts/generate_api_docs.py
 - Maximum line length: 120 characters
 - Use descriptive variable names
 
-**Format with Ruff:**
+Run linting before opening a PR:
+
 ```bash
-poetry run ruff format .
 poetry run ruff check .
 ```
 
@@ -94,7 +92,9 @@ poetry run ruff check .
 - Keep components under 300 lines
 
 **Format with Prettier (if configured):**
+
 ```bash
+cd src/frontend
 npm run format
 ```
 
@@ -104,7 +104,7 @@ npm run format
 
 ```bash
 # Run all tests
-make test
+poetry run pytest
 
 # Run with coverage
 poetry run pytest --cov=src/backend
@@ -117,7 +117,7 @@ poetry run pytest tests/test_specific.py
 
 ```bash
 cd src/frontend
-npm run test
+npm run lint
 ```
 
 ## Commit Guidelines
@@ -152,7 +152,7 @@ docs(api): update endpoint documentation
 
 1. **Update documentation** if needed
 2. **Add tests** for new features
-3. **Ensure all tests pass**: `make test`
+3. **Ensure all tests pass**: `poetry run pytest`
 4. **Update CHANGELOG.md** (if applicable)
 5. **Create pull request** with clear description
 
@@ -185,11 +185,12 @@ src/backend/
 
 ```
 src/frontend/
-├── src/
-│   ├── components/  # Vue components
-│   ├── pages/       # Page components
-│   └── App.vue      # Root component
-└── vite.config.js   # Build config
+├── app.vue          # Root app component
+├── components/      # Reusable Vue components
+├── composables/     # Shared composables
+├── pages/           # Route pages
+├── plugins/         # Nuxt plugins
+└── nuxt.config.ts   # Nuxt configuration
 ```
 
 ## Common Tasks
@@ -199,11 +200,11 @@ src/frontend/
 1. Create/update endpoint in `src/backend/api/`
 2. Add tests in `tests/`
 3. Update API documentation
-4. Generate OpenAPI spec: `python scripts/generate_api_docs.py`
+4. Verify endpoint in interactive docs: `http://localhost:8000/docs`
 
 ### Adding a New Vue Component
 
-1. Create component in `src/frontend/src/components/`
+1. Create component in `src/frontend/components/`
 2. Use `<script setup>` syntax
 3. Add scoped styles
 4. Document props and emits
@@ -239,7 +240,7 @@ When modifying database schema:
 
 - Check existing [documentation](index.md)
 - Open an [issue](https://github.com/Depict-CV/Depict-AI/issues)
-- Ask in discussions
+- Ask in GitHub Discussions
 
 ## License
 

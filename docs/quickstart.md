@@ -14,19 +14,7 @@ cd src/frontend && npm install && cd ../..
 
 ## 2. Start the Application
 
-### Option A: Using Makefile (Recommended)
-
-**Terminal 1 - Backend:**
-```bash
-make backend
-```
-
-**Terminal 2 - Frontend:**
-```bash
-make frontend
-```
-
-### Option B: Manual Commands
+### Start backend and frontend in separate terminals
 
 **Terminal 1 - Backend:**
 ```bash
@@ -42,7 +30,7 @@ npm run dev
 
 ## 3. Access the Application
 
-- **Frontend:** http://localhost:5173
+- **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8000
 - **API Docs:** http://localhost:8000/docs
 
@@ -50,7 +38,7 @@ npm run dev
 
 ### Option 1: Sign Up via UI
 
-1. Go to http://localhost:5173
+1. Go to http://localhost:3000
 2. Click "Sign Up"
 3. Enter:
    - Username
@@ -76,7 +64,7 @@ npm run dev
 
 ## 5. Log In
 
-1. Go to http://localhost:5173
+1. Go to http://localhost:3000
 2. Enter your email and password
 3. Click "Sign In"
 
@@ -119,33 +107,36 @@ Enable social login with Google, Microsoft, or GitHub:
 ### Run Tests
 
 ```bash
-make test
+poetry run pytest
 ```
 
 ### View Documentation
 
 ```bash
-make docs
-# Then visit http://localhost:8000 (MkDocs default port)
+poetry run mkdocs serve
+# Then visit http://127.0.0.1:8000
 ```
 
 ## Common Commands
 
 ```bash
 # Backend
-make backend        # Start FastAPI server
-make test          # Run tests
-make shell         # Activate Poetry shell
+cd src/backend
+poetry run fastapi dev endpoints.py  # Start FastAPI server
+
+cd ../..
+poetry run pytest                     # Run tests
 
 # Frontend  
-make frontend      # Start Vite dev server
+cd src/frontend
+npm run dev                            # Start Nuxt dev server
 
 # Docs
-make docs          # Start MkDocs server
+cd ../..
+poetry run mkdocs serve                # Start MkDocs server
 
 # Maintenance
-make clean         # Clean cache files
-make rebuild       # Rebuild environment
+poetry run ruff check .                # Lint Python code
 ```
 
 ## Troubleshooting
@@ -162,7 +153,7 @@ make rebuild       # Rebuild environment
 
 **Port conflicts?**
 - Backend default: 8000
-- Frontend default: 5173
+- Frontend default: 3000
 - Change ports in config if needed
 
 ## Getting Help
