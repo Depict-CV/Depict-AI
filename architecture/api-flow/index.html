@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>API Flow - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "API Flow";
+        var mkdocs_page_input_path = "architecture/api-flow.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">API Flow</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#authentication-flow">Authentication Flow</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rest-api-routers">REST API Routers</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-request-patterns">Common Request Patterns</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#listing-images-with-filters">Listing Images with Filters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#creating-an-annotation">Creating an Annotation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#running-ai-inference">Running AI Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#minio-sync">MinIO Sync</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cors-policy">CORS Policy</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Architecture</li>
+      <li class="breadcrumb-item active">API Flow</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/architecture/api-flow.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="api-flow">API Flow<a class="headerlink" href="#api-flow" title="Permanent link">&para;</a></h1>
+<p>This document describes how requests flow between the Nuxt 3 frontend and the FastAPI backend.</p>
+<hr />
+<h2 id="authentication-flow">Authentication Flow<a class="headerlink" href="#authentication-flow" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Browser                    Clerk (SaaS)              FastAPI Backend
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>   │                           │                           │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>   │──── sign in ─────────────►│                           │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>   │◄─── Clerk session + JWT ──│                           │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>   │                                                       │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   │──── API request + Bearer &lt;JWT&gt; ──────────────────────►│
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>   │                                              verify JWT│
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>   │                                           (deps.py)   │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   │                                              look up   │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>   │                                              user in DB│
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>   │◄─── JSON response ────────────────────────────────────│
+</code></pre></div>
+<ol>
+<li>The user authenticates via Clerk (OAuth or email/password).</li>
+<li>Clerk issues a signed JWT for the session.</li>
+<li>On every API call, <code>useApi.ts</code> calls <code>$clerk.session.getToken()</code> to get a fresh token.</li>
+<li>The token is sent as <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+<li><code>deps.py</code> on the backend verifies the token against Clerk's JWKS endpoint and resolves the <code>User</code> database record.</li>
+</ol>
+<hr />
+<h2 id="rest-api-routers">REST API Routers<a class="headerlink" href="#rest-api-routers" title="Permanent link">&para;</a></h2>
+<p>The FastAPI application (<code>endpoints.py</code>) mounts the following routers:</p>
+<table>
+<thead>
+<tr>
+<th>Router</th>
+<th>Prefix</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users</code></td>
+<td><code>/users</code></td>
+<td>User registration and profile</td>
+</tr>
+<tr>
+<td><code>projects</code></td>
+<td><code>/projects</code></td>
+<td>CRUD for projects</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td><code>/data</code></td>
+<td>Image/video upload and listing</td>
+</tr>
+<tr>
+<td><code>annotations</code></td>
+<td><code>/annotations</code></td>
+<td>Annotation CRUD and status transitions</td>
+</tr>
+<tr>
+<td><code>ml</code></td>
+<td><code>/ml</code></td>
+<td>AI inference jobs</td>
+</tr>
+<tr>
+<td><code>images</code></td>
+<td><code>/images</code></td>
+<td>Image serving and pre-signed URLs</td>
+</tr>
+<tr>
+<td><code>minio_sync</code></td>
+<td><code>/minio</code></td>
+<td>MinIO bucket synchronization</td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td><code>/notifications</code></td>
+<td>User notifications</td>
+</tr>
+<tr>
+<td><code>test_auth</code></td>
+<td><code>/test-auth</code></td>
+<td>Auth debugging endpoint (dev only)</td>
+</tr>
+</tbody>
+</table>
+<p>Interactive API documentation is available at <code>http://localhost:8000/docs</code> when the backend is running.</p>
+<hr />
+<h2 id="common-request-patterns">Common Request Patterns<a class="headerlink" href="#common-request-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="listing-images-with-filters">Listing Images with Filters<a class="headerlink" href="#listing-images-with-filters" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>GET /data?project_id=3&amp;status=to+review&amp;skip=0&amp;limit=20
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Authorization: Bearer &lt;token&gt;
+</code></pre></div>
+<p>Response: paginated list of <code>Data</code> objects with annotation status.</p>
+<hr />
+<h3 id="creating-an-annotation">Creating an Annotation<a class="headerlink" href="#creating-an-annotation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>POST /annotations
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Authorization: Bearer &lt;token&gt;
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Content-Type: application/json
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>{
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  &quot;data_id&quot;: 42,
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  &quot;status&quot;: &quot;human annotation&quot;,
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  &quot;x1&quot;: 100, &quot;y1&quot;: 150, &quot;x2&quot;: 300, &quot;y2&quot;: 400
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>}
+</code></pre></div>
+<hr />
+<h3 id="running-ai-inference">Running AI Inference<a class="headerlink" href="#running-ai-inference" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>POST /ml/inference
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Authorization: Bearer &lt;token&gt;
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Content-Type: application/json
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>{
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  &quot;project_id&quot;: 3,
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  &quot;model&quot;: &quot;yolos-tiny&quot;,
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  &quot;image_ids&quot;: [42, 43, 44]
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>}
+</code></pre></div>
+<p>The backend runs inference and stores results as <code>Annotation</code> rows with <code>status = "ml annotation"</code>.</p>
+<hr />
+<h3 id="minio-sync">MinIO Sync<a class="headerlink" href="#minio-sync" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>POST /minio/sync
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Authorization: Bearer &lt;token&gt;
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Content-Type: application/json
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>{
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  &quot;project_id&quot;: 3
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>}
+</code></pre></div>
+<p>The backend connects to the configured MinIO bucket, lists objects, and imports any new images into the <code>Data</code> table.</p>
+<hr />
+<h2 id="cors-policy">CORS Policy<a class="headerlink" href="#cors-policy" title="Permanent link">&para;</a></h2>
+<p>In development, all origins are allowed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">allow_origins</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+</code></pre></div>
+<p>In production, restrict this to your frontend domain:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">allow_origins</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;https://app.yourdomain.com&quot;</span><span class="p">]</span>
+</code></pre></div>
+<p>See <a href="../../deployment/production/">Deployment → Production</a> for secure configuration guidance.</p>
+<hr />
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>HTTP Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>Missing or invalid JWT</td>
+</tr>
+<tr>
+<td><code>403 Forbidden</code></td>
+<td>Authenticated but insufficient permissions</td>
+</tr>
+<tr>
+<td><code>404 Not Found</code></td>
+<td>Resource does not exist</td>
+</tr>
+<tr>
+<td><code>422 Unprocessable Entity</code></td>
+<td>Request body validation error (Pydantic)</td>
+</tr>
+<tr>
+<td><code>500 Internal Server Error</code></td>
+<td>Unexpected server error (reported to Sentry)</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../database/" class="btn btn-neutral float-left" title="Database Schema"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../deployment/docker/" class="btn btn-neutral float-right" title="Docker Setup">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../database/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../deployment/docker/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

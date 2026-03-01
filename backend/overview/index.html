@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Overview - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Overview";
+        var mkdocs_page_input_path = "backend/overview.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Overview</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#tech-stack">Tech Stack</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#authentication">🔐 Authentication</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#data-management">📊 Data Management</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#api-design">🔗 API Design</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database-schema">Database Schema</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#api-endpoints">API Endpoints</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#authentication_1">Authentication</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#oauth2">OAuth2</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#projects">Projects</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#data-images">Data (Images)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotations">Annotations</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#running-the-backend">Running the Backend</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#development-mode">Development Mode</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#production-mode">Production Mode</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#environment-configuration">Environment Configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Backend</li>
+      <li class="breadcrumb-item active">Overview</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/backend/overview.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="backend-overview">Backend Overview<a class="headerlink" href="#backend-overview" title="Permanent link">&para;</a></h1>
+<p>The Depict AI backend is built with <strong>FastAPI</strong>, providing a high-performance REST API for managing computer vision datasets, annotations, and user authentication.</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>src/backend/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── api/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── __init__.py
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── annotations.py    # Annotation CRUD endpoints
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── auth.py          # Authentication &amp; JWT
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── data.py          # Data/image management
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   ├── deps.py          # FastAPI dependencies
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   ├── ml.py            # ML model endpoints
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   ├── oauth2.py        # Social login (Google, Microsoft, GitHub)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   ├── projects.py      # Project management
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   └── users.py         # User management
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>├── db/
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   ├── database.py      # Database connection &amp; initialization
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   └── tables.py        # SQLModel table definitions
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>└── endpoints.py         # Main FastAPI app &amp; router registration
+</code></pre></div>
+<h2 id="tech-stack">Tech Stack<a class="headerlink" href="#tech-stack" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>FastAPI</strong> - Modern async web framework</li>
+<li><strong>SQLModel</strong> - SQL databases with Pydantic models</li>
+<li><strong>Pydantic</strong> - Data validation</li>
+<li><strong>python-jose</strong> - JWT token handling</li>
+<li><strong>httpx</strong> - Async HTTP client for OAuth2</li>
+<li><strong>Sentry SDK</strong> - Error monitoring</li>
+</ul>
+<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<h3 id="authentication">🔐 Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Local Auth</strong>: Email/password with SHA-256 hashing</li>
+<li><strong>OAuth2</strong>: Social login with Google, Microsoft, GitHub</li>
+<li><strong>JWT Tokens</strong>: Secure stateless authentication</li>
+<li><strong>Role-Based Access</strong>: User permissions (view, edit, delete, certify)</li>
+</ul>
+<h3 id="data-management">📊 Data Management<a class="headerlink" href="#data-management" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Projects</strong>: Organize images into projects</li>
+<li><strong>Images</strong>: Upload, store, and manage image data</li>
+<li><strong>Annotations</strong>: Create, read, update annotations</li>
+<li><strong>ML Integration</strong>: Run ML models on images</li>
+</ul>
+<h3 id="api-design">🔗 API Design<a class="headerlink" href="#api-design" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>RESTful</strong>: Standard HTTP methods (GET, POST, PUT, DELETE)</li>
+<li><strong>OpenAPI</strong>: Auto-generated API documentation at <code>/docs</code></li>
+<li><strong>Async</strong>: Non-blocking I/O for high performance</li>
+<li><strong>CORS</strong>: Configured for frontend integration</li>
+</ul>
+<h2 id="database-schema">Database Schema<a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h2>
+<p>See <a href="../../architecture/database/">Database Schema</a> for complete schema details.</p>
+<p>Main entities:
+- <strong>User</strong> - Authentication and profile
+- <strong>Project</strong> - Image collection container
+- <strong>Data</strong> - Image/video metadata
+- <strong>Annotation</strong> - Labels, boxes, masks
+- <strong>ProjectUserLink</strong> - Many-to-many user-project relation</p>
+<h2 id="api-endpoints">API Endpoints<a class="headerlink" href="#api-endpoints" title="Permanent link">&para;</a></h2>
+<h3 id="authentication_1">Authentication<a class="headerlink" href="#authentication_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>POST /signup</code> - Create new user</li>
+<li><code>POST /login</code> - Email/password login</li>
+<li><code>POST /token</code> - OAuth2 token endpoint</li>
+<li><code>GET /me</code> - Get current user info</li>
+</ul>
+<h3 id="oauth2">OAuth2<a class="headerlink" href="#oauth2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>GET /auth/{provider}/login</code> - Initiate OAuth2 flow</li>
+<li><code>GET /auth/{provider}/callback</code> - OAuth2 callback</li>
+</ul>
+<h3 id="projects">Projects<a class="headerlink" href="#projects" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>GET /projects/my-projects</code> - List user's projects</li>
+<li><code>POST /projects/</code> - Create new project</li>
+<li><code>POST /projects/join/{code}</code> - Join project by code</li>
+<li><code>GET /projects/{id}</code> - Get project details</li>
+<li><code>PUT /projects/{id}</code> - Update project</li>
+<li><code>DELETE /projects/{id}</code> - Delete project</li>
+</ul>
+<h3 id="data-images">Data (Images)<a class="headerlink" href="#data-images" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>POST /data/</code> - Upload image</li>
+<li><code>POST /data/batch</code> - Batch upload</li>
+<li><code>GET /data/non-labeled</code> - Get unlabeled images</li>
+</ul>
+<h3 id="annotations">Annotations<a class="headerlink" href="#annotations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>POST /annotations/</code> - Create annotation</li>
+<li><code>GET /annotations/{id}</code> - Get annotation</li>
+<li><code>PUT /annotations/{id}</code> - Update annotation</li>
+</ul>
+<p>See <a href="../api/">API Reference</a> for complete endpoint documentation.</p>
+<h2 id="running-the-backend">Running the Backend<a class="headerlink" href="#running-the-backend" title="Permanent link">&para;</a></h2>
+<h3 id="development-mode">Development Mode<a class="headerlink" href="#development-mode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Using Poetry</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">cd</span><span class="w"> </span>src/backend
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </span>dev<span class="w"> </span>endpoints.py
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Using uvicorn directly</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>poetry<span class="w"> </span>run<span class="w"> </span>uvicorn<span class="w"> </span>endpoints:app<span class="w"> </span>--reload<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</code></pre></div>
+<h3 id="production-mode">Production Mode<a class="headerlink" href="#production-mode" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </span>run<span class="w"> </span>endpoints.py
+</code></pre></div>
+<h2 id="environment-configuration">Environment Configuration<a class="headerlink" href="#environment-configuration" title="Permanent link">&para;</a></h2>
+<p>Create <code>.env</code> file in project root:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a># API
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>API_URL=&quot;http://localhost:8000&quot;
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a># JWT
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>JWT_SECRET_KEY=&quot;your-secret-key-here&quot;
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a># OAuth2 (optional)
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>GOOGLE_CLIENT_ID=&quot;...&quot;
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>GOOGLE_CLIENT_SECRET=&quot;...&quot;
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>MICROSOFT_CLIENT_ID=&quot;...&quot;
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>MICROSOFT_CLIENT_SECRET=&quot;...&quot;
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>GITHUB_CLIENT_ID=&quot;...&quot;
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>GITHUB_CLIENT_SECRET=&quot;...&quot;
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a># Monitoring (optional)
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>SENTRY_DSN=&quot;...&quot;
+</code></pre></div>
+<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<p>See <a href="../../contributing/">Testing</a> for testing strategies.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Run all tests</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Run with coverage</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>--cov<span class="o">=</span>src/backend
+</code></pre></div>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../api/">API Reference</a> - Complete API documentation</li>
+<li><a href="../../architecture/database/">Database Schema</a> - Schema details</li>
+<li><a href="../../USER_MANAGEMENT/">User Management</a> - Auth implementation details</li>
+<li><a href="../../contributing/">Contributing</a> - Testing guide</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../quickstart/" class="btn btn-neutral float-left" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../api/" class="btn btn-neutral float-right" title="API Reference">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../../quickstart/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

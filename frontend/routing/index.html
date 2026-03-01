@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Routing - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Routing";
+        var mkdocs_page_input_path = "frontend/routing.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Routing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#route-table">Route Table</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pages">Pages</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#dashboard-indexvue">/ — Dashboard (index.vue)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#login-login-loginvue">/login — Login (login.vue)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotateid-annotation-editor-idvue">/annotate/:id — Annotation Editor ([id].vue)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#auth-middleware">Auth Middleware</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#navigation">Navigation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#nuxt-configuration">Nuxt Configuration</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Frontend</li>
+      <li class="breadcrumb-item active">Routing</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/frontend/routing.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">&para;</a></h1>
+<p>Depict AI uses <strong>Nuxt 3 file-based routing</strong>. Every file inside <code>src/frontend/pages/</code> automatically becomes a route.</p>
+<h2 id="route-table">Route Table<a class="headerlink" href="#route-table" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Route</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pages/index.vue</code></td>
+<td><code>/</code></td>
+<td>Main dashboard (projects + image gallery)</td>
+</tr>
+<tr>
+<td><code>pages/login.vue</code></td>
+<td><code>/login</code></td>
+<td>Authentication page (Clerk sign-in)</td>
+</tr>
+<tr>
+<td><code>pages/annotate/[id].vue</code></td>
+<td><code>/annotate/:id</code></td>
+<td>Annotation editor for image with the given ID</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
+<h3 id="dashboard-indexvue"><code>/</code> — Dashboard (<code>index.vue</code>)<a class="headerlink" href="#dashboard-indexvue" title="Permanent link">&para;</a></h3>
+<p>The main application page. Requires the user to be authenticated (enforced by the <code>auth</code> middleware).</p>
+<p>Renders the full dashboard layout:
+- Left sidebar with navigation icons
+- Side panel (switches between Projects, Filters, Import, Export, AI, Stats, etc.)
+- <code>ImageGallery</code> in the main area</p>
+<h3 id="login-login-loginvue"><code>/login</code> — Login (<code>login.vue</code>)<a class="headerlink" href="#login-login-loginvue" title="Permanent link">&para;</a></h3>
+<p>Unauthenticated landing page. Renders the Clerk <code>&lt;SignIn&gt;</code> component.<br />
+Redirects to <code>/</code> after successful authentication.</p>
+<h3 id="annotateid-annotation-editor-idvue"><code>/annotate/:id</code> — Annotation Editor (<code>[id].vue</code>)<a class="headerlink" href="#annotateid-annotation-editor-idvue" title="Permanent link">&para;</a></h3>
+<p>Full-screen annotation editor for a specific image (<code>id</code> is the image's database ID).</p>
+<p>Loads:
+- The image from MinIO / the backend
+- Existing annotations via <code>useAnnotationData</code>
+- Konva canvas via <code>useKonvaCanvas</code></p>
+<hr />
+<h2 id="auth-middleware">Auth Middleware<a class="headerlink" href="#auth-middleware" title="Permanent link">&para;</a></h2>
+<p><code>src/frontend/middleware/auth.ts</code> is a global route middleware that runs on every navigation.</p>
+<ul>
+<li>If the user is <strong>not authenticated</strong>, they are redirected to <code>/login</code>.</li>
+<li>The <code>/login</code> page itself is excluded from the redirect to avoid loops.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Any route
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ▼
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>auth middleware
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ├── authenticated?  ──► allow navigation
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    └── not authenticated?  ──► redirect to /login
+</code></pre></div>
+<hr />
+<h2 id="navigation">Navigation<a class="headerlink" href="#navigation" title="Permanent link">&para;</a></h2>
+<p>Navigation between pages is handled with Nuxt's <code>navigateTo()</code> helper and <code>&lt;NuxtLink&gt;</code> components.</p>
+<p>Opening an image in the editor:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">&lt;!-- inside ImageGallery.vue --&gt;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>navigateTo(`/annotate/${image.id}`)
+</code></pre></div>
+<p>Returning to the dashboard from the editor uses the browser's <code>history.back()</code> or a fixed link to <code>/</code>.</p>
+<hr />
+<h2 id="nuxt-configuration">Nuxt Configuration<a class="headerlink" href="#nuxt-configuration" title="Permanent link">&para;</a></h2>
+<p>Route-level settings are defined in <code>src/frontend/nuxt.config.ts</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">runtimeConfig</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nx">clerkPublishableKey</span><span class="o">:</span><span class="w"> </span><span class="kt">process.env.VITE_CLERK_PUBLISHABLE_KEY</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nx">apiBaseUrl</span><span class="o">:</span><span class="w"> </span><span class="kt">process.env.VITE_API_BASE_URL</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;http://localhost:8000&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">},</span>
+</code></pre></div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../state/" class="btn btn-neutral float-left" title="State Management"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../styling/" class="btn btn-neutral float-right" title="Styling">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../state/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../styling/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

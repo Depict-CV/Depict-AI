@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Components - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Components";
+        var mkdocs_page_input_path = "frontend/components.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Components</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#directory-structure">Directory Structure</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#main-components">Main Components</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#imagegalleryvue">ImageGallery.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#projectspanelvue">ProjectsPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#filterpanelvue">FilterPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#importpanelvue">ImportPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#exportpanelvue">ExportPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#aipanelvue">AIPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#modelanalysispanelvue">ModelAnalysisPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#statspanelvue">StatsPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#profilemenuvue">ProfileMenu.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#organisationpanelvue">OrganisationPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#projectsettingspanelvue">ProjectSettingsPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#settingsdialogvue">SettingsDialog.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#subscriptionpanelvue">SubscriptionPanel.vue</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#annotation-components">Annotation Components</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#annotationeditorvue-annotationeditorrefactoredvue">AnnotationEditor.vue / AnnotationEditorRefactored.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotationtoolbarvue">AnnotationToolbar.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotationcontrolspanelvue">AnnotationControlsPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotationinfopanelvue">AnnotationInfoPanel.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotationhistoryvue">AnnotationHistory.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#aiannotationbuttonvue">AIAnnotationButton.vue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#imageadjustmentsvue">ImageAdjustments.vue</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Frontend</li>
+      <li class="breadcrumb-item active">Components</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/frontend/components.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="frontend-components">Frontend Components<a class="headerlink" href="#frontend-components" title="Permanent link">&para;</a></h1>
+<p>The Depict AI frontend is organized into two main component namespaces: <code>annot/</code> for the annotation editor, and <code>main/</code> for the dashboard panels.</p>
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>src/frontend/components/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── annot/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── AIAnnotationButton.vue
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── AnnotationControlsPanel.vue
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── AnnotationEditor.vue
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── AnnotationEditorRefactored.vue
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   ├── AnnotationHistory.vue
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   ├── AnnotationInfoPanel.vue
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   ├── AnnotationToolbar.vue
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   └── ImageAdjustments.vue
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└── main/
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ├── AIPanel.vue
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    ├── ExportPanel.vue
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ├── FilterPanel.vue
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ├── ImageGallery.vue
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    ├── ImportPanel.vue
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    ├── ModelAnalysisPanel.vue
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ├── OrganisationPanel.vue
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ├── ProfileMenu.vue
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ├── ProjectSettingsPanel.vue
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ├── ProjectsPanel.vue
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ├── SettingsDialog.vue
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    ├── StatsPanel.vue
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    └── SubscriptionPanel.vue
+</code></pre></div>
+<hr />
+<h2 id="main-components">Main Components<a class="headerlink" href="#main-components" title="Permanent link">&para;</a></h2>
+<h3 id="imagegalleryvue"><code>ImageGallery.vue</code><a class="headerlink" href="#imagegalleryvue" title="Permanent link">&para;</a></h3>
+<p>The central dashboard component that renders a paginated grid of images for a given project.</p>
+<p><strong>Props:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Prop</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>projectId</code></td>
+<td><code>Number</code></td>
+<td><code>null</code></td>
+<td>ID of the active project</td>
+</tr>
+<tr>
+<td><code>filters</code></td>
+<td><code>Object</code></td>
+<td><code>{}</code></td>
+<td>Active filter criteria (status, labels, etc.)</td>
+</tr>
+<tr>
+<td><code>inferenceResults</code></td>
+<td><code>Object</code></td>
+<td><code>null</code></td>
+<td>AI inference output to overlay on images</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Emits:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>selectImage</code></td>
+<td>Fired when the user opens an image for annotation</td>
+</tr>
+<tr>
+<td><code>modifyRequest</code></td>
+<td>Fired when bulk modification is requested</td>
+</tr>
+<tr>
+<td><code>selectionChange</code></td>
+<td>Fired when the selection set changes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Features:</strong>
+- Infinite scroll with batches of 20 images
+- Multi-select mode with select-all toggle
+- Review mode to accept/reject AI predictions
+- Displays annotation status badges per image</p>
+<hr />
+<h3 id="projectspanelvue"><code>ProjectsPanel.vue</code><a class="headerlink" href="#projectspanelvue" title="Permanent link">&para;</a></h3>
+<p>Lists and manages all projects the user has access to. Lets users create, archive, or delete projects.</p>
+<hr />
+<h3 id="filterpanelvue"><code>FilterPanel.vue</code><a class="headerlink" href="#filterpanelvue" title="Permanent link">&para;</a></h3>
+<p>Provides filter controls (annotation status, data type, labels) that are passed as props down to <code>ImageGallery</code>.</p>
+<hr />
+<h3 id="importpanelvue"><code>ImportPanel.vue</code><a class="headerlink" href="#importpanelvue" title="Permanent link">&para;</a></h3>
+<p>Handles image upload — either via direct upload or by syncing from a MinIO bucket.</p>
+<hr />
+<h3 id="exportpanelvue"><code>ExportPanel.vue</code><a class="headerlink" href="#exportpanelvue" title="Permanent link">&para;</a></h3>
+<p>Exports annotated datasets in various formats (COCO, YOLO, Pascal VOC).</p>
+<hr />
+<h3 id="aipanelvue"><code>AIPanel.vue</code><a class="headerlink" href="#aipanelvue" title="Permanent link">&para;</a></h3>
+<p>Triggers AI inference jobs on images and displays in-progress status.</p>
+<hr />
+<h3 id="modelanalysispanelvue"><code>ModelAnalysisPanel.vue</code><a class="headerlink" href="#modelanalysispanelvue" title="Permanent link">&para;</a></h3>
+<p>Displays model performance metrics (precision, recall, confusion matrix) after inference.</p>
+<hr />
+<h3 id="statspanelvue"><code>StatsPanel.vue</code><a class="headerlink" href="#statspanelvue" title="Permanent link">&para;</a></h3>
+<p>Shows dataset statistics: annotation distribution, image counts per status, label frequency.</p>
+<hr />
+<h3 id="profilemenuvue"><code>ProfileMenu.vue</code><a class="headerlink" href="#profilemenuvue" title="Permanent link">&para;</a></h3>
+<p>Dropdown menu for user account actions: profile, settings, sign out.</p>
+<hr />
+<h3 id="organisationpanelvue"><code>OrganisationPanel.vue</code><a class="headerlink" href="#organisationpanelvue" title="Permanent link">&para;</a></h3>
+<p>Manages organisation members and their permission levels.</p>
+<hr />
+<h3 id="projectsettingspanelvue"><code>ProjectSettingsPanel.vue</code><a class="headerlink" href="#projectsettingspanelvue" title="Permanent link">&para;</a></h3>
+<p>Edit project metadata (name, description) and configure MinIO storage integration.</p>
+<hr />
+<h3 id="settingsdialogvue"><code>SettingsDialog.vue</code><a class="headerlink" href="#settingsdialogvue" title="Permanent link">&para;</a></h3>
+<p>Global application settings modal.</p>
+<hr />
+<h3 id="subscriptionpanelvue"><code>SubscriptionPanel.vue</code><a class="headerlink" href="#subscriptionpanelvue" title="Permanent link">&para;</a></h3>
+<p>Subscription tier and billing management.</p>
+<hr />
+<h2 id="annotation-components">Annotation Components<a class="headerlink" href="#annotation-components" title="Permanent link">&para;</a></h2>
+<h3 id="annotationeditorvue-annotationeditorrefactoredvue"><code>AnnotationEditor.vue</code> / <code>AnnotationEditorRefactored.vue</code><a class="headerlink" href="#annotationeditorvue-annotationeditorrefactoredvue" title="Permanent link">&para;</a></h3>
+<p>Full-screen canvas editor for annotating images. Powered by <strong>Konva.js</strong> (via <code>useKonvaCanvas</code>).<br />
+Supports bounding boxes, polygons, masks, and keypoints.</p>
+<hr />
+<h3 id="annotationtoolbarvue"><code>AnnotationToolbar.vue</code><a class="headerlink" href="#annotationtoolbarvue" title="Permanent link">&para;</a></h3>
+<p>Tool selection sidebar inside the annotation editor: pointer, bounding box, polygon, mask, keypoint tools.</p>
+<hr />
+<h3 id="annotationcontrolspanelvue"><code>AnnotationControlsPanel.vue</code><a class="headerlink" href="#annotationcontrolspanelvue" title="Permanent link">&para;</a></h3>
+<p>Right-side panel in the annotation editor providing shape list, label assignment, and shape properties.</p>
+<hr />
+<h3 id="annotationinfopanelvue"><code>AnnotationInfoPanel.vue</code><a class="headerlink" href="#annotationinfopanelvue" title="Permanent link">&para;</a></h3>
+<p>Displays metadata about the currently selected annotation (coordinates, label, status).</p>
+<hr />
+<h3 id="annotationhistoryvue"><code>AnnotationHistory.vue</code><a class="headerlink" href="#annotationhistoryvue" title="Permanent link">&para;</a></h3>
+<p>Shows the annotation revision history for an image, allowing users to revert to previous states.</p>
+<hr />
+<h3 id="aiannotationbuttonvue"><code>AIAnnotationButton.vue</code><a class="headerlink" href="#aiannotationbuttonvue" title="Permanent link">&para;</a></h3>
+<p>Trigger button to run AI inference on the currently open image directly from the editor.</p>
+<hr />
+<h3 id="imageadjustmentsvue"><code>ImageAdjustments.vue</code><a class="headerlink" href="#imageadjustmentsvue" title="Permanent link">&para;</a></h3>
+<p>Controls for brightness, contrast, and saturation adjustments of the canvas image (visual aids only, not stored).</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../overview/" class="btn btn-neutral float-left" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../state/" class="btn btn-neutral float-right" title="State Management">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../overview/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../state/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

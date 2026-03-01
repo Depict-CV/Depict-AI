@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>AI Inference - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "AI Inference";
+        var mkdocs_page_input_path = "backend/AI_Inference_Guide.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">AI Inference</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#what-it-does">✅ What It Does</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#how-to-use">How to Use</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-select-a-project">1. Select a Project</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-open-ai-panel">2. Open AI Panel</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-configure-inference">3. Configure Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-run-inference">4. Run Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-review-results">5. Review Results</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#api-endpoints">API Endpoints</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#single-image-inference">Single Image Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#batch-inference">Batch Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#project-inference">Project Inference</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#model-details">Model Details</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#resnet-50">ResNet-50</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#annotation-status">Annotation Status</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#performance">Performance</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#workflow-example">Workflow Example</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#typical-usage">Typical Usage</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#quality-control">Quality Control</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#when-to-use-ai-inference">When to Use AI Inference</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#optimization-tips">Optimization Tips</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#no-unannotated-images-found">"No unannotated images found"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#inference-failing-on-images">Inference failing on images</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#low-accuracy-predictions">Low accuracy predictions</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#slow-processing">Slow processing</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#future-enhancements">Future Enhancements</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#planned-features">Planned Features</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#coming-soon">Coming Soon</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#integration-with-workflow">Integration with Workflow</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#complete-pipeline">Complete Pipeline</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotation-states">Annotation States</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#technical-details">Technical Details</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#backend-implementation">Backend Implementation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#frontend-implementation">Frontend Implementation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#database-schema">Database Schema</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#support">Support</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#resources">Resources</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Backend</li>
+      <li class="breadcrumb-item active">AI Inference</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/backend/AI_Inference_Guide.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="ai-inference-feature">AI Inference Feature<a class="headerlink" href="#ai-inference-feature" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The AI Inference feature allows you to automatically annotate images in your projects using pre-trained machine learning models. Currently supports ResNet-50 for image classification.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<h3 id="what-it-does">✅ What It Does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Automatic Annotation</strong>: Run inference on all unannotated images in a project</li>
+<li><strong>Batch Processing</strong>: Process multiple images efficiently</li>
+<li><strong>ML Annotation Status</strong>: Predictions marked as "ML Annotation" for review</li>
+<li><strong>Detailed Results</strong>: See success/failure for each image</li>
+<li><strong>Optional Saving</strong>: Choose whether to save predictions to database</li>
+</ul>
+<h2 id="how-to-use">How to Use<a class="headerlink" href="#how-to-use" title="Permanent link">&para;</a></h2>
+<h3 id="1-select-a-project">1. Select a Project<a class="headerlink" href="#1-select-a-project" title="Permanent link">&para;</a></h3>
+<p>First, select the project you want to run inference on from the Projects panel.</p>
+<h3 id="2-open-ai-panel">2. Open AI Panel<a class="headerlink" href="#2-open-ai-panel" title="Permanent link">&para;</a></h3>
+<p>Click the AI Tools (🤖) icon in the sidebar.</p>
+<h3 id="3-configure-inference">3. Configure Inference<a class="headerlink" href="#3-configure-inference" title="Permanent link">&para;</a></h3>
+<p><strong>Model Selection:</strong>
+- Currently: ResNet-50 (Image Classification)
+- Trained on: ImageNet (1000 classes)
+- Future: More models will be added</p>
+<p><strong>Options:</strong>
+- <strong>Save as Annotations</strong>: Enable to automatically save predictions to database
+- <strong>Batch Limit</strong>: Optionally limit how many images to process (useful for testing)</p>
+<h3 id="4-run-inference">4. Run Inference<a class="headerlink" href="#4-run-inference" title="Permanent link">&para;</a></h3>
+<p>Click <strong>"Run Inference on Project"</strong> button.</p>
+<p>The system will:
+1. Find all images without annotations in the project
+2. Run ResNet-50 inference on each image
+3. Classify images into one of 1000 ImageNet categories
+4. Save annotations to database (if enabled)
+5. Display detailed results</p>
+<h3 id="5-review-results">5. Review Results<a class="headerlink" href="#5-review-results" title="Permanent link">&para;</a></h3>
+<p>After inference completes, you'll see:
+- <strong>Total Processed</strong>: Number of images analyzed
+- <strong>Successful</strong>: Images successfully classified
+- <strong>Failed</strong>: Images that encountered errors
+- <strong>Success Rate</strong>: Percentage of successful predictions
+- <strong>Detailed List</strong>: Individual results for each image with predictions</p>
+<h2 id="api-endpoints">API Endpoints<a class="headerlink" href="#api-endpoints" title="Permanent link">&para;</a></h2>
+<h3 id="single-image-inference">Single Image Inference<a class="headerlink" href="#single-image-inference" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>POST /infer/resnet50
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>{
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  &quot;image_path&quot;: &quot;/path/to/image.jpg&quot;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Response:
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>{
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  &quot;class_id&quot;: 281,
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  &quot;class_name&quot;: &quot;tabby cat&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>}
+</code></pre></div>
+<h3 id="batch-inference">Batch Inference<a class="headerlink" href="#batch-inference" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>POST /infer/resnet50/batch
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>{
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  &quot;data_ids&quot;: [1, 2, 3, 4],
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  &quot;project_id&quot;: 1,
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  &quot;save_annotations&quot;: true
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>}
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>Response:
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>{
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  &quot;total&quot;: 4,
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  &quot;successful&quot;: 3,
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>  &quot;failed&quot;: 1,
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>  &quot;results&quot;: [...],
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>  &quot;annotations_saved&quot;: true
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>}
+</code></pre></div>
+<h3 id="project-inference">Project Inference<a class="headerlink" href="#project-inference" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>POST /infer/resnet50/project
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>{
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  &quot;project_id&quot;: 1,
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  &quot;save_annotations&quot;: true,
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  &quot;limit&quot;: 100  // optional
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>}
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>Response:
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>{
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  &quot;total&quot;: 50,
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>  &quot;successful&quot;: 48,
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  &quot;failed&quot;: 2,
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  &quot;results&quot;: [...],
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  &quot;annotations_saved&quot;: true,
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  &quot;project_id&quot;: 1,
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  &quot;project_name&quot;: &quot;My Project&quot;
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>}
+</code></pre></div>
+<h2 id="model-details">Model Details<a class="headerlink" href="#model-details" title="Permanent link">&para;</a></h2>
+<h3 id="resnet-50">ResNet-50<a class="headerlink" href="#resnet-50" title="Permanent link">&para;</a></h3>
+<p><strong>Architecture:</strong>
+- Deep Residual Network with 50 layers
+- Pre-trained on ImageNet dataset
+- 1000 output classes</p>
+<p><strong>Input Requirements:</strong>
+- RGB images
+- Resized to 256x256
+- Center cropped to 224x224
+- Normalized with ImageNet mean/std</p>
+<p><strong>Output:</strong>
+- Class ID (0-999)
+- Class Name (e.g., "golden retriever", "laptop", "mountain bike")</p>
+<p><strong>Example Categories:</strong>
+- Animals: dogs, cats, birds, fish, insects
+- Objects: furniture, electronics, vehicles, food
+- Natural: plants, landscapes, weather
+- And 900+ more categories</p>
+<h2 id="annotation-status">Annotation Status<a class="headerlink" href="#annotation-status" title="Permanent link">&para;</a></h2>
+<p>Predictions are saved with status: <strong><code>ML_ANNOTATION</code></strong></p>
+<p>This allows you to:
+- Distinguish ML predictions from human annotations
+- Review and verify ML predictions
+- Approve or modify predictions as needed
+- Track annotation source</p>
+<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
+<p><strong>Speed:</strong>
+- Local CPU: ~1-2 seconds per image
+- GPU (if available): ~0.1-0.2 seconds per image
+- Batch processing: Efficient for large datasets</p>
+<p><strong>Accuracy:</strong>
+- Depends on image content and quality
+- Best for ImageNet-like images
+- May require review for domain-specific images</p>
+<h2 id="workflow-example">Workflow Example<a class="headerlink" href="#workflow-example" title="Permanent link">&para;</a></h2>
+<h3 id="typical-usage">Typical Usage<a class="headerlink" href="#typical-usage" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Upload Images</strong>: Import images to project via Import/Export panel</li>
+<li><strong>Run Inference</strong>: Use AI panel to auto-annotate all images</li>
+<li><strong>Review Results</strong>: Check predictions in results panel</li>
+<li><strong>Verify Annotations</strong>: Review ML annotations in gallery</li>
+<li><strong>Correct Errors</strong>: Manually edit incorrect predictions</li>
+<li><strong>Approve</strong>: Mark verified annotations as certified</li>
+</ol>
+<h3 id="quality-control">Quality Control<a class="headerlink" href="#quality-control" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>All Images (100)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    ↓
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Run ML Inference
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    ↓
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>ML Annotations (95 successful, 5 failed)
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    ↓
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Manual Review
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    ↓
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Corrections (10 images needed fixing)
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    ↓
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>Certified Annotations (95 verified)
+</code></pre></div>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="when-to-use-ai-inference">When to Use AI Inference<a class="headerlink" href="#when-to-use-ai-inference" title="Permanent link">&para;</a></h3>
+<p>✅ <strong>Good Use Cases:</strong>
+- Large datasets needing initial annotation
+- Common objects/categories (ImageNet classes)
+- Quick prototyping and exploration
+- Reducing manual annotation workload</p>
+<p>❌ <strong>Not Recommended:</strong>
+- Highly specialized domains (medical, scientific)
+- Custom categories not in ImageNet
+- Critical applications requiring 100% accuracy
+- Very low quality or corrupted images</p>
+<h3 id="optimization-tips">Optimization Tips<a class="headerlink" href="#optimization-tips" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Start Small</strong>: Test with batch limit before processing all images</li>
+<li><strong>Review First Batch</strong>: Check accuracy on sample before full run</li>
+<li><strong>Save Selectively</strong>: Disable saving if just testing</li>
+<li><strong>Monitor Failures</strong>: Check failed images for patterns</li>
+<li><strong>Iterate</strong>: Correct patterns and re-run on failed images</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="no-unannotated-images-found">"No unannotated images found"<a class="headerlink" href="#no-unannotated-images-found" title="Permanent link">&para;</a></h3>
+<p><strong>Cause</strong>: All images in project already have annotations<br />
+<strong>Solution</strong>: 
+- Clear existing annotations if you want to re-annotate
+- Upload new images to project</p>
+<h3 id="inference-failing-on-images">Inference failing on images<a class="headerlink" href="#inference-failing-on-images" title="Permanent link">&para;</a></h3>
+<p><strong>Cause</strong>: Image file issues (corrupt, wrong format, inaccessible)<br />
+<strong>Solution</strong>:
+- Check image file integrity
+- Verify file paths are correct
+- Ensure MinIO/storage is accessible
+- Check backend logs for specific errors</p>
+<h3 id="low-accuracy-predictions">Low accuracy predictions<a class="headerlink" href="#low-accuracy-predictions" title="Permanent link">&para;</a></h3>
+<p><strong>Cause</strong>: Images don't match ImageNet distribution<br />
+<strong>Solution</strong>:
+- Use domain-specific models (future feature)
+- Manual annotation for specialized content
+- Fine-tune models on your data (future feature)</p>
+<h3 id="slow-processing">Slow processing<a class="headerlink" href="#slow-processing" title="Permanent link">&para;</a></h3>
+<p><strong>Cause</strong>: CPU inference, large images<br />
+<strong>Solution</strong>:
+- Use GPU if available (configure PyTorch)
+- Process in smaller batches
+- Optimize image sizes</p>
+<h2 id="future-enhancements">Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<h3 id="planned-features">Planned Features<a class="headerlink" href="#planned-features" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Multiple model support (YOLOv8, SAM, etc.)</li>
+<li>[ ] Object detection (bounding boxes)</li>
+<li>[ ] Instance segmentation</li>
+<li>[ ] Custom model upload</li>
+<li>[ ] Fine-tuning on your data</li>
+<li>[ ] Active learning workflow</li>
+<li>[ ] Confidence scores display</li>
+<li>[ ] Batch selection for inference</li>
+<li>[ ] Progress bar during inference</li>
+<li>[ ] Export predictions to file</li>
+</ul>
+<h3 id="coming-soon">Coming Soon<a class="headerlink" href="#coming-soon" title="Permanent link">&para;</a></h3>
+<p><strong>YOLOv8 Object Detection:</strong>
+- Detect multiple objects per image
+- Draw bounding boxes
+- Multi-class detection</p>
+<p><strong>Segment Anything Model (SAM):</strong>
+- Interactive segmentation
+- Automatic mask generation
+- Instance separation</p>
+<h2 id="integration-with-workflow">Integration with Workflow<a class="headerlink" href="#integration-with-workflow" title="Permanent link">&para;</a></h2>
+<h3 id="complete-pipeline">Complete Pipeline<a class="headerlink" href="#complete-pipeline" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>1. Data Import
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>   ↓
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>2. AI Inference (Auto-annotation)
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>   ↓
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>3. Manual Review (Quality check)
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>   ↓
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>4. Corrections (Fix errors)
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>   ↓
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>5. Certification (Approve)
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>   ↓
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>6. Export (Training data ready)
+</code></pre></div>
+<h3 id="annotation-states">Annotation States<a class="headerlink" href="#annotation-states" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Pending</strong>: No annotation yet</li>
+<li><strong>ML Annotation</strong>: Auto-generated by AI</li>
+<li><strong>Human Annotation</strong>: Manually created</li>
+<li><strong>To Review</strong>: Needs verification</li>
+<li><strong>Certified</strong>: Verified and approved</li>
+<li><strong>Rejected</strong>: Marked as incorrect</li>
+</ul>
+<h2 id="technical-details">Technical Details<a class="headerlink" href="#technical-details" title="Permanent link">&para;</a></h2>
+<h3 id="backend-implementation">Backend Implementation<a class="headerlink" href="#backend-implementation" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>src/backend/api/ml.py</code></p>
+<p><strong>Endpoints:</strong>
+- <code>/infer/resnet50</code> - Single image
+- <code>/infer/resnet50/batch</code> - Multiple images
+- <code>/infer/resnet50/project</code> - Entire project</p>
+<p><strong>Dependencies:</strong>
+- PyTorch
+- torchvision
+- PIL (Pillow)</p>
+<h3 id="frontend-implementation">Frontend Implementation<a class="headerlink" href="#frontend-implementation" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>src/frontend/components/AIPanel.vue</code></p>
+<p><strong>Features:</strong>
+- Model selection interface
+- Inference configuration
+- Progress indication
+- Results visualization
+- Success rate calculation</p>
+<h3 id="database-schema">Database Schema<a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h3>
+<p><strong>Annotation Table:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">Annotation</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="nb">id</span><span class="o">=</span><span class="n">auto</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">status</span><span class="o">=</span><span class="n">ML_ANNOTATION</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;golden_retriever&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">annotation_score</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Future: confidence score</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">data_id</span><span class="o">=</span><span class="n">image_id</span><span class="p">,</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">creation_date</span><span class="o">=</span><span class="n">now</span><span class="p">()</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">)</span>
+</code></pre></div></p>
+<h2 id="support">Support<a class="headerlink" href="#support" title="Permanent link">&para;</a></h2>
+<p>For issues or questions:
+1. Check backend logs for errors
+2. Verify image files are accessible
+3. Test with single image first
+4. Check API documentation at <code>/docs</code></p>
+<h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>PyTorch Models</strong>: https://pytorch.org/vision/stable/models.html</li>
+<li><strong>ImageNet Classes</strong>: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a</li>
+<li><strong>ResNet Paper</strong>: https://arxiv.org/abs/1512.03385</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../api/" class="btn btn-neutral float-left" title="API Reference"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../frontend/overview/" class="btn btn-neutral float-right" title="Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../frontend/overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

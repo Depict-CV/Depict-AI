@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Database Schema - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Database Schema";
+        var mkdocs_page_input_path = "architecture/database.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../quickstart/">Quick Start</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../backend/AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../frontend/styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Database Schema</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#entity-relationship-overview">Entity Relationship Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#tables">Tables</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#user">user</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#project">project</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#projectuserlink">projectuserlink</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#minioconfig">minioconfig</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#data">data</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotation">annotation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database-initialization">Database Initialization</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Architecture</li>
+      <li class="breadcrumb-item active">Database Schema</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/architecture/database.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="database-schema">Database Schema<a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h1>
+<p>Depict AI uses <strong>SQLModel</strong> (a combination of SQLAlchemy and Pydantic) to define its database schema. Tables are created automatically on backend startup via <code>init_db()</code>.</p>
+<hr />
+<h2 id="entity-relationship-overview">Entity Relationship Overview<a class="headerlink" href="#entity-relationship-overview" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>User ──────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a> │                                                  │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a> │ many-to-many (ProjectUserLink)                   │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a> ▼                                                  │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Project ──► MinIOConfig                            │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a> │                                                  │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> │ one-to-many                                      │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a> ▼                                                  │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Data (Image/Video/Frames) ◄──── author_id ─────────┘
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a> │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a> │ one-to-many
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a> ▼
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>Annotation ──► AnnotationLabel
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>               AnnotationChange (history)
+</code></pre></div>
+<hr />
+<h2 id="tables">Tables<a class="headerlink" href="#tables" title="Permanent link">&para;</a></h2>
+<h3 id="user"><code>user</code><a class="headerlink" href="#user" title="Permanent link">&para;</a></h3>
+<p>Stores authenticated users (created on first login via Clerk).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Integer PK</td>
+<td>Auto-generated</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>String (unique, indexed)</td>
+<td>Display name</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>String (unique, indexed)</td>
+<td>Email address</td>
+</tr>
+<tr>
+<td><code>permission</code></td>
+<td>Enum</td>
+<td>Global permission level</td>
+</tr>
+<tr>
+<td><code>oauth_provider</code></td>
+<td>String (nullable)</td>
+<td><code>clerk</code>, <code>google</code>, <code>microsoft</code>, <code>github</code></td>
+</tr>
+<tr>
+<td><code>oauth_id</code></td>
+<td>String (nullable)</td>
+<td>External provider user ID</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Permission levels:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>view only</code></td>
+<td>Read-only access</td>
+</tr>
+<tr>
+<td><code>edit</code></td>
+<td>Can create and edit annotations</td>
+</tr>
+<tr>
+<td><code>edit &amp; delete</code></td>
+<td>Can also delete data</td>
+</tr>
+<tr>
+<td><code>can certify</code></td>
+<td>Can mark annotations as certified</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="project"><code>project</code><a class="headerlink" href="#project" title="Permanent link">&para;</a></h3>
+<p>A logical grouping of images and annotations.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Integer PK</td>
+<td>Auto-generated</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>String (unique, indexed)</td>
+<td>Project name</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>String (nullable)</td>
+<td>Optional description</td>
+</tr>
+<tr>
+<td><code>owner_id</code></td>
+<td>FK → <code>user.id</code></td>
+<td>Project creator</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>Datetime (nullable)</td>
+<td>Creation timestamp</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Enum</td>
+<td><code>active</code>, <code>deleted</code>, <code>archived</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="projectuserlink"><code>projectuserlink</code><a class="headerlink" href="#projectuserlink" title="Permanent link">&para;</a></h3>
+<p>Many-to-many join table between <code>user</code> and <code>project</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_id</code></td>
+<td>FK → <code>project.id</code> (PK)</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>FK → <code>user.id</code> (PK)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="minioconfig"><code>minioconfig</code><a class="headerlink" href="#minioconfig" title="Permanent link">&para;</a></h3>
+<p>Stores per-project MinIO credentials for object storage access.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Integer PK</td>
+<td>Auto-generated</td>
+</tr>
+<tr>
+<td><code>project_id</code></td>
+<td>FK → <code>project.id</code> (unique)</td>
+<td>One config per project</td>
+</tr>
+<tr>
+<td><code>endpoint</code></td>
+<td>String</td>
+<td>MinIO server URL</td>
+</tr>
+<tr>
+<td><code>bucket_name</code></td>
+<td>String</td>
+<td>Target bucket</td>
+</tr>
+<tr>
+<td><code>access_key</code></td>
+<td>String</td>
+<td>Access key ID</td>
+</tr>
+<tr>
+<td><code>secret_key</code></td>
+<td>String</td>
+<td>Secret access key ⚠️ stored in plaintext — encrypt in production</td>
+</tr>
+<tr>
+<td><code>use_ssl</code></td>
+<td>Boolean</td>
+<td>Enable TLS</td>
+</tr>
+<tr>
+<td><code>last_sync</code></td>
+<td>Datetime (nullable)</td>
+<td>Timestamp of last sync</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="data"><code>data</code><a class="headerlink" href="#data" title="Permanent link">&para;</a></h3>
+<p>Represents an individual media item (image, video, or frame sequence).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Integer PK</td>
+<td>Auto-generated</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>Enum</td>
+<td><code>image</code>, <code>frames</code>, <code>video</code></td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td>String</td>
+<td>Path, URL, or API reference</td>
+</tr>
+<tr>
+<td><code>author_id</code></td>
+<td>FK → <code>user.id</code> (nullable)</td>
+<td>Uploader</td>
+</tr>
+<tr>
+<td><code>creation_date</code></td>
+<td>Datetime (nullable)</td>
+<td>Upload timestamp</td>
+</tr>
+<tr>
+<td><code>project_id</code></td>
+<td>FK → <code>project.id</code></td>
+<td>Owning project</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="annotation"><code>annotation</code><a class="headerlink" href="#annotation" title="Permanent link">&para;</a></h3>
+<p>Stores individual annotations. One <code>Data</code> record can have multiple annotations (e.g., multiple bounding boxes on one image).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Integer PK</td>
+<td>Auto-generated</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Enum</td>
+<td>Annotation lifecycle status</td>
+</tr>
+<tr>
+<td><code>history_status</code></td>
+<td>Enum</td>
+<td><code>current</code> or <code>history</code> (for versioning)</td>
+</tr>
+<tr>
+<td><code>x1, y1, x2, y2</code></td>
+<td>Integer (nullable)</td>
+<td>Bounding box coordinates</td>
+</tr>
+<tr>
+<td><code>keypoints</code></td>
+<td>String/JSON (nullable)</td>
+<td><code>{"nodes": [...], "edges": [...]}</code></td>
+</tr>
+<tr>
+<td><code>mask_segments</code></td>
+<td>String/JSON (nullable)</td>
+<td>Array of polygon point arrays</td>
+</tr>
+<tr>
+<td><code>polygon</code></td>
+<td>String/JSON (nullable)</td>
+<td>Flat array of polygon points</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Annotation statuses:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>to review</code></td>
+<td>Newly created, pending review</td>
+</tr>
+<tr>
+<td><code>human annotation</code></td>
+<td>Verified by a human annotator</td>
+</tr>
+<tr>
+<td><code>ml annotation</code></td>
+<td>Generated by an AI model</td>
+</tr>
+<tr>
+<td><code>rejected</code></td>
+<td>Marked as incorrect</td>
+</tr>
+<tr>
+<td><code>certified</code></td>
+<td>Final, approved annotation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="database-initialization">Database Initialization<a class="headerlink" href="#database-initialization" title="Permanent link">&para;</a></h2>
+<p>On backend startup, <code>src/backend/db/database.py</code> calls <code>SQLModel.metadata.create_all(engine)</code> which creates any missing tables without dropping existing data.</p>
+<p>For production migrations (schema changes), use <strong>Alembic</strong> or recreate the database and restore from backup.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../design/" class="btn btn-neutral float-left" title="System Design"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../api-flow/" class="btn btn-neutral float-right" title="API Flow">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../design/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../api-flow/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

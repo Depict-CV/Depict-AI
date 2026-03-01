@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Edouard Geze, Tangi Migot" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Quick Start - Depict-AI Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Quick Start";
+        var mkdocs_page_input_path = "quickstart.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Depict-AI Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Quick Start</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-install-dependencies">1. Install Dependencies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-start-the-application">2. Start the Application</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#start-backend-and-frontend-in-separate-terminals">Start backend and frontend in separate terminals</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-access-the-application">3. Access the Application</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-create-your-first-user">4. Create Your First User</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#option-1-sign-up-via-ui">Option 1: Sign Up via UI</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#option-2-using-api-docs">Option 2: Using API Docs</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-log-in">5. Log In</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-explore-features">6. Explore Features</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#create-a-project">Create a Project</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#upload-images">Upload Images</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotate-images">Annotate Images</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#set-up-oauth2-optional">Set Up OAuth2 (Optional)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#explore-documentation">Explore Documentation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#run-tests">Run Tests</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#view-documentation">View Documentation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-commands">Common Commands</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#getting-help">Getting Help</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Backend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend/api/">API Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../backend/AI_Inference_Guide/">AI Inference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Frontend</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend/components/">Components</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend/state/">State Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend/routing/">Routing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../frontend/styling/">Styling</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architecture</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/api-flow/">API Flow</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../deployment/docker/">Docker Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../deployment/production/">Production</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developers Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../contributing/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../code-style/">Code Style</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../sentry/">Sentry Tutorial</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Depict-AI Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Getting Started</li>
+      <li class="breadcrumb-item active">Quick Start</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Depict-CV/Depict-AI/edit/master/docs/quickstart.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h1>
+<p>Get Depict AI running in under 5 minutes!</p>
+<h2 id="1-install-dependencies">1. Install Dependencies<a class="headerlink" href="#1-install-dependencies" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install Python dependencies</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>poetry<span class="w"> </span>install
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Install frontend dependencies</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nb">cd</span><span class="w"> </span>src/frontend<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>npm<span class="w"> </span>install<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>../..
+</code></pre></div>
+<h2 id="2-start-the-application">2. Start the Application<a class="headerlink" href="#2-start-the-application" title="Permanent link">&para;</a></h2>
+<h3 id="start-backend-and-frontend-in-separate-terminals">Start backend and frontend in separate terminals<a class="headerlink" href="#start-backend-and-frontend-in-separate-terminals" title="Permanent link">&para;</a></h3>
+<p><strong>Terminal 1 - Backend:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>src/backend
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </span>dev<span class="w"> </span>endpoints.py
+</code></pre></div></p>
+<p><strong>Terminal 2 - Frontend:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>src/frontend
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>npm<span class="w"> </span>run<span class="w"> </span>dev
+</code></pre></div></p>
+<h2 id="3-access-the-application">3. Access the Application<a class="headerlink" href="#3-access-the-application" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Frontend:</strong> http://localhost:3000</li>
+<li><strong>Backend API:</strong> http://localhost:8000</li>
+<li><strong>API Docs:</strong> http://localhost:8000/docs</li>
+</ul>
+<h2 id="4-create-your-first-user">4. Create Your First User<a class="headerlink" href="#4-create-your-first-user" title="Permanent link">&para;</a></h2>
+<h3 id="option-1-sign-up-via-ui">Option 1: Sign Up via UI<a class="headerlink" href="#option-1-sign-up-via-ui" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Go to http://localhost:3000</li>
+<li>Click "Sign Up"</li>
+<li>Enter:</li>
+<li>Username</li>
+<li>Email</li>
+<li>Password (min 6 characters)</li>
+<li>Click "Sign Up"</li>
+</ol>
+<h3 id="option-2-using-api-docs">Option 2: Using API Docs<a class="headerlink" href="#option-2-using-api-docs" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Go to http://localhost:8000/docs</li>
+<li>Find <code>POST /signup</code> endpoint</li>
+<li>Click "Try it out"</li>
+<li>Enter user details:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;admin@example.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;hashed_password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;password123&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;permission&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;edit &amp; delete&quot;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
+</code></pre></div></li>
+<li>Execute</li>
+</ol>
+<h2 id="5-log-in">5. Log In<a class="headerlink" href="#5-log-in" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Go to http://localhost:3000</li>
+<li>Enter your email and password</li>
+<li>Click "Sign In"</li>
+</ol>
+<h2 id="6-explore-features">6. Explore Features<a class="headerlink" href="#6-explore-features" title="Permanent link">&para;</a></h2>
+<h3 id="create-a-project">Create a Project<a class="headerlink" href="#create-a-project" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click on "Projects" in the sidebar</li>
+<li>Click "Create Project"</li>
+<li>Enter project name and description</li>
+<li>Start adding images!</li>
+</ol>
+<h3 id="upload-images">Upload Images<a class="headerlink" href="#upload-images" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Select a project</li>
+<li>Click "Upload" panel</li>
+<li>Drag and drop images or click to browse</li>
+<li>Images will be processed and added to your project</li>
+</ol>
+<h3 id="annotate-images">Annotate Images<a class="headerlink" href="#annotate-images" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click on an image in the gallery</li>
+<li>Use annotation tools to label</li>
+<li>Save annotations</li>
+</ol>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<h3 id="set-up-oauth2-optional">Set Up OAuth2 (Optional)<a class="headerlink" href="#set-up-oauth2-optional" title="Permanent link">&para;</a></h3>
+<p>Enable social login with Google, Microsoft, or GitHub:</p>
+<ul>
+<li><a href="../USER_MANAGEMENT/">Authentication Setup Guide</a></li>
+</ul>
+<h3 id="explore-documentation">Explore Documentation<a class="headerlink" href="#explore-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="../backend/api/">Backend API Reference</a></li>
+<li><a href="../frontend/components/">Frontend Components</a></li>
+<li><a href="../architecture/database/">Database Schema</a></li>
+</ul>
+<h3 id="run-tests">Run Tests<a class="headerlink" href="#run-tests" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+</code></pre></div>
+<h3 id="view-documentation">View Documentation<a class="headerlink" href="#view-documentation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># Then visit http://127.0.0.1:8000</span>
+</code></pre></div>
+<h2 id="common-commands">Common Commands<a class="headerlink" href="#common-commands" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Backend</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">cd</span><span class="w"> </span>src/backend
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </span>dev<span class="w"> </span>endpoints.py<span class="w">  </span><span class="c1"># Start FastAPI server</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nb">cd</span><span class="w"> </span>../..
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w">                     </span><span class="c1"># Run tests</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1"># Frontend  </span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nb">cd</span><span class="w"> </span>src/frontend
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>npm<span class="w"> </span>run<span class="w"> </span>dev<span class="w">                            </span><span class="c1"># Start Nuxt dev server</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="c1"># Docs</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="nb">cd</span><span class="w"> </span>../..
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve<span class="w">                </span><span class="c1"># Start MkDocs server</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="c1"># Maintenance</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>poetry<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>.<span class="w">                </span><span class="c1"># Lint Python code</span>
+</code></pre></div>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>Can't log in?</strong>
+- Check backend logs for errors
+- Verify user was created successfully
+- Ensure JWT_SECRET_KEY is set in <code>.env</code></p>
+<p><strong>Images not uploading?</strong>
+- Check file size limits
+- Verify image format (jpg, png, etc.)
+- Check backend logs for errors</p>
+<p><strong>Port conflicts?</strong>
+- Backend default: 8000
+- Frontend default: 3000
+- Change ports in config if needed</p>
+<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Check <a href="../backend/overview/">Backend Documentation</a></li>
+<li>Check <a href="../frontend/overview/">Frontend Documentation</a></li>
+<li>Review <a href="http://localhost:8000/docs">API Docs</a> when server is running</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../backend/overview/" class="btn btn-neutral float-right" title="Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Depict-CV/Depict-AI" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../backend/overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
