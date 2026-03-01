@@ -25,8 +25,13 @@ const categories = [
 
 const handleSelect = (category) => {
   if (category.key === 'hugging-face-dataset') {
+    window.open('https://huggingface.co/datasets?sort=trending&search=satellite', '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  if (category.key === 'aws-open-data') {
     window.open(
-      'https://huggingface.co/datasets?modality=modality:image&sort=trending',
+      'https://aws.amazon.com/marketplace/search/results?trk=8384929b-0eb1-4af3-8996-07aa409646bc&sc_channel=el&FULFILLMENT_OPTION_TYPE=DATA_EXCHANGE&CONTRACT_TYPE=OPEN_DATA_LICENSES&filters=FULFILLMENT_OPTION_TYPE%2CCONTRACT_TYPE',
       '_blank',
       'noopener,noreferrer'
     )

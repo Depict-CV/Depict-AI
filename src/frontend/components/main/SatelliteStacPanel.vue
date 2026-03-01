@@ -566,28 +566,16 @@ onUnmounted(() => {
 
 <template>
   <div class="w-full">
-    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-5">
+    <div class="bg-white border border-gray-200 rounded-lg p-3 mb-4">
       <h2 class="text-lg font-semibold text-gray-900 mb-1">Satellite Data (Microsoft Planetary Computer)</h2>
-      <p class="text-sm text-gray-500 mb-4">Set STAC search parameters and load imagery metadata.</p>
+      <p class="text-sm text-gray-500 mb-3">Set STAC search parameters and load imagery metadata.</p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">Collection</label>
-          <select
-            v-model="form.collection"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            <option v-for="collection in collectionOptions" :key="collection" :value="collection">
-              {{ collection }}
-            </option>
-          </select>
-        </div>
-
-        <div class="md:col-span-2">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+        <div class="lg:col-span-1">
           <label class="block text-sm text-gray-700 mb-1">Draw BBOX on map</label>
-          <div ref="mapContainer" class="w-full h-64 border border-gray-300 rounded"></div>
+          <div ref="mapContainer" class="w-full aspect-square border border-gray-300 rounded"></div>
           <div class="mt-2 flex items-center justify-between gap-2">
-            <p class="text-xs text-gray-500">Current BBOX: {{ bboxLabel }}</p>
+            <p class="text-xs text-gray-500 truncate">Current BBOX: {{ bboxLabel }}</p>
             <button
               type="button"
               class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
@@ -599,76 +587,94 @@ onUnmounted(() => {
           <p class="text-xs text-gray-400 mt-1">Use the rectangle tool on the map toolbar to draw your area.</p>
         </div>
 
-        <div class="md:col-span-2">
-          <label class="block text-sm text-gray-700 mb-1">Or edit BBOX manually (minLon,minLat,maxLon,maxLat)</label>
-          <div class="flex gap-2">
-            <input
-              v-model="bboxInput"
-              type="text"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-              placeholder="-122.600000, 37.600000, -122.300000, 37.900000"
-            />
+        <div class="lg:col-span-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Collection</label>
+              <select
+                v-model="form.collection"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option v-for="collection in collectionOptions" :key="collection" :value="collection">
+                  {{ collection }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Start Date</label>
+              <input
+                v-model="form.startDate"
+                type="date"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">End Date</label>
+              <input
+                v-model="form.endDate"
+                type="date"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Max Cloud Cover (%)</label>
+              <input
+                v-model.number="form.maxCloudCover"
+                type="number"
+                min="0"
+                max="100"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Sort by</label>
+              <select
+                v-model="form.sortField"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option v-for="option in sortFieldOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-sm text-gray-700 mb-1"
+                >Or edit BBOX manually (minLon,minLat,maxLon,maxLat)</label
+              >
+              <div class="flex gap-2">
+                <input
+                  v-model="bboxInput"
+                  type="text"
+                  class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="-122.600000, 37.600000, -122.300000, 37.900000"
+                />
+                <button
+                  type="button"
+                  class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+                  @click="applyManualBbox"
+                >
+                  Apply Coordinates
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex justify-end">
             <button
               type="button"
-              class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
-              @click="applyManualBbox"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              :disabled="loading"
+              @click="loadStacData"
             >
-              Apply Coordinates
+              {{ loading ? 'Loading...' : 'Load as STAC' }}
             </button>
           </div>
         </div>
-
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">Start Date</label>
-          <input
-            v-model="form.startDate"
-            type="date"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">End Date</label>
-          <input
-            v-model="form.endDate"
-            type="date"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">Max Cloud Cover (%)</label>
-          <input
-            v-model.number="form.maxCloudCover"
-            type="number"
-            min="0"
-            max="100"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm text-gray-700 mb-1">Sort by</label>
-          <select
-            v-model="form.sortField"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            <option v-for="option in sortFieldOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <div class="mt-4">
-        <button
-          type="button"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
-          :disabled="loading"
-          @click="loadStacData"
-        >
-          {{ loading ? 'Loading...' : 'Load as STAC' }}
-        </button>
       </div>
 
       <p v-if="errorMessage" class="mt-3 text-sm text-red-600">{{ errorMessage }}</p>
