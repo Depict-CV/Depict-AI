@@ -127,19 +127,21 @@ Contributions are **very welcome**.
 
 ### Prerequisites
 
-- Python 3.12+
-- Poetry
-- Node.js & npm
-- Docker & Docker Compose (optional, for containerized run)
+* Python 3.12+
+* Poetry
+* Node.js & npm
+* Docker & Docker Compose (optional, for containerized run)
 
 ### Setup
 
 1. **Install Python dependencies:**
+
    ```bash
    poetry install
    ```
 
 2. **Install frontend dependencies:**
+
    ```bash
    cd src/frontend
    npm install
@@ -155,13 +157,14 @@ docker compose up --build
 docker compose down
 ```
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API docs: http://localhost:8000/docs
+* Frontend: <http://localhost:3000>
+* Backend API: <http://localhost:8000>
+* API docs: <http://localhost:8000/docs>
 
 ### Manual Commands
 
 **Backend (FastAPI):**
+
 ```bash
 poetry env activate
 cd src/backend
@@ -169,12 +172,14 @@ fastapi dev endpoints.py
 ```
 
 **Frontend (Vue.js):**
+
 ```bash
 cd src/frontend
 npm run dev
 ```
 
 **Documentation:**
+
 ```bash
 poetry run mkdocs serve
 ```
