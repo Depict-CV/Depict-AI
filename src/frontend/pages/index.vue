@@ -39,6 +39,7 @@ const features = runtimeConfig.public.features || {}
 const menuFeatureMap = {
   projects: 'sidebarProjects',
   import: 'sidebarImport',
+  'data-aquisition': 'sidebarDataAquisition',
   ai: 'sidebarAi',
   filter: 'sidebarFilter',
   stats: 'sidebarStats',
@@ -360,7 +361,7 @@ onMounted(async () => {
             </button>
 
             <button
-              v-if="features.sidebarAi !== false"
+              v-if="features.sidebarDataAquisition !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'data-aquisition'
@@ -368,12 +369,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Data aquisition"
-              @click="activeMenu = activeMenu === 'data-aquisition' ? null : 'data-aquisition'"
+              @click="toggleMenu('data-aquisition')"
             >
               <Database :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarAi !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'ai' ? 'bg-blue-950 text-white' : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
