@@ -29,6 +29,7 @@ export default defineNuxtConfig({
       features: {
         annotatePage: flag('VITE_FEATURE_ANNOTATE_PAGE', true),
         sidebarProjects: flag('VITE_FEATURE_SIDEBAR_PROJECTS', true),
+        sidebarDataAquisition: flag('VITE_FEATURE_SIDEBAR_DATA_AQUISITION', true),
         sidebarImport: flag('VITE_FEATURE_SIDEBAR_IMPORT', true),
         sidebarAi: flag('VITE_FEATURE_SIDEBAR_AI', true),
         sidebarFilter: flag('VITE_FEATURE_SIDEBAR_FILTER', true),
