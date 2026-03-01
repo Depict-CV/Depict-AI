@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
   projectId: {
@@ -23,16 +23,17 @@ const previewImageTitle = ref('')
 const mapContainer = ref(null)
 const bboxInput = ref('')
 const selectedItemIds = ref(new Set())
+const lastSelectedItemId = ref(null)
 const isImporting = ref(false)
 const importMessage = ref('')
-const currentPage = ref(1)
 const nextPageRequest = ref(null)
-const requestHistory = ref([])
-const currentPageRequest = ref(null)
+const resultsSentinel = ref(null)
 
 let leaflet = null
 let map = null
 let drawnItems = null
+let resultsObserver = null
+let imageClickTimeout = null
 
 const PAGE_SIZE = 20
 
@@ -82,8 +83,7 @@ const selectedCount = computed(() => selectedItemIds.value.size)
 
 const canImport = computed(() => selectedCount.value > 0 && !!props.projectId)
 
-const canGoNext = computed(() => !!nextPageRequest.value && !loading.value)
-const canGoPrevious = computed(() => requestHistory.value.length > 0 && !loading.value)
+const canLoadMoreChunks = computed(() => !!nextPageRequest.value && !loading.value)
 
 const parseBboxInput = (value) => {
   const parsed = value
@@ -138,6 +138,60 @@ const toggleItemSelection = (itemId) => {
   }
 }
 
+const selectRangeFromLastSelection = (itemId) => {
+  if (!lastSelectedItemId.value) {
+    toggleItemSelection(itemId)
+    lastSelectedItemId.value = itemId
+    return
+  }
+
+  const items = filteredStacItems.value
+  const lastIndex = items.findIndex((item) => item.id === lastSelectedItemId.value)
+  const currentIndex = items.findIndex((item) => item.id === itemId)
+
+  if (lastIndex === -1 || currentIndex === -1) {
+    toggleItemSelection(itemId)
+    lastSelectedItemId.value = itemId
+    return
+  }
+
+  const start = Math.min(lastIndex, currentIndex)
+  const end = Math.max(lastIndex, currentIndex)
+
+  for (let index = start; index <= end; index += 1) {
+    selectedItemIds.value.add(items[index].id)
+  }
+
+  lastSelectedItemId.value = itemId
+}
+
+const handleImageSingleClick = (itemId, event) => {
+  const isShiftClick = event?.shiftKey === true
+
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+  }
+
+  imageClickTimeout = setTimeout(() => {
+    if (isShiftClick) {
+      selectRangeFromLastSelection(itemId)
+    } else {
+      toggleItemSelection(itemId)
+      lastSelectedItemId.value = itemId
+    }
+    imageClickTimeout = null
+  }, 220)
+}
+
+const handleImageDoubleClick = (item) => {
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+    imageClickTimeout = null
+  }
+
+  openImagePreview(item)
+}
+
 const toggleSelectAllVisible = () => {
   const visibleIds = filteredStacItems.value.map((item) => item.id)
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedItemIds.value.has(id))
@@ -148,6 +202,11 @@ const toggleSelectAllVisible = () => {
   }
 
   visibleIds.forEach((id) => selectedItemIds.value.add(id))
+}
+
+const handleCheckboxToggle = (itemId) => {
+  toggleItemSelection(itemId)
+  lastSelectedItemId.value = itemId
 }
 
 const importSelectedItems = async () => {
@@ -235,14 +294,25 @@ const buildRequestFromLink = (link, basePayload) => {
   }
 }
 
-const applyResponsePage = (response, basePayload) => {
-  stacItems.value = mapIncomingItems(response?.features || [])
+const appendUniqueItems = (incomingItems, { reset = false } = {}) => {
+  if (reset) {
+    stacItems.value = []
+  }
+
+  const existingIds = new Set(stacItems.value.map((item) => item.id))
+  const uniqueIncoming = incomingItems.filter((item) => item?.id && !existingIds.has(item.id))
+  stacItems.value = [...stacItems.value, ...uniqueIncoming]
+}
+
+const applyResponsePage = (response, basePayload, { reset = false } = {}) => {
+  const mappedItems = mapIncomingItems(response?.features || [])
+  appendUniqueItems(mappedItems, { reset })
 
   const nextLink = (response?.links || []).find((link) => link?.rel === 'next' && link?.href)
   nextPageRequest.value = buildRequestFromLink(nextLink, basePayload)
 }
 
-const executePageRequest = async (requestConfig, { incrementPage = 0 } = {}) => {
+const executePageRequest = async (requestConfig, { reset = false } = {}) => {
   if (!requestConfig?.href) {
     return
   }
@@ -258,9 +328,7 @@ const executePageRequest = async (requestConfig, { incrementPage = 0 } = {}) => 
       },
     })
 
-    applyResponsePage(response, requestConfig.body)
-    currentPageRequest.value = requestConfig
-    currentPage.value = Math.max(1, currentPage.value + incrementPage)
+    applyResponsePage(response, requestConfig.body, { reset })
   } catch (error) {
     errorMessage.value = error?.data?.detail || error?.message || 'Failed to load STAC page data'
   } finally {
@@ -268,25 +336,12 @@ const executePageRequest = async (requestConfig, { incrementPage = 0 } = {}) => 
   }
 }
 
-const goToNextPage = async () => {
-  if (!canGoNext.value || !nextPageRequest.value) {
+const loadNextChunk = async () => {
+  if (!canLoadMoreChunks.value || !nextPageRequest.value) {
     return
   }
 
-  if (currentPageRequest.value) {
-    requestHistory.value.push(currentPageRequest.value)
-  }
-
-  await executePageRequest(nextPageRequest.value, { incrementPage: 1 })
-}
-
-const goToPreviousPage = async () => {
-  if (!canGoPrevious.value) {
-    return
-  }
-
-  const previousRequest = requestHistory.value.pop()
-  await executePageRequest(previousRequest, { incrementPage: -1 })
+  await executePageRequest(nextPageRequest.value)
 }
 
 const clearDrawnBbox = () => {
@@ -424,15 +479,9 @@ const loadStacData = async () => {
       },
     })
 
-    applyResponsePage(response, payload)
-    currentPageRequest.value = {
-      href: 'https://planetarycomputer.microsoft.com/api/stac/v1/search',
-      method: 'POST',
-      body: payload,
-    }
-    requestHistory.value = []
-    currentPage.value = 1
+    applyResponsePage(response, payload, { reset: true })
     selectedItemIds.value = new Set()
+    lastSelectedItemId.value = null
     importMessage.value = ''
   } catch (error) {
     errorMessage.value = error?.data?.detail || error?.message || 'Failed to load STAC data'
@@ -456,13 +505,55 @@ const closeImagePreview = () => {
   previewImageTitle.value = ''
 }
 
+const observeSentinel = () => {
+  if (resultsObserver) {
+    resultsObserver.disconnect()
+    resultsObserver = null
+  }
+
+  if (!resultsSentinel.value || typeof window === 'undefined') {
+    return
+  }
+
+  resultsObserver = new window.IntersectionObserver(
+    (entries) => {
+      const [entry] = entries
+      if (entry?.isIntersecting) {
+        loadNextChunk()
+      }
+    },
+    {
+      root: null,
+      rootMargin: '250px 0px',
+      threshold: 0,
+    }
+  )
+
+  resultsObserver.observe(resultsSentinel.value)
+}
+
+watch(resultsSentinel, () => {
+  observeSentinel()
+})
+
 onMounted(() => {
+  observeSentinel()
   initMap().catch((error) => {
     errorMessage.value = error?.message || 'Failed to initialize map'
   })
 })
 
 onUnmounted(() => {
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+    imageClickTimeout = null
+  }
+
+  if (resultsObserver) {
+    resultsObserver.disconnect()
+    resultsObserver = null
+  }
+
   if (map) {
     map.remove()
     map = null
@@ -586,23 +677,7 @@ onUnmounted(() => {
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <h3 class="text-base font-semibold text-gray-900">STAC Results</h3>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-500">Page {{ currentPage }} • {{ filteredStacItems.length }} item(s)</span>
-        <button
-          type="button"
-          class="px-2.5 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded disabled:bg-gray-200 disabled:text-gray-400"
-          :disabled="!canGoPrevious"
-          @click="goToPreviousPage"
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          class="px-2.5 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded disabled:bg-gray-200 disabled:text-gray-400"
-          :disabled="!canGoNext"
-          @click="goToNextPage"
-        >
-          Next
-        </button>
+        <span class="text-sm text-gray-500">Loaded {{ filteredStacItems.length }} item(s)</span>
         <button
           type="button"
           class="px-2.5 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
@@ -624,43 +699,48 @@ onUnmounted(() => {
     <p v-if="!projectId" class="mb-3 text-xs text-amber-700">Select a project to enable import.</p>
     <p v-if="importMessage" class="mb-3 text-sm text-gray-700">{{ importMessage }}</p>
 
-    <div v-if="filteredStacItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div
+      v-if="filteredStacItems.length > 0"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2"
+    >
       <div
         v-for="item in filteredStacItems"
         :key="item.id"
         class="border rounded-lg overflow-hidden bg-white"
         :class="selectedItemIds.has(item.id) ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-200'"
       >
-        <div class="h-36 bg-gray-100">
+        <div class="aspect-square bg-gray-100">
           <img
             v-if="item.previewUrl"
             :src="item.previewUrl"
             :alt="item.id"
-            class="w-full h-full object-cover cursor-zoom-in"
+            class="w-full h-full object-contain cursor-zoom-in"
             title="Double click to enlarge"
-            @dblclick="openImagePreview(item)"
+            @click="handleImageSingleClick(item.id, $event)"
+            @dblclick="handleImageDoubleClick(item)"
           />
           <div v-else class="w-full h-full flex items-center justify-center text-xs text-gray-500">No preview</div>
         </div>
-        <div class="p-3">
+        <div class="p-2">
           <label class="inline-flex items-center gap-2 text-xs text-gray-700 mb-2">
             <input
               type="checkbox"
               class="rounded border-gray-300"
               :checked="selectedItemIds.has(item.id)"
-              @change="toggleItemSelection(item.id)"
+              @change="handleCheckboxToggle(item.id)"
             />
             Select item
           </label>
           <p class="text-sm font-medium text-gray-900 truncate">{{ item.id }}</p>
           <p class="text-xs text-gray-500 mt-1">{{ item.collection }}</p>
           <p class="text-xs text-gray-500 mt-1">{{ item.datetime || 'No datetime' }}</p>
-          <p class="text-xs text-gray-500 mt-1">Cloud: {{ item.cloudCover ?? 'n/a' }}</p>
-          <p class="text-xs text-gray-500 mt-1">Platform: {{ item.platform || 'n/a' }}</p>
-          <p class="text-xs text-gray-500 mt-1">Instrument: {{ item.instrument || 'n/a' }}</p>
-          <p class="text-xs text-gray-500 mt-1">Provider: {{ item.provider || 'n/a' }}</p>
         </div>
       </div>
+    </div>
+
+    <div v-if="filteredStacItems.length > 0" ref="resultsSentinel" class="h-6 mt-2 flex items-center justify-center">
+      <p v-if="loading" class="text-xs text-gray-500">Loading next chunk...</p>
+      <p v-else-if="!nextPageRequest" class="text-xs text-gray-500">No more results available.</p>
     </div>
 
     <div v-else class="text-sm text-gray-500 py-6 text-center border border-dashed border-gray-300 rounded-lg bg-white">
