@@ -20,7 +20,7 @@ import ProjectsPanel from '~/components/main/ProjectsPanel.vue'
 import StatsPanel from '~/components/main/StatsPanel.vue'
 import AIPanel from '~/components/main/AIPanel.vue'
 import ImportPanel from '~/components/main/ImportPanel.vue'
-import DataAquisitionPanel from '~/components/main/DataAquisitionPanel.vue'
+import DataAcquisitionPanel from '~/components/main/DataAquisitionPanel.vue'
 import ExportPanel from '~/components/main/ExportPanel.vue'
 import ModelAnalysisPanel from '~/components/main/ModelAnalysisPanel.vue'
 import FilterPanel from '~/components/main/FilterPanel.vue'
@@ -39,7 +39,7 @@ const features = runtimeConfig.public.features || {}
 const menuFeatureMap = {
   projects: 'sidebarProjects',
   import: 'sidebarImport',
-  'data-aquisition': 'sidebarDataAquisition',
+  'data-acquisition': 'sidebarDataAcquisition',
   ai: 'sidebarAi',
   filter: 'sidebarFilter',
   stats: 'sidebarStats',
@@ -107,7 +107,7 @@ const handleSelectionChange = (selectedImages) => {
   selectedImagesFromGallery.value = selectedImages
 }
 
-const handleDataAquisitionSelect = (category) => {
+const handleDataAcquisitionSelect = (category) => {
   if (category?.key === 'satellite') {
     mainViewMode.value = 'satellite-stac'
     return
@@ -251,7 +251,7 @@ watchEffect(() => {
     activeMenu.value = null
   }
 
-  if (activeMenu.value !== 'data-aquisition' && mainViewMode.value !== 'gallery') {
+  if (activeMenu.value !== 'data-acquisition' && mainViewMode.value !== 'gallery') {
     mainViewMode.value = 'gallery'
   }
 })
@@ -365,15 +365,15 @@ onMounted(async () => {
             </button>
 
             <button
-              v-if="features.sidebarDataAquisition !== false"
+              v-if="features.sidebarDataAcquisition !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-                activeMenu === 'data-aquisition'
+                activeMenu === 'data-acquisition'
                   ? 'bg-blue-950 text-white'
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
-              title="Data aquisition"
-              @click="toggleMenu('data-aquisition')"
+              title="Data acquisition"
+              @click="toggleMenu('data-acquisition')"
             >
               <Database :size="20" />
             </button>
@@ -492,9 +492,9 @@ onMounted(async () => {
             v-if="activeMenu === 'import' && features.sidebarImport !== false"
             :project-id="selectedProject?.id"
           />
-          <DataAquisitionPanel
-            v-if="activeMenu === 'data-aquisition' && features.sidebarDataAquisition !== false"
-            @select-category="handleDataAquisitionSelect"
+          <DataAcquisitionPanel
+            v-if="activeMenu === 'data-acquisition' && features.sidebarDataAcquisition !== false"
+            @select-category="handleDataAcquisitionSelect"
           />
           <ExportPanel
             v-if="activeMenu === 'export' && features.sidebarExport !== false"
