@@ -25,11 +25,12 @@ from src.backend.db.database import init_db  # noqa: E402
 
 SENTRY_DSN = config.SENTRY_DSN
 
-# Initialize Sentry
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    send_default_pii=True,
-)
+# Initialize Sentry only when enabled
+if config.SENTRY_ENABLED and SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        send_default_pii=True,
+    )
 
 app = FastAPI()
 
@@ -45,6 +46,8 @@ app.add_middleware(
 
 @app.get("/sentry-debug")
 async def trigger_error():
+    if not config.SENTRY_ENABLED:
+        return {"status": "disabled", "message": "Sentry is disabled in current configuration"}
     return 1 / 0
 
 
@@ -66,7 +69,3 @@ app.include_router(notifications.router)
 @app.get("/", tags=["root"])
 def read_root():
     return {"status": "ok", "message": "API alive"}
-
-
-# todo add endpoints for: statistics for annotation and project , health , get all images without annotations,
-# TODO refactor endpoint to limit the call ( by batch or pagination) and run 1 request instead of loop of db requests

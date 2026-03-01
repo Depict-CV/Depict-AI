@@ -9,6 +9,8 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { user } = useAuth()
+const runtimeConfig = useRuntimeConfig()
+const features = runtimeConfig.public.features || {}
 
 const image = ref(null)
 const projectId = ref(null)
@@ -17,6 +19,11 @@ const loading = ref(true)
 const annotationEditorRef = ref(null)
 
 onMounted(async () => {
+  if (features.annotatePage === false) {
+    await navigateTo('/')
+    return
+  }
+
   try {
     const imageId = route.params.id
 

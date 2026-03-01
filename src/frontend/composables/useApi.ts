@@ -1,8 +1,19 @@
 export const useApi = () => {
   const config = useRuntimeConfig()
+  const authEnabled = config.public.authEnabled
   const { $clerk } = useNuxtApp()
 
   const apiFetch = async (endpoint: string, options: any = {}) => {
+    if (!authEnabled) {
+      return $fetch(`${config.public.apiBaseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Content-Type': 'application/json',
+        },
+      })
+    }
+
     if (!$clerk || !$clerk.session) {
       throw new Error('Not authenticated')
     }

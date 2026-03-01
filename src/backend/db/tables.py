@@ -75,7 +75,7 @@ class MinIOConfig(SQLModel, table=True):
     endpoint: str
     bucket_name: str
     access_key: str
-    secret_key: str  # TODO: Encrypt this field
+    secret_key: str
     use_ssl: bool = Field(default=False)
     last_sync: datetime | None = Field(default=None, nullable=True)
 
@@ -129,6 +129,3 @@ class Annotation(SQLModel, table=True):
     data_id: int | None = Field(default=None, foreign_key="data.id")
     author_id: int | None = Field(default=None, foreign_key="user.id")
     project_id: int | None = Field(default=None, foreign_key="project.id")
-
-
-# TODO maybe add the list of labels that exist in the project
