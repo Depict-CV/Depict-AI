@@ -250,6 +250,10 @@ watchEffect(() => {
   if (activeMenu.value && !isMenuEnabled(activeMenu.value)) {
     activeMenu.value = null
   }
+
+  if (activeMenu.value !== 'data-aquisition' && mainViewMode.value !== 'gallery') {
+    mainViewMode.value = 'gallery'
+  }
 })
 
 onMounted(async () => {
