@@ -62,10 +62,6 @@ See [Authentication Setup](USER_MANAGEMENT.md) for social login configuration.
 ### Start Backend Server
 
 ```bash
-# Using Makefile
-make backend
-
-# Or manually
 cd src/backend
 poetry run fastapi dev endpoints.py
 ```
@@ -77,38 +73,34 @@ API documentation at: http://localhost:8000/docs
 ### Start Frontend Server
 
 ```bash
-# Using Makefile (in another terminal)
-make frontend
-
-# Or manually
 cd src/frontend
 npm run dev
 ```
 
-Frontend will be available at: http://localhost:5173
+Frontend will be available at: http://localhost:3000
 
-## Using Makefile Commands
-
-For convenience, use the provided Makefile:
+## Useful Commands
 
 ```bash
-# Install all dependencies
-make install
+# Install dependencies
+poetry install
+cd src/frontend
+npm install
 
-# Start backend
-make backend
+# Run backend
+cd ../backend
+poetry run fastapi dev endpoints.py
 
-# Start frontend (in another terminal)
-make frontend
+# Run frontend
+cd ../frontend
+npm run dev
 
 # Run tests
-make test
+cd ../..
+poetry run pytest
 
-# Clean cache
-make clean
-
-# Rebuild environment
-make rebuild
+# Serve docs
+poetry run mkdocs serve
 ```
 
 ## Troubleshooting
@@ -149,10 +141,10 @@ npm cache clean --force
 
 ### Port Already in Use
 
-If port 8000 or 5173 is already in use, you can change them:
+If port 8000 or 3000 is already in use, you can change them:
 
 **Backend:** Edit `uvicorn` command port
-**Frontend:** Edit `vite.config.js` or use `--port` flag
+**Frontend:** Edit `nuxt.config.ts` or run `npm run dev -- --port <PORT>`
 
 ## Next Steps
 

@@ -6,35 +6,23 @@ The Depict AI frontend is built with **Vue.js 3** using the Composition API, pro
 
 ```
 src/frontend/
-├── src/
-│   ├── assets/              # Static assets (images, fonts)
-│   ├── components/          # Reusable Vue components
-│   │   ├── ImageGallery.vue
-│   │   ├── LoginPage.vue
-│   │   ├── Menubar.vue
-│   │   ├── Sidebar.vue
-│   │   └── panels/
-│   │       ├── AiAnnotationPanel.vue
-│   │       ├── FilterPanel.vue
-│   │       ├── NavPanel.vue
-│   │       ├── ProjectsPanel.vue
-│   │       └── UploadPanel.vue
-│   ├── pages/               # Page components
-│   │   └── ManualAnnotationPage.vue
-│   ├── App.vue             # Root component
-│   └── main.js             # Application entry point
-├── public/                  # Public static files
-├── index.html              # HTML template
-├── package.json            # npm dependencies
-├── vite.config.js          # Vite configuration
-└── jsconfig.json           # JavaScript configuration
+├── app.vue                 # Root app component
+├── assets/                 # Static assets and global CSS
+├── components/             # Reusable Vue components
+├── composables/            # Shared Composition API logic
+├── middleware/             # Route middleware
+├── pages/                  # File-based routes
+├── plugins/                # Nuxt plugins
+├── public/                 # Public static files
+├── nuxt.config.ts          # Nuxt configuration
+└── package.json            # npm scripts and dependencies
 ```
 
 ## Tech Stack
 
 - **Vue.js 3** - Progressive JavaScript framework
 - **Composition API** - Modern Vue reactivity
-- **Vite** - Next-generation frontend tooling
+- **Nuxt 3** - Vue framework for routing and app structure
 - **Lucide Vue Next** - Icon library
 - **Native Fetch API** - HTTP requests
 - **localStorage** - Client-side state persistence
@@ -176,15 +164,11 @@ const response = await fetch('http://localhost:8000/projects/my-projects', {
 ### Development Mode
 
 ```bash
-# Using Makefile
-make frontend
-
-# Using npm
 cd src/frontend
 npm run dev
 ```
 
-Frontend available at: http://localhost:5173
+Frontend available at: http://localhost:3000
 
 ### Production Build
 
@@ -193,7 +177,7 @@ cd src/frontend
 npm run build
 ```
 
-Build output in `dist/` directory.
+Build output in `.output/` directory.
 
 ### Preview Production Build
 
@@ -203,23 +187,24 @@ npm run preview
 
 ## Environment Configuration
 
-Frontend uses hardcoded API URL. For production, consider environment variables:
+Frontend uses Nuxt runtime config with environment variables:
 
 ```javascript
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const config = useRuntimeConfig();
+const API_URL = config.public.apiBaseUrl;
 ```
 
 Create `.env` in `src/frontend/`:
 
 ```env
-VITE_API_URL=https://api.yourdomain.com
+VITE_API_BASE_URL=https://api.yourdomain.com
 ```
 
 ## Development Tips
 
 ### Hot Module Replacement (HMR)
 
-Vite provides instant HMR. Changes reflect immediately without full reload.
+Nuxt dev server provides instant HMR. Changes reflect immediately without full reload.
 
 ### Vue DevTools
 
@@ -243,11 +228,11 @@ Install [Vue DevTools](https://devtools.vuejs.org/) browser extension for debugg
 See [Frontend Testing](../contributing.md) for testing strategies.
 
 ```bash
-# Run unit tests (if configured)
-npm run test
+# Run lint checks
+npm run lint
 
-# Run E2E tests (if configured)
-npm run test:e2e
+# Check formatting
+npm run format:check
 ```
 
 ## Next Steps

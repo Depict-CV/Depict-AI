@@ -102,9 +102,6 @@ See [API Reference](api.md) for complete endpoint documentation.
 ### Development Mode
 
 ```bash
-# Using Makefile
-make backend
-
 # Using Poetry
 cd src/backend
 poetry run fastapi dev endpoints.py
@@ -148,7 +145,7 @@ See [Testing](../contributing.md) for testing strategies.
 
 ```bash
 # Run all tests
-make test
+poetry run pytest
 
 # Run with coverage
 poetry run pytest --cov=src/backend
