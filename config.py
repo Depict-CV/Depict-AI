@@ -6,6 +6,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Config:
     API_URL = os.getenv("API_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN")
@@ -22,6 +29,10 @@ class Config:
     CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
     CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "")
     CLERK_ISSUER = os.getenv("CLERK_ISSUER", "")
+
+    # Feature toggles
+    AUTH_ENABLED = env_bool("AUTH_ENABLED", True)
+    SENTRY_ENABLED = env_bool("SENTRY_ENABLED", True)
 
     base_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(base_dir, "src", "config.yaml")

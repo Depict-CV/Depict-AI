@@ -4,6 +4,11 @@ export default defineNuxtRouteMiddleware((to, _from) => {
     return
   }
 
+  const config = useRuntimeConfig()
+  if (!config.public.authEnabled) {
+    return
+  }
+
   const { $clerk } = useNuxtApp()
 
   // Wait for Clerk to be ready

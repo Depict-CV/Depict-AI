@@ -4,6 +4,10 @@ import { User, CreditCard, Settings, Building2, LogOut } from 'lucide-vue-next'
 const props = defineProps({
   user: Object,
   showProfileMenu: Boolean,
+  featureFlags: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
 const emit = defineEmits(['close', 'openPanel', 'signOut', 'openSettings'])
@@ -30,6 +34,7 @@ const openSettings = () => {
     class="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50"
   >
     <button
+      v-if="featureFlags.pageSubscription !== false"
       @click="openPanel('subscription')"
       class="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors text-left"
     >
@@ -38,6 +43,7 @@ const openSettings = () => {
     </button>
 
     <button
+      v-if="featureFlags.pageSettings !== false"
       @click="openSettings"
       class="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors text-left"
     >
@@ -46,6 +52,7 @@ const openSettings = () => {
     </button>
 
     <button
+      v-if="featureFlags.pageOrganisation !== false"
       @click="openPanel('organisation')"
       class="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors text-left"
     >

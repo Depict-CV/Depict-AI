@@ -81,8 +81,28 @@ async def get_current_clerk_user(
     - Creates or retrieves User from database
     - Maps Clerk user to local User model with oauth_provider='clerk'
 
-    If DISABLE_AUTH=true in config, returns a mock test user without validation.
+    If AUTH_ENABLED=false in config, returns a local dev user without token validation.
     """
+
+    if not config.config.AUTH_ENABLED:
+        username = "local-dev-user"
+        email = "local-dev-user@local.dev"
+        statement = select(User).where(User.username == username)
+        user = session.exec(statement).first()
+
+        if not user:
+            user = User(
+                username=username,
+                email=email,
+                permission=PermissionEnum.CAN_CERTIFY,
+                oauth_provider="local",
+                oauth_id="local-dev-user",
+            )
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+        return user
 
     # Check if credentials were provided
     if not credentials:

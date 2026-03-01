@@ -33,6 +33,43 @@ import ImageGallery from '~/components/main/ImageGallery.vue'
 import SatelliteStacPanel from '~/components/main/SatelliteStacPanel.vue'
 
 const { isSignedIn, user, signOut } = useAuth()
+const runtimeConfig = useRuntimeConfig()
+const features = runtimeConfig.public.features || {}
+
+const menuFeatureMap = {
+  projects: 'sidebarProjects',
+  import: 'sidebarImport',
+  ai: 'sidebarAi',
+  filter: 'sidebarFilter',
+  stats: 'sidebarStats',
+  'model-analysis': 'sidebarModelAnalysis',
+  export: 'sidebarExport',
+  'project-settings': 'sidebarProjectSettings',
+  subscription: 'pageSubscription',
+  organisation: 'pageOrganisation',
+}
+
+const isMenuEnabled = (menu) => {
+  const featureKey = menuFeatureMap[menu]
+  if (!featureKey) return true
+  return features[featureKey] !== false
+}
+
+const toggleMenu = (menu) => {
+  if (!isMenuEnabled(menu)) return
+  activeMenu.value = activeMenu.value === menu ? null : menu
+}
+
+const openPanelFromProfile = (panel) => {
+  if (!isMenuEnabled(panel)) return
+  activeMenu.value = panel
+}
+
+const openSettingsFromProfile = () => {
+  if (features.pageSettings === false) return
+  showSettingsDialog.value = true
+  showProfileMenu.value = false
+}
 
 const showProfileMenu = ref(false)
 const showSettingsDialog = ref(false)
@@ -94,6 +131,10 @@ const handleSelectProject = (project) => {
 }
 
 const handleSelectImage = (image) => {
+  if (features.annotatePage === false) {
+    alert('Annotation page is currently disabled by configuration.')
+    return
+  }
   selectedImage.value = image
   navigateTo(`/annotate/${image.id}`)
 }
@@ -195,10 +236,20 @@ const markAsCompleted = (requestId) => {
 }
 
 const openChangeRequest = (request) => {
+  if (features.annotatePage === false) {
+    alert('Annotation page is currently disabled by configuration.')
+    return
+  }
   // Navigate to annotation page for the image
   navigateTo(`/annotate/${request.imageId}`)
   showNotificationCenter.value = false
 }
+
+watchEffect(() => {
+  if (activeMenu.value && !isMenuEnabled(activeMenu.value)) {
+    activeMenu.value = null
+  }
+})
 
 onMounted(async () => {
   await fetchProjects()
@@ -264,15 +315,11 @@ onMounted(async () => {
         <!-- Profile Dropdown Menu -->
         <ProfileMenu
           :user="user"
+          :feature-flags="features"
           :show-profile-menu="showProfileMenu"
           @close="showProfileMenu = false"
-          @open-panel="(panel) => (activeMenu = panel)"
-          @open-settings="
-            () => {
-              showSettingsDialog = true
-              showProfileMenu = false
-            }
-          "
+          @open-panel="openPanelFromProfile"
+          @open-settings="openSettingsFromProfile"
           @sign-out="signOut"
         />
       </div>
@@ -285,6 +332,7 @@ onMounted(async () => {
         <nav class="flex flex-col items-center py-4 gap-1 h-full">
           <div class="flex flex-col items-center gap-1">
             <button
+              v-if="features.sidebarProjects !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'projects'
@@ -292,12 +340,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Projects"
-              @click="activeMenu = activeMenu === 'projects' ? null : 'projects'"
+              @click="toggleMenu('projects')"
             >
               <FolderOpen :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarImport !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'import'
@@ -305,12 +354,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Import"
-              @click="activeMenu = activeMenu === 'import' ? null : 'import'"
+              @click="toggleMenu('import')"
             >
               <Download :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarAi !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'data-aquisition'
@@ -329,12 +379,13 @@ onMounted(async () => {
                 activeMenu === 'ai' ? 'bg-blue-950 text-white' : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="AI Tools"
-              @click="activeMenu = activeMenu === 'ai' ? null : 'ai'"
+              @click="toggleMenu('ai')"
             >
               <Bot :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarFilter !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'filter'
@@ -342,12 +393,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Filter"
-              @click="activeMenu = activeMenu === 'filter' ? null : 'filter'"
+              @click="toggleMenu('filter')"
             >
               <Filter :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarStats !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'stats'
@@ -355,12 +407,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Statistics"
-              @click="activeMenu = activeMenu === 'stats' ? null : 'stats'"
+              @click="toggleMenu('stats')"
             >
               <BarChart3 :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarModelAnalysis !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'model-analysis'
@@ -368,12 +421,13 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Model Analysis"
-              @click="activeMenu = activeMenu === 'model-analysis' ? null : 'model-analysis'"
+              @click="toggleMenu('model-analysis')"
             >
               <Microscope :size="20" />
             </button>
 
             <button
+              v-if="features.sidebarExport !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'export'
@@ -381,7 +435,7 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Export"
-              @click="activeMenu = activeMenu === 'export' ? null : 'export'"
+              @click="toggleMenu('export')"
             >
               <Upload :size="20" />
             </button>
@@ -390,6 +444,7 @@ onMounted(async () => {
           <!-- Bottom Section -->
           <div class="mt-auto flex flex-col items-center gap-1">
             <button
+              v-if="features.sidebarProjectSettings !== false"
               :class="[
                 'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
                 activeMenu === 'project-settings'
@@ -397,7 +452,7 @@ onMounted(async () => {
                   : 'text-gray-400 hover:text-blue-950 hover:bg-blue-50',
               ]"
               title="Project Settings"
-              @click="activeMenu = activeMenu === 'project-settings' ? null : 'project-settings'"
+              @click="toggleMenu('project-settings')"
             >
               <Settings2 :size="20" />
             </button>
@@ -412,28 +467,43 @@ onMounted(async () => {
       >
         <div class="p-6">
           <ProjectsPanel
-            v-if="activeMenu === 'projects'"
+            v-if="activeMenu === 'projects' && features.sidebarProjects !== false"
             :projects="projects"
             @refresh-projects="fetchProjects"
             @select-project="handleSelectProject"
           />
-          <StatsPanel v-if="activeMenu === 'stats'" :project-id="selectedProject?.id" />
+          <StatsPanel
+            v-if="activeMenu === 'stats' && features.sidebarStats !== false"
+            :project-id="selectedProject?.id"
+          />
           <AIPanel
-            v-if="activeMenu === 'ai'"
+            v-if="activeMenu === 'ai' && features.sidebarAi !== false"
             :project-id="selectedProject?.id"
             :selected-images="selectedImagesFromGallery"
             @inference-results="handleInferenceResults"
           />
-          <ImportPanel v-if="activeMenu === 'import'" :project-id="selectedProject?.id" />
-          <DataAquisitionPanel v-if="activeMenu === 'data-aquisition'" @select-category="handleDataAquisitionSelect" />
-          <ExportPanel v-if="activeMenu === 'export'" :project-id="selectedProject?.id" />
-          <ModelAnalysisPanel v-if="activeMenu === 'model-analysis'" />
+          <ImportPanel
+            v-if="activeMenu === 'import' && features.sidebarImport !== false"
+            :project-id="selectedProject?.id"
+          />
+          <DataAquisitionPanel
+            v-if="activeMenu === 'data-aquisition' && features.sidebarDataAquisition !== false"
+            @select-category="handleDataAquisitionSelect"
+          />
+          <ExportPanel
+            v-if="activeMenu === 'export' && features.sidebarExport !== false"
+            :project-id="selectedProject?.id"
+          />
+          <ModelAnalysisPanel v-if="activeMenu === 'model-analysis' && features.sidebarModelAnalysis !== false" />
           <FilterPanel
-            v-if="activeMenu === 'filter'"
+            v-if="activeMenu === 'filter' && features.sidebarFilter !== false"
             :project-id="selectedProject?.id"
             @apply-filters="handleApplyFilters"
           />
-          <ProjectSettingsPanel v-if="activeMenu === 'project-settings'" :project-id="selectedProject?.id" />
+          <ProjectSettingsPanel
+            v-if="activeMenu === 'project-settings' && features.sidebarProjectSettings !== false"
+            :project-id="selectedProject?.id"
+          />
         </div>
       </aside>
 
@@ -527,13 +597,23 @@ onMounted(async () => {
       </div>
 
       <!-- Settings Dialog -->
-      <SettingsDialog v-if="showSettingsDialog" :user="user" @close="showSettingsDialog = false" @sign-out="signOut" />
+      <SettingsDialog
+        v-if="showSettingsDialog && features.pageSettings !== false"
+        :user="user"
+        @close="showSettingsDialog = false"
+        @sign-out="signOut"
+      />
 
       <!-- Subscription Dialog -->
-      <SubscriptionPanel :is-open="activeMenu === 'subscription'" @close="activeMenu = null" />
+      <SubscriptionPanel
+        v-if="features.pageSubscription !== false"
+        :is-open="activeMenu === 'subscription'"
+        @close="activeMenu = null"
+      />
 
       <!-- Organisation Dialog -->
       <OrganisationPanel
+        v-if="features.pageOrganisation !== false"
         :is-open="activeMenu === 'organisation'"
         :members="organizationMembers"
         @close="activeMenu = null"

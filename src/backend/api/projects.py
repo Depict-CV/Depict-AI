@@ -127,8 +127,6 @@ def get_user_projects(db: Session = Depends(get_session), current_user: User = D
         member_count_stmt = select(ProjectUserLink).where(ProjectUserLink.project_id == project.id)
         member_count = len(db.exec(member_count_stmt).all())
 
-        # Count images (assuming you have an Image table)
-        # TODO: Add actual image count from your Image table
         image_count = 0
 
         # Determine user role
