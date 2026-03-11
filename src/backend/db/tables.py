@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -89,6 +90,7 @@ class Data(SQLModel, table=True):
     author_id: int | None = Field(default=None, foreign_key="user.id")
     creation_date: datetime | None = Field(default=None, nullable=True)
     project_id: int | None = Field(foreign_key="project.id")
+    data_metadata: dict[str, Any] | None = Field(default=None, sa_column=Column("metadata", JSON, nullable=True))
 
     author: Optional[User] = Relationship(back_populates="data")
     project: Optional[Project] = Relationship()
