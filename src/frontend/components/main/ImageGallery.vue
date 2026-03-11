@@ -37,6 +37,10 @@ const selectedPredictions = ref(new Set())
 const lastSelectedPredictionIndex = ref(null)
 const isSavingAnnotations = ref(false)
 const displayedInferenceResults = ref([])
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+
+let imageClickTimeout = null
 
 const isAllSelected = computed(() => {
   if (reviewMode.value) {
@@ -338,8 +342,62 @@ watch(
 )
 
 onUnmounted(() => {
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+    imageClickTimeout = null
+  }
   window.removeEventListener('scroll', handleScroll)
 })
+
+const openImagePreview = (item) => {
+  if (!item?.location) {
+    return
+  }
+
+  previewImageUrl.value = item.location
+  previewImageTitle.value = item.id ? `Image ${item.id}` : 'Image preview'
+}
+
+const closeImagePreview = () => {
+  previewImageUrl.value = ''
+  previewImageTitle.value = ''
+}
+
+const queueSingleClick = (callback) => {
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+  }
+
+  imageClickTimeout = setTimeout(() => {
+    callback()
+    imageClickTimeout = null
+  }, 220)
+}
+
+const handleGalleryImageSingleClick = (image, event) => {
+  if (!selectionMode.value) {
+    return
+  }
+
+  queueSingleClick(() => {
+    toggleImageSelection(image.id, event)
+  })
+}
+
+const handlePredictionSingleClick = (index, event) => {
+  queueSingleClick(() => {
+    togglePredictionSelection(index, event)
+  })
+}
+
+const handleImageDoubleClick = (item) => {
+  if (imageClickTimeout) {
+    clearTimeout(imageClickTimeout)
+    imageClickTimeout = null
+  }
+
+  openImagePreview(item)
+}
 
 const toggleSelectionMode = () => {
   selectionMode.value = !selectionMode.value
@@ -773,13 +831,14 @@ const discardPredictions = () => {
         :class="{
           'ring-4 ring-purple-500': selectedPredictions.has(index),
         }"
-        @click="togglePredictionSelection(index, $event)"
+        @click="handlePredictionSingleClick(index, $event)"
+        @dblclick="handleImageDoubleClick(result)"
       >
         <img
           :src="result.location"
           :alt="`Prediction ${index}`"
           loading="lazy"
-          class="w-auto h-full object-cover block"
+          class="w-auto h-full object-cover block cursor-zoom-in"
         />
 
         <!-- Selection Checkbox -->
@@ -830,9 +889,15 @@ const discardPredictions = () => {
         :class="{
           'ring-4 ring-blue-500': selectionMode && selectedImages.has(image.id),
         }"
-        @click="selectionMode ? toggleImageSelection(image.id, $event) : null"
+        @click="handleGalleryImageSingleClick(image, $event)"
+        @dblclick="handleImageDoubleClick(image)"
       >
-        <img :src="image.location" :alt="`Image ${image.id}`" loading="lazy" class="w-auto h-full object-cover block" />
+        <img
+          :src="image.location"
+          :alt="`Image ${image.id}`"
+          loading="lazy"
+          class="w-auto h-full object-cover block cursor-zoom-in"
+        />
 
         <!-- Selection Checkbox (only in selection mode) -->
         <div
@@ -930,6 +995,23 @@ const discardPredictions = () => {
     <div v-else-if="images.length === 0 && !loading" class="text-center py-10">
       <p class="text-gray-500 text-lg">No annotated images found in this project</p>
       <p class="text-gray-400 text-sm mt-2">Create annotations using the AI Tools or annotate images manually</p>
+    </div>
+
+    <div
+      v-if="previewImageUrl"
+      class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      @click="closeImagePreview"
+    >
+      <div class="relative max-w-6xl max-h-[90vh] w-full" @click.stop>
+        <button
+          type="button"
+          class="absolute -top-10 right-0 px-3 py-1.5 text-sm bg-white/90 hover:bg-white text-gray-900 rounded"
+          @click="closeImagePreview"
+        >
+          Close
+        </button>
+        <img :src="previewImageUrl" :alt="previewImageTitle" class="w-full max-h-[90vh] object-contain rounded" />
+      </div>
     </div>
   </div>
 </template>

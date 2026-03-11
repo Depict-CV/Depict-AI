@@ -309,6 +309,22 @@ const handleCheckboxToggle = (itemId) => {
   lastSelectedItemId.value = itemId
 }
 
+const getBboxCenter = (bbox) => {
+  if (!Array.isArray(bbox) || bbox.length !== 4) {
+    return null
+  }
+
+  const [minLon, minLat, maxLon, maxLat] = bbox
+  const lon = (Number(minLon) + Number(maxLon)) / 2
+  const lat = (Number(minLat) + Number(maxLat)) / 2
+
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+    return null
+  }
+
+  return { lon, lat }
+}
+
 const importSelectedItems = async () => {
   if (!props.projectId) {
     importMessage.value = 'Select a project first before importing.'
@@ -336,6 +352,21 @@ const importSelectedItems = async () => {
         user_id: user.value.id,
         project_id: props.projectId,
         type: 'image',
+        metadata: {
+          stac_id: item.id,
+          collection: item.collection,
+          image_datetime: item.datetime || null,
+          cloud_cover: typeof item.cloudCover === 'number' ? item.cloudCover : null,
+          platform: item.platform || null,
+          instrument: item.instrument || null,
+          provider: item.provider || null,
+          bbox: item.raw?.bbox || null,
+          geometry: item.raw?.geometry || null,
+          center_coordinates: getBboxCenter(item.raw?.bbox),
+          preview_url: item.previewUrl || null,
+          primary_asset_url: item.primaryAssetUrl || null,
+          source: 'microsoft-planetary-computer',
+        },
       }))
       .filter((entry) => !!entry.location)
 

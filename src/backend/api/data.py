@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
@@ -18,6 +19,36 @@ class ScanDirectoryRequest(BaseModel):
 
 # Supported image extensions
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".tiff", ".tif", ".ico"}
+
+
+def parse_creation_date(data: dict, metadata: dict | None) -> datetime | None:
+    date_value = data.get("creation_date")
+    if not date_value and metadata:
+        date_value = metadata.get("image_datetime")
+
+    if not date_value:
+        return None
+
+    if isinstance(date_value, datetime):
+        return date_value
+
+    if not isinstance(date_value, str):
+        return None
+
+    normalized = date_value.replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+
+
+def parse_metadata(data: dict) -> dict | None:
+    metadata = data.get("metadata")
+    if not isinstance(metadata, dict):
+        metadata = data.get("data_metadata")
+    if isinstance(metadata, dict):
+        return metadata
+    return None
 
 
 @router.post("/scan-directory")
@@ -70,7 +101,18 @@ def create_data(data: dict = Body(...), db: Session = Depends(get_session)):
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    new_data = Data(location=location, author_id=user_id, project_id=project_id, type=data_type)
+
+    metadata = parse_metadata(data)
+    creation_date = parse_creation_date(data, metadata)
+
+    new_data = Data(
+        location=location,
+        author_id=user_id,
+        project_id=project_id,
+        type=data_type,
+        creation_date=creation_date,
+        data_metadata=metadata,
+    )
     db.add(new_data)
     db.commit()
     db.refresh(new_data)
@@ -110,7 +152,17 @@ def create_data_batch(data_list: List[dict] = Body(...), db: Session = Depends(g
         if not project:
             raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
 
-        new_data = Data(location=location, author_id=user.id, project_id=project_id, type=data_type)
+        metadata = parse_metadata(data)
+        creation_date = parse_creation_date(data, metadata)
+
+        new_data = Data(
+            location=location,
+            author_id=user.id,
+            project_id=project_id,
+            type=data_type,
+            creation_date=creation_date,
+            data_metadata=metadata,
+        )
         db.add(new_data)
         created_items.append(new_data)
 
